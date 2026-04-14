@@ -9,7 +9,6 @@
 
     <artifactId>products-api</artifactId>
     <packaging>jar</packaging>
-
     <name>products-api</name>
     <description>DTOs and Feign Interfaces for Product Service</description>
 

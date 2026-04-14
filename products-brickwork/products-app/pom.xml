@@ -9,14 +9,13 @@
 
     <artifactId>products-app</artifactId>
     <packaging>jar</packaging>
-
     <name>products-app</name>
     <description>Spring Boot Application for Product Service</description>
 
 
 
     <dependencies>
-        <!-- Import Core logic -->
+        <!-- Internal modules -->
         <dependency>
             <groupId>com.brickwork.app</groupId>
             <artifactId>products-api</artifactId>
@@ -31,6 +30,12 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-openfeign-core</artifactId>
+            <version>4.3.0</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -44,8 +49,8 @@
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
                         </exclude>
-                        <mainClass>com.brick.app.ProductsApplication</mainClass>
                     </excludes>
+                        <mainClass>com.brickwork.products.ProductsApplication</mainClass>
                 </configuration>
             </plugin>
         </plugins>
