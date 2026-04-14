@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.brick.app</groupId>
+		<artifactId>brick-work-pro</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>products-brickwork</artifactId>
+	<name>product-service</name>
+
+	<packaging>pom</packaging>
+	<description>Product Service Parent Module for BrickWorks Pro</description>
+
+	<modules>
+		<module>products-app</module>
+		<module>products-service</module>
+		<module>products-api</module>
+	</modules>
+</project>

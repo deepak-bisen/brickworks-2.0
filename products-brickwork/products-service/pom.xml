@@ -1,0 +1,26 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.brickwork.app</groupId>
+        <artifactId>products-brickwork</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>products-service</artifactId>
+    <packaging>jar</packaging>
+
+    <name>products-service</name>
+    <description>Business Logic for Product Service</description>
+
+    <dependencies>
+        <!-- Import API module to map Entities to DTOs -->
+        <dependency>
+            <groupId>com.brickwork.app</groupId>
+            <artifactId>products-api</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+    </dependencies>
+
+</project>
