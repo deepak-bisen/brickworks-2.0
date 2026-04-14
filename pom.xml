@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>com.brick.app</groupId>
+    <groupId>com.brickwork.app</groupId>
     <artifactId>brick-work-pro</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
