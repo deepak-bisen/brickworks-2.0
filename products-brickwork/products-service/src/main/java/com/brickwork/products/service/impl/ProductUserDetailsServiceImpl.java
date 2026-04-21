@@ -1,15 +1,15 @@
 package com.brickwork.products.service.impl;
 
+import com.brickwork.products.service.ProductUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 
 @Service
-public class ProductUserDetailsServiceImpl implements UserDetailsService {
+public class ProductUserDetailsServiceImpl implements ProductUserDetailsService {
     // This is a simplified version for services that only validate tokens.
     // It doesn't need to check a database. It just creates a UserDetails object
     // from the username extracted from the token.
