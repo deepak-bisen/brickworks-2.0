@@ -9,7 +9,7 @@ import lombok.Data;
 public class RawMaterial {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String rawMaterialId;
 
     private String name; // e.g., "Soil", "Coal", "Sand"
     private String unitOfMeasure; // e.g., "Tons", "Kg"

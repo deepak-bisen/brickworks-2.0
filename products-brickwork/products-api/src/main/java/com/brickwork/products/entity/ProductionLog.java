@@ -10,9 +10,9 @@ import java.time.LocalDate;
 public class ProductionLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String productionLogId;
 
-    private Long managerId; // Tracks which employee created the log
+    private String managerId; // Tracks which employee created the log
 
     @ManyToOne
     @JoinColumn(name = "product_id")

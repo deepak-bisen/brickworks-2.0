@@ -1,0 +1,46 @@
+package com.brickwork.orders.entity;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Data
+@Entity
+@Table(name = "ORDERS")
+public class Order {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String orderId;
+
+    // We store only the ID of the customer, not a direct database link.
+    // This is a core concept in microservices.
+    @Column(nullable = false)
+    private String customerId;
+
+    @Column(nullable = false)
+    private LocalDateTime orderDate;
+
+    @Column(nullable = false)
+    private String status;
+
+    // Phase 1: Standard Total
+    @Column
+    private Double totalAmount;
+//  private Double totalCost;
+
+    @Column(length = 500) // 500 characters for a full address
+    private String deliveryAddress;
+
+    // Phase 2: Enterprise Financial Tracking
+    private Double totalProfit;
+    private Double discountApplied;
+
+    // This is a relationship to OrderDetail within the SAME service's database.
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<OrderDetails> orderDetails = new ArrayList<>();
+}

@@ -19,6 +19,7 @@
 
     <modules>
         <module>products-brickwork</module>
+        <module>orders-brickwork</module>
     </modules>
 
     <properties>
