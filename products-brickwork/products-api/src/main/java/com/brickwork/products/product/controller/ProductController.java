@@ -14,23 +14,24 @@ import java.util.List;
 public interface ProductController {
 
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductDTO> getProductById(@PathVariable("productId") String productId);
+    ResponseEntity<ProductDTO> getProductById(@PathVariable("productId") String productId);
 
     @GetMapping
-    public ResponseEntity<List<ProductDTO>> getAllProducts();
+    ResponseEntity<List<ProductDTO>> getAllProducts();
 
     @GetMapping("/category/{category}")
     ResponseEntity<List<ProductDTO>> getProductsByCategory(@PathVariable("category") String category);
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)  // Sets the HTTP status code to 201 Created on success
-    public ResponseEntity<?> createProduct(@ModelAttribute ProductDTO productDTO, @RequestParam("imageFile") MultipartFile imageFile); // @RequestBody tells Spring to convert the incoming JSON into a Product object
+    ResponseEntity<?> createProduct(@ModelAttribute ProductDTO productDTO, @RequestParam("imageFile") MultipartFile imageFile); // @RequestBody tells Spring to convert the incoming JSON into a Product object
 
     @PutMapping(value = "{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> updateProduct(@PathVariable String productID, @RequestPart("productDTO") ProductDTO productDTO, @RequestPart(value = "imageFile", required = false) MultipartFile imageFile);
+    ResponseEntity<?> updateProduct(@PathVariable String productID, @RequestPart("productDTO") ProductDTO productDTO, @RequestPart(value = "imageFile", required = false) MultipartFile imageFile);
 
     @DeleteMapping("/{productId}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable String productId);
+    ResponseEntity<Void> deleteProduct(@PathVariable String productId);
 
-
+    @PutMapping("/{id}/deduct-stock")
+    ResponseEntity<Void> deductStock(@PathVariable String id, @RequestParam int quantity);
 }

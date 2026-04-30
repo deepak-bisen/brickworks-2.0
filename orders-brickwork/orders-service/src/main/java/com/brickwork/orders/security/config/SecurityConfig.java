@@ -24,12 +24,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // --- TEMPORARY DEV BYPASS ---
                         // This allows you to test the actual business logic without fighting the temporary JWT filter
-                        .requestMatchers("/api/**").permitAll()
-                        .anyRequest().authenticated()                 // PRIVATE: Everything else
+                       // .requestMatchers("/api/**").permitAll()
+                       // .anyRequest().authenticated()                 // PRIVATE: Everything else
+                        .anyRequest().permitAll()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+      //  http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }

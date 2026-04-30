@@ -50,6 +50,7 @@ public class ProductControllerImpl implements ProductController {
      * @return A 204 No Content response on success, or 404 Not Found.
      */
 
+    @Override
     public ResponseEntity<Void> deleteProduct(String productId) {
         try {
             productService.deleteProduct(productId);
@@ -62,6 +63,12 @@ public class ProductControllerImpl implements ProductController {
             System.out.println("deletion not done!");
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @Override
+    public ResponseEntity<Void> deductStock(@PathVariable String id, @RequestParam int quantity) {
+        productService.deductStock(id, quantity);
+        return ResponseEntity.ok().build();
     }
 
     /**

@@ -60,6 +60,19 @@ public class ProductServiceImpl implements ProductService {
         productRepository.deleteById(productID);
     }
 
+    @Override
+    public void deductStock(String productId, int quantity) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (product.getStockQuantity() < quantity) {
+            throw new IllegalArgumentException("Not enough stock for product: " + product.getName());
+        }
+
+        product.setStockQuantity(product.getStockQuantity() - quantity);
+        productRepository.save(product);
+    }
+
     /**
      * Updates an existing product.
      *

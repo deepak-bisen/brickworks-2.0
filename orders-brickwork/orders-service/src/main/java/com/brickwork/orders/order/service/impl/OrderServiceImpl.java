@@ -31,13 +31,16 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDTO createOrder(OrderRequestDTO requestDTO) {
         // Strict validation for formal orders
         if (requestDTO.getCustomerId() == null || requestDTO.getCustomerId().trim().isEmpty()) {
-            throw new IllegalArgumentException("Customer ID is required to create a formal order.");
+            throw new IllegalArgumentException("Customer ID is required to create an order.");
         }
 
         Order order = new Order();
         order.setOrderDate(LocalDateTime.now());
         order.setDeliveryAddress(requestDTO.getDeliveryAddress());
         order.setCustomerId(requestDTO.getCustomerId());
+        order.setGuestName(requestDTO.getGuestName());
+        order.setGuestEmail(requestDTO.getGuestEmail());
+        order.setGuestPhone(requestDTO.getGuestPhone());
         order.setStatus(OrderStatus.PENDING_PAYMENT);
 
         return processOrderItemsAndSave(order, requestDTO);
@@ -122,6 +125,13 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDTO updateOrderStatus(String id, OrderStatus status) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // --- NEW: Deduct stock when the order leaves! ---
+        if (status == OrderStatus.DISPATCHED && order.getStatus() != OrderStatus.DISPATCHED) {
+            for (OrderDetails detail : order.getOrderDetails()) {
+                productClient.deductStock(detail.getProductId(), detail.getQuantity());
+            }
+        }
 
         order.setStatus(status);
 

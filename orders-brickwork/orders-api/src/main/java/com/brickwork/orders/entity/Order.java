@@ -20,7 +20,7 @@ public class Order {
     // We store only the ID of the customer, not a direct database link.
     // This is a core concept in microservices.
     //for authenticated users
-    @Column(nullable = false)
+    @Column
     private String customerId;
 
     // RESTORED PHASE 1: For Public Lead Generation (FUNC-005)
