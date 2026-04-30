@@ -1,6 +1,7 @@
 package com.brickwork.orders.controller;
 import com.brickwork.orders.dto.OrderRequestDTO;
 import com.brickwork.orders.dto.OrderResponseDTO;
+import com.brickwork.orders.enums.OrderStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +28,7 @@ public interface OrderController {
     // Endpoint for the secure Customer Dashboard
     // Added for Phase 2: Status updates (e.g. Pending -> Dispatched)
     @PutMapping("/{id}/status")
-    ResponseEntity<?> updateOrderStatus(@PathVariable("id") String id, @RequestParam("status")  String status);
+    ResponseEntity<?> updateOrderStatus(@PathVariable("id") String id, @RequestParam("status") OrderStatus status);
 
     // RESTORED PHASE 1: Endpoint for the secure Customer Dashboard
     @GetMapping("/customer/{customerId}")
@@ -35,5 +36,8 @@ public interface OrderController {
 
     // --- NEW ENDPOINTS FOR ADMIN PANEL ---
     @GetMapping("/all/orders")
-    ResponseEntity<List<OrderResponseDTO>> getAllOrders();
+    ResponseEntity<List<OrderResponseDTO>> getAllActualOrders();
+
+    @GetMapping("/all/get/public-qoute")
+    ResponseEntity<List<OrderResponseDTO>> getAllPublicQuotes();
 }

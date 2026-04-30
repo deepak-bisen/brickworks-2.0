@@ -24,7 +24,7 @@ public interface ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)  // Sets the HTTP status code to 201 Created on success
-    public ResponseEntity<?> createProduct(@RequestPart("productDTO") ProductDTO productDTO, @RequestPart(value = "imageFile", required = false) MultipartFile imageFile); // @RequestBody tells Spring to convert the incoming JSON into a Product object
+    public ResponseEntity<?> createProduct(@ModelAttribute ProductDTO productDTO, @RequestParam("imageFile") MultipartFile imageFile); // @RequestBody tells Spring to convert the incoming JSON into a Product object
 
     @PutMapping(value = "{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateProduct(@PathVariable String productID, @RequestPart("productDTO") ProductDTO productDTO, @RequestPart(value = "imageFile", required = false) MultipartFile imageFile);

@@ -1,5 +1,6 @@
 package com.brickwork.orders.entity;
 
+import com.brickwork.orders.enums.OrderStatus;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -30,8 +31,9 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime orderDate;
 
+    @Enumerated(EnumType.STRING) // Saves the word (e.g., "DISPATCHED") in the DB, not a number
     @Column(nullable = false)
-    private String status;
+    private OrderStatus status;
 
     @Column(length = 500) // 500 characters for a full address
     private String deliveryAddress;

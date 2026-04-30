@@ -10,13 +10,12 @@ import lombok.NoArgsConstructor;
 public class ProductDTO {
     private String productId;
     private String name;
-    private String color;
     private String description;
-    private String brickType;
     private String category;
-    private String dimensions;
     private Double unitPrice;
     private Integer stockQuantity;
+    private String brickType;
+    private String dimensions;
     private Double estimatedCost;
     private Integer bulkDiscountThreshold;
     private String imageName;

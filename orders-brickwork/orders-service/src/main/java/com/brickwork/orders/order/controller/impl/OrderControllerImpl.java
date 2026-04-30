@@ -3,6 +3,7 @@ package com.brickwork.orders.order.controller.impl;
 import com.brickwork.orders.controller.OrderController;
 import com.brickwork.orders.dto.OrderRequestDTO;
 import com.brickwork.orders.dto.OrderResponseDTO;
+import com.brickwork.orders.enums.OrderStatus;
 import com.brickwork.orders.order.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -49,10 +50,20 @@ public class OrderControllerImpl implements OrderController {
     // --- NEW ENDPOINTS FOR ADMIN PANEL ---
 
     @Override
-    public ResponseEntity<List<OrderResponseDTO>> getAllOrders() {
+    public ResponseEntity<List<OrderResponseDTO>> getAllActualOrders() {
         try{
-        return ResponseEntity.ok(orderService.getAllOrders());
+        return ResponseEntity.ok(orderService.getAllActualOrders());
         } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @Override
+    public ResponseEntity<List<OrderResponseDTO>> getAllPublicQuotes() {
+        try{
+            return ResponseEntity.ok(orderService.getAllPublicQuotes());
+        }catch (Exception e){
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -63,7 +74,7 @@ public class OrderControllerImpl implements OrderController {
     }
 
     @Override
-    public ResponseEntity<?> updateOrderStatus(@PathVariable String id, String status) {
+    public ResponseEntity<?> updateOrderStatus(@PathVariable String id, OrderStatus status) {
         return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
     }
 

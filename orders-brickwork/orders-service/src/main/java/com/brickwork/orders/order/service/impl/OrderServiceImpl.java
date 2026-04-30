@@ -7,6 +7,7 @@ import com.brickwork.orders.dto.OrderResponseDTO;
 import com.brickwork.orders.dto.ProductDTO;
 import com.brickwork.orders.entity.Order;
 import com.brickwork.orders.entity.OrderDetails;
+import com.brickwork.orders.enums.OrderStatus;
 import com.brickwork.orders.order.repository.OrderRepository;
 import com.brickwork.orders.order.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,7 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderDate(LocalDateTime.now());
         order.setDeliveryAddress(requestDTO.getDeliveryAddress());
         order.setCustomerId(requestDTO.getCustomerId());
-        order.setStatus("PENDING_PAYMENT");
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
 
         return processOrderItemsAndSave(order, requestDTO);
     }
@@ -55,7 +56,7 @@ public class OrderServiceImpl implements OrderService {
         order.setGuestName(requestDTO.getGuestName());
         order.setGuestEmail(requestDTO.getGuestEmail());
         order.setGuestPhone(requestDTO.getGuestPhone());
-        order.setStatus("QUOTE_REQUEST");
+        order.setStatus(OrderStatus.QUOTE_REQUEST);
 
         return processOrderItemsAndSave(order, requestDTO);
     }
@@ -118,7 +119,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderResponseDTO updateOrderStatus(String id, String status) {
+    public OrderResponseDTO updateOrderStatus(String id, OrderStatus status) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
@@ -129,9 +130,21 @@ public class OrderServiceImpl implements OrderService {
         return mapToResponse(orderRepository.save(order));
     }
 
+
     @Override
-    public List<OrderResponseDTO> getAllOrders() {
-        return orderRepository.findAll().stream()
+    public List<OrderResponseDTO> getAllActualOrders() {
+        // Strict Filter: Fetch everything that is NOT a quote
+        return orderRepository.findByStatusNot(OrderStatus.QUOTE_REQUEST)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OrderResponseDTO> getAllPublicQuotes() {
+        // Strict Filter: Fetch ONLY quotes
+        return orderRepository.findByStatus(OrderStatus.QUOTE_REQUEST)
+                .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -140,7 +153,7 @@ public class OrderServiceImpl implements OrderService {
         OrderResponseDTO response = new OrderResponseDTO();
         response.setOrderId(order.getOrderId());
         response.setCustomerId(order.getCustomerId());
-        response.setStatus(order.getStatus());
+        response.setStatus(order.getStatus().toString());
         response.setOrderDate(order.getOrderDate());
         response.setTotalAmount(order.getTotalAmount());
         response.setDiscountApplied(order.getDiscountApplied());

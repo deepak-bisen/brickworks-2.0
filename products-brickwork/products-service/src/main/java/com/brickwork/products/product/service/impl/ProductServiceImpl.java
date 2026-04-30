@@ -79,7 +79,6 @@ public class ProductServiceImpl implements ProductService {
         existingProduct.setDescription(productDTO.getDescription());
         existingProduct.setCategory(productDTO.getCategory());
         existingProduct.setDimensions(productDTO.getDimensions());
-        existingProduct.setColor(productDTO.getColor());
         existingProduct.setBrickType(productDTO.getBrickType());
         existingProduct.setUnitPrice(productDTO.getUnitPrice());
         existingProduct.setStockQuantity(productDTO.getStockQuantity());
@@ -98,9 +97,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductDTO mapToDTO(Product product) {
-        return new ProductDTO(product.getProductId(), product.getName(), product.getColor(), product.getDescription(),
-                product.getBrickType(), product.getCategory(), product.getDimensions(),
-                product.getUnitPrice(), product.getStockQuantity(), product.getEstimatedCost(),
+        return new ProductDTO(product.getProductId(), product.getName(), product.getDescription(),
+                product.getCategory(),product.getUnitPrice(), product.getStockQuantity(),product.getBrickType()
+                , product.getDimensions(), product.getEstimatedCost(),
                 product.getBulkDiscountThreshold(), product.getImageName(), product.getImageType(), product.getImageData());
     }
 
@@ -109,14 +108,15 @@ public class ProductServiceImpl implements ProductService {
         product.setName(dto.getName());
         product.setDescription(dto.getDescription());
         product.setCategory(dto.getCategory());
+        product.setUnitPrice(dto.getUnitPrice());
+        product.setStockQuantity(dto.getStockQuantity());
+        product.setBrickType(dto.getBrickType());
+        product.setDimensions(dto.getDimensions());
+        product.setEstimatedCost(dto.getEstimatedCost());
+        product.setBulkDiscountThreshold(dto.getBulkDiscountThreshold());
         product.setImageName(dto.getName());
         product.setImageType(dto.getImageType());
         product.setImageData(dto.getImageData());
-        product.setDimensions(dto.getDimensions());
-        product.setUnitPrice(dto.getUnitPrice());
-        product.setStockQuantity(dto.getStockQuantity());
-        product.setEstimatedCost(dto.getEstimatedCost());
-        product.setBulkDiscountThreshold(dto.getBulkDiscountThreshold());
         return product;
     }
 }
