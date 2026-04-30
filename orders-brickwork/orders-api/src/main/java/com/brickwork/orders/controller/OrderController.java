@@ -1,4 +1,5 @@
 package com.brickwork.orders.controller;
+import com.brickwork.orders.dto.OrderDTO;
 import com.brickwork.orders.dto.OrderRequestDTO;
 import com.brickwork.orders.dto.OrderResponseDTO;
 import com.brickwork.orders.entity.Order;
@@ -18,19 +19,25 @@ public interface OrderController {
     /**
      * This is the original, PROTECTED endpoint for an admin to create an order.
      * It will require a valid JWT.
-     *
+     */
     @PostMapping
-    public Order CreateOrder(@RequestBody OrderRequestDTO orderRequestDTO);
-*/
+    ResponseEntity<OrderResponseDTO> CreateOrder(@RequestBody OrderRequestDTO orderRequestDTO);
+
 
     @GetMapping("/{id}")
     ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable("id") String id);
 
     // Added for Phase 2: Status updates (e.g. Pending -> Dispatched)
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<?> updateOrderStatus(@PathVariable("id") String id, @RequestParam("status")  String status);
+    @PutMapping("/{id}/status")
+    ResponseEntity<?> updateOrderStatus(@PathVariable("id") String id, @RequestParam("status")  String status);
 
     // --- NEW ENDPOINTS FOR ADMIN PANEL ---
-    @GetMapping
-    public ResponseEntity<List<Order>> getAllOrders();
+    //     @GetMapping
+    //     ResponseEntity<List<OrderDTO>> getAllOrders();
+
+
+    // RESTORED PHASE 1: Endpoint for the secure Customer Dashboard
+    @GetMapping("/customer/{customerId}")
+    ResponseEntity<List<OrderResponseDTO>> getOrdersByCustomer(@PathVariable("customerId") String customerId);
+
 }

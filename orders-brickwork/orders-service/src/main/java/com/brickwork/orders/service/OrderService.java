@@ -16,9 +16,9 @@ public interface OrderService {
 
   //  Order createOrderWithStatus(OrderRequestDTO orderRequest, String status);
 
-  //  List<Order> getAllOrders();
+  //  List<OrderDTO> getAllOrders();
 
     OrderResponseDTO updateOrderStatus(String orderId, String status);
-
+    List<OrderResponseDTO> getOrdersByCustomer(String customerId);
     OrderResponseDTO getOrderById(String orderId);
 }

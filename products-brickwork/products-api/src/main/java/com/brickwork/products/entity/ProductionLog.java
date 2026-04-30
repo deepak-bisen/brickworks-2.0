@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Table(name = "production_logs")
 public class ProductionLog {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String productionLogId;
 
     private String managerId; // Tracks which employee created the log

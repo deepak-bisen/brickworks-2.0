@@ -9,7 +9,7 @@ import lombok.Data;
 @Table(name = "ORDER_DETAILS")
 public class OrderDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String odId;
 
     // This defines the "many" side of the relationship. Many OrderDetail items belong to one Order.

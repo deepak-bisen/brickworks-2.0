@@ -1,10 +1,7 @@
 package com.brickwork.orders.service.impl;
 
 import com.brickwork.orders.client.ProductClient;
-import com.brickwork.orders.dto.OrderItemRequestDTO;
-import com.brickwork.orders.dto.OrderRequestDTO;
-import com.brickwork.orders.dto.OrderResponseDTO;
-import com.brickwork.orders.dto.ProductDTO;
+import com.brickwork.orders.dto.*;
 import com.brickwork.orders.entity.Order;
 import com.brickwork.orders.entity.OrderDetails;
 import com.brickwork.orders.repository.OrderRepository;
@@ -15,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -27,11 +25,28 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponseDTO createOrder(OrderRequestDTO requestDTO) {
+
+        // RESTORED PHASE 1 VALIDATION: Ensure public leads provide valid contact info
+        boolean isGuest = requestDTO.getCustomerId() == null || requestDTO.getCustomerId().trim().isEmpty();
+
+        if (isGuest && (requestDTO.getGuestPhone() == null || requestDTO.getGuestPhone().length() < 10)) {
+            throw new IllegalArgumentException("A valid 10-digit phone number is required to request a quote.");
+        }
+
         Order order = new Order();
-        order.setCustomerId(requestDTO.getCustomerId());
-        order.setDeliveryAddress(requestDTO.getDeliveryAddress());
         order.setOrderDate(LocalDateTime.now());
-        order.setStatus("PENDING_PAYMENT");
+        order.setDeliveryAddress(requestDTO.getDeliveryAddress());
+
+        // Differentiate between logged-in Contractor and Public Guest (FUNC-005)
+        if (!isGuest) {
+            order.setCustomerId(requestDTO.getCustomerId());
+            order.setStatus("PENDING_PAYMENT");
+        } else {
+            order.setGuestName(requestDTO.getGuestName());
+            order.setGuestEmail(requestDTO.getGuestEmail());
+            order.setGuestPhone(requestDTO.getGuestPhone());
+            order.setStatus("QUOTE_REQUEST");
+        }
 
         double totalAmount = 0.0;
         double totalCost = 0.0;
@@ -40,12 +55,13 @@ public class OrderServiceImpl implements OrderService {
         List<OrderDetails> detailsList = new ArrayList<>();
 
         for (OrderItemRequestDTO item : requestDTO.getItems()) {
-
+            // Fetch live product data via Feign
             ProductDTO product = productClient.getProductById(item.getProductId());
 
             double itemTotal = product.getUnitPrice() * item.getQuantity();
             double itemCost = product.getEstimatedCost() * item.getQuantity();
 
+            // Phase 2: Apply Bulk Discount logic
             if (product.getBulkDiscountThreshold() != null && item.getQuantity() >= product.getBulkDiscountThreshold()) {
                 double discount = itemTotal * 0.05;
                 totalDiscount += discount;
@@ -55,7 +71,7 @@ public class OrderServiceImpl implements OrderService {
             totalAmount += itemTotal;
             totalCost += itemCost;
 
-            // NEW: Create the OrderDetail record
+            // Create Line Items
             OrderDetails detail = new OrderDetails();
             detail.setOrder(order);
             detail.setProductId(product.getProductId());
@@ -64,16 +80,20 @@ public class OrderServiceImpl implements OrderService {
             detailsList.add(detail);
         }
 
-        double netProfit = totalAmount - totalCost;
-
+        // Phase 2: Save Financials
         order.setTotalAmount(totalAmount);
         order.setDiscountApplied(totalDiscount);
-        order.setTotalProfit(netProfit);
-        order.setOrderDetails(detailsList); // Link items to order
+        order.setTotalProfit(totalAmount - totalCost);
+        order.setOrderDetails(detailsList);
 
         Order savedOrder = orderRepository.save(order);
         return mapToResponse(savedOrder);
     }
+
+//    @Override
+//    public List<OrderDTO> getAllOrders() {
+//        return mapToResponse(orderRepository.findAll());
+//    }
 
     @Override
     public OrderResponseDTO getOrderById(String id) {
@@ -82,12 +102,23 @@ public class OrderServiceImpl implements OrderService {
         return mapToResponse(order);
     }
 
+    // RESTORED PHASE 1: Implementation for Customer Portal
+    @Override
+    public List<OrderResponseDTO> getOrdersByCustomer(String customerId) {
+        return orderRepository.findByCustomerId(customerId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     @Override
     public OrderResponseDTO updateOrderStatus(String id, String status) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
         order.setStatus(status);
+
+        // TODO: Future trigger for Notification Service (FUNC-012)
+
         return mapToResponse(orderRepository.save(order));
     }
 

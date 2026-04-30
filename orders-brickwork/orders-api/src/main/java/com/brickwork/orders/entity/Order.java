@@ -18,8 +18,14 @@ public class Order {
 
     // We store only the ID of the customer, not a direct database link.
     // This is a core concept in microservices.
+    //for authenticated users
     @Column(nullable = false)
     private String customerId;
+
+    // RESTORED PHASE 1: For Public Lead Generation (FUNC-005)
+    private String guestName;
+    private String guestPhone;
+    private String guestEmail;
 
     @Column(nullable = false)
     private LocalDateTime orderDate;
@@ -27,15 +33,13 @@ public class Order {
     @Column(nullable = false)
     private String status;
 
-    // Phase 1: Standard Total
-    @Column
-    private Double totalAmount;
-//  private Double totalCost;
-
     @Column(length = 500) // 500 characters for a full address
     private String deliveryAddress;
 
     // Phase 2: Enterprise Financial Tracking
+    //Standard Total
+    @Column
+    private Double totalAmount;
     private Double totalProfit;
     private Double discountApplied;
 

@@ -10,29 +10,23 @@ import java.util.List;
 // This class represents the JSON object we expect to receive when a user wants to create an order.
 @Data
 public class OrderRequestDTO {
+
     private String customerId;
+
     private List<OrderItemRequestDTO> items;
+
+    @NotBlank(message = "address number is required")
     private String deliveryAddress;
 
     //for save customers when they request a quote
     @NotBlank(message = "name is required")
-    private String name;
+    private String guestName;
 
     @NotBlank(message = "phone number is required")
     @Pattern(regexp = "^\\d{10}$", message = "Phone must be between 10 digits")
-    private String phone;
+    private String guestPhone;
 
     @NotBlank(message = "email number is required")
     @Email(message = "Please provide a valid email address")
-    private String email;
-
-    @NotBlank(message = "address number is required")
-    private String address;
+    private String guestEmail;
 }
-
-/*
-/ Phase 2 Financials
-    private Double totalAmount;
-    private Double discountApplied;
-    private Double netProfit;
- */

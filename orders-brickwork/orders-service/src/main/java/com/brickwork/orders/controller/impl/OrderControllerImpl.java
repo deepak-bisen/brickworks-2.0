@@ -41,23 +41,27 @@ public class OrderControllerImpl implements OrderController {
     /**
      * This is the original, PROTECTED endpoint for an admin to create an order.
      * It will require a valid JWT.
-     *
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Order CreateOrder(@RequestBody OrderRequestDTO orderRequestDTO) {
-        return orderService.createOrder(orderRequestDTO);
+    public ResponseEntity<OrderResponseDTO> CreateOrder(@RequestBody OrderRequestDTO orderRequestDTO) {
+        return ResponseEntity.ok(orderService.createOrder(orderRequestDTO));
     }
-*/
 
     // --- NEW ENDPOINTS FOR ADMIN PANEL ---
 
-    @GetMapping
-    public ResponseEntity<List<Order>> getAllOrders() {
-        try{
-        return ResponseEntity.ok(orderService.getAllOrders());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+//    @GetMapping
+//    public ResponseEntity<List<OrderDTO>> getAllOrders() {
+//        try{
+//        return ResponseEntity.ok(orderService.getAllOrders());
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//        }
+//    }
+
+    @Override
+    public ResponseEntity<List<OrderResponseDTO>> getOrdersByCustomer(String customerId) {
+        return ResponseEntity.ok(orderService.getOrdersByCustomer(customerId));
     }
 
     @PatchMapping("/{id}/status")
