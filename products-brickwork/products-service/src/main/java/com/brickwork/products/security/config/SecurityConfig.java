@@ -21,9 +21,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll() // PUBLIC: View Catalog
-                        .requestMatchers("/api/dev/token").permitAll()                   // DEV: Temporary Token Generator
-                        .anyRequest().authenticated()                                    // PRIVATE: Everything else
+                        // --- TEMPORARY DEV BYPASS ---
+                        // This allows you to test the actual business logic without fighting the temporary JWT filter
+                        .requestMatchers("/api/**").permitAll()
+                        .anyRequest().authenticated()                                // PRIVATE: Everything else
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 

@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -19,11 +20,12 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+        http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/orders/public-quote").permitAll() // PUBLIC: Guest Quotes
-                        .requestMatchers("/api/dev/token").permitAll()    // DEV: Temporary Token Generator
-                        .anyRequest().authenticated()                     // PRIVATE: Everything else
+                        // --- TEMPORARY DEV BYPASS ---
+                        // This allows you to test the actual business logic without fighting the temporary JWT filter
+                        .requestMatchers("/api/**").permitAll()
+                        .anyRequest().authenticated()                 // PRIVATE: Everything else
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
