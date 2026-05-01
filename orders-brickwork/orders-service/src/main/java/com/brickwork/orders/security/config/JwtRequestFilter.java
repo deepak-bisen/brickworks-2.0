@@ -7,20 +7,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
-
-    @Autowired
-    private UserDetailsService userDetailsService;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -34,33 +31,28 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         String username = null;
         String jwt = null;
 
-        // 1. Check for the Authorization header and the "Bearer " prefix
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwt = authorizationHeader.substring(7); // Extract the token
-            username = jwtUtil.extractUsername(jwt);
-        }
-
-        // 2. If we have a username and there is no user currently authenticated
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-            // 3. Load the user's details from the database
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-
-            // 4. Validate the token (does the username match? is it expired?)
-            if (jwtUtil.validateToken(jwt, userDetails)) {
-
-                // 5. If valid, create an authentication token
-                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                usernamePasswordAuthenticationToken
-                        .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // 6. Set this token in the SecurityContext, effectively "logging in" the user for this one request
-                SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+            jwt = authorizationHeader.substring(7);
+            try {
+                username = jwtUtil.extractUsername(jwt);
+            } catch (Exception e) {
+                System.out.println("JWT Token is invalid or expired");
             }
         }
 
-        // 7. Pass the request on to the next filter in the chain
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (jwtUtil.validateToken(jwt)) {
+                String role = jwtUtil.extractRole(jwt);
+
+                SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role != null ? role : "ROLE_CUSTOMER");
+
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        username, null, Collections.singletonList(authority));
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        }
         chain.doFilter(request, response);
     }
 }

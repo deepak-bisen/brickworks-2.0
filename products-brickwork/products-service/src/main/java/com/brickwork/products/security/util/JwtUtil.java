@@ -2,88 +2,48 @@ package com.brickwork.products.security.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
 
-//Util class for JWT
-//Has methods for generating token , validate, isExpiry etc.
-
-@Service
+@Component
 public class JwtUtil {
 
-    // A secret key to sign the JWT. In a real production app, this should be a much more complex
-    // and secure key, stored safely (e.g., in environment variables).
-    // private String SECRET_KEY = "brickworks_secret_key";
+    // Using the exact same secret key as users-brickwork!
+    @Value("${jwt.secret:5f4dcc3b5aa765d61d8327deb882cf99b8e14ab75f4dcc3b5aa765d61d8327de}")
+    private String secret;
 
-    // A more secure, longer secret key. Must be long enough for the HS256 algorithm.
-    // This MUST be identical to the key in our employee-service
-    private final String SECRET_KEY = "BrickWorksProSecretKeyForJWTGenerationWhichIsSecureAndLongEnough";
-
-    // --- NEW METHOD to generate a proper Key object ---
-    private Key getSigningKey() {
-        byte[] keyBytes = this.SECRET_KEY.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
+    public Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
-    // Extracts the username from a given token
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return extractAllClaims(token).getSubject();
     }
 
-    // Extracts the expiration date from a given token
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    public String extractRole(String token) {
+        return (String) extractAllClaims(token).get("role");
     }
 
-    // A generic function to extract a specific claim (piece of information) from the token
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
-    }
-    private Claims extractAllClaims(String token) {
-        // return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
-        // --- UPDATED to use the Key object ---
-        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
-    }
-
-
-    // Checks if the token has expired
-    private Boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            System.out.println("Invalid JWT Signature/Expired: " + e.getMessage());
+            return false;
+        }
     }
 
-    // Generates a new JWT for a given UserDetails object
-    // This service only validates, but we include the whole file for consistency
-    public String generateToken(UserDetails userDetails) {
-        Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername());
-    }
-
-    private String createToken(Map<String, Object> claims, String subject) {
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject) // The subject is the username
-                .setIssuedAt(new Date(System.currentTimeMillis())) // Token creation time
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // Token valid for 10 hours
-                // .signWith(SignatureAlgorithm.HS256, SECRET_KEY) // Sign the token with our secret key
-                // .compact();
-                // --- UPDATED to use the Key object and specify the algorithm ---
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    // Validates the token by checking if the username matches and if it has not expired
-    public Boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    private Key getSignKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

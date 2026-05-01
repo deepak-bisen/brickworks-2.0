@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -19,20 +19,25 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+        http
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // --- TEMPORARY DEV BYPASS ---
-                        // This allows you to test the actual business logic without fighting the temporary JWT filter
-                       // .requestMatchers("/api/**").permitAll()
-                        //.anyRequest().authenticated()                                // PRIVATE: Everything else
-                        // Let Swagger UI load!
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        // Let everything else through!
-                        .anyRequest().permitAll()
-                )
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                        // Public Routes (No token needed to view catalog)
+                        .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
 
-   //     http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+                        // Admin Only: Creating or updating products
+                        .requestMatchers(HttpMethod.POST, "/api/products").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+
+                        // Managers & Admins: Handling factory lifecycle
+                        .requestMatchers("/api/raw-materials/**", "/api/production-logs/**").hasAnyRole("ADMIN", "MANAGER","STAFF")
+
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }
