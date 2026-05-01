@@ -6,6 +6,7 @@ import com.brickwork.products.product.repository.ProductRepository;
 import com.brickwork.products.product.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -35,7 +36,9 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findByCategory(category).stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
+
     @Override
+    @Transactional
     public ProductDTO createProduct(ProductDTO productDTO, MultipartFile imageFile) throws IOException {
         Product product = mapToEntity(productDTO);
         product.setImageName(imageFile.getOriginalFilename());
@@ -82,19 +85,22 @@ public class ProductServiceImpl implements ProductService {
      * @throws RuntimeException if the product is not found.
      */
     @Override
+    @Transactional
     public ProductDTO updateProduct(String productId, ProductDTO productDTO, MultipartFile imageFile) throws IOException {
         // Find the existing product
         Product existingProduct = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
-        // Update the fields
-        existingProduct.setName(productDTO.getName());
-        existingProduct.setDescription(productDTO.getDescription());
-        existingProduct.setCategory(productDTO.getCategory());
-        existingProduct.setDimensions(productDTO.getDimensions());
-        existingProduct.setBrickType(productDTO.getBrickType());
-        existingProduct.setUnitPrice(productDTO.getUnitPrice());
-        existingProduct.setStockQuantity(productDTO.getStockQuantity());
+        // Only update fields if they are NOT null in the DTO
+        if (productDTO.getName() != null) existingProduct.setName(productDTO.getName());
+        if (productDTO.getDescription() != null) existingProduct.setDescription(productDTO.getDescription());
+        if (productDTO.getCategory() != null) existingProduct.setCategory(productDTO.getCategory());
+        if (productDTO.getDimensions() != null) existingProduct.setDimensions(productDTO.getDimensions());
+        if (productDTO.getBrickType() != null) existingProduct.setBrickType(productDTO.getBrickType());
+        if (productDTO.getUnitPrice() != null) existingProduct.setUnitPrice(productDTO.getUnitPrice());
+        if (productDTO.getStockQuantity() != null) existingProduct.setStockQuantity(productDTO.getStockQuantity());
+        if (productDTO.getEstimatedCost() != null) existingProduct.setEstimatedCost(productDTO.getEstimatedCost());
+        if (productDTO.getBulkDiscountThreshold() != null) existingProduct.setBulkDiscountThreshold(productDTO.getBulkDiscountThreshold());
 
         if (imageFile != null && !imageFile.isEmpty()) {
             existingProduct.setImageName(imageFile.getOriginalFilename());

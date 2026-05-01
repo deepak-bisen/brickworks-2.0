@@ -26,6 +26,9 @@ public class SecurityConfig {
                         // This allows you to test the actual business logic without fighting the temporary JWT filter
                        // .requestMatchers("/api/**").permitAll()
                        // .anyRequest().authenticated()                 // PRIVATE: Everything else
+                        // Let Swagger UI load!
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        // Let everything else through!
                         .anyRequest().permitAll()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

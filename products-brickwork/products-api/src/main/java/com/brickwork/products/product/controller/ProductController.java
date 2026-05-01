@@ -16,7 +16,7 @@ public interface ProductController {
     @GetMapping("/{productId}")
     ResponseEntity<ProductDTO> getProductById(@PathVariable("productId") String productId);
 
-    @GetMapping
+    @GetMapping("/all")
     ResponseEntity<List<ProductDTO>> getAllProducts();
 
     @GetMapping("/category/{category}")
@@ -26,8 +26,10 @@ public interface ProductController {
     @ResponseStatus(HttpStatus.CREATED)  // Sets the HTTP status code to 201 Created on success
     ResponseEntity<?> createProduct(@ModelAttribute ProductDTO productDTO, @RequestParam("imageFile") MultipartFile imageFile); // @RequestBody tells Spring to convert the incoming JSON into a Product object
 
-    @PutMapping(value = "{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ResponseEntity<?> updateProduct(@PathVariable String productID, @RequestPart("productDTO") ProductDTO productDTO, @RequestPart(value = "imageFile", required = false) MultipartFile imageFile);
+    @PatchMapping(value = "{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<?> updateProduct(@PathVariable String productID,
+                                    @ModelAttribute ProductDTO productDTO,
+                                    @RequestPart(value = "imageFile", required = false) MultipartFile imageFile);
 
     @DeleteMapping("/{productId}")
     ResponseEntity<Void> deleteProduct(@PathVariable String productId);
