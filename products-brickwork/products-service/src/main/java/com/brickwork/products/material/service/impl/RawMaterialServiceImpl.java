@@ -6,6 +6,7 @@ import com.brickwork.products.material.repository.RawMaterialRepository;
 import com.brickwork.products.material.service.RawMaterialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ public class RawMaterialServiceImpl implements RawMaterialService {
     }
 
     @Override
+    @Transactional
     public RawMaterialDTO addMaterial(RawMaterialDTO dto) {
         RawMaterial material = new RawMaterial();
         material.setName(dto.getName());
@@ -38,6 +40,7 @@ public class RawMaterialServiceImpl implements RawMaterialService {
     }
 
     @Override
+    @Transactional
     public RawMaterialDTO updateMaterialStock(String id, Double stockAdded) {
         RawMaterial rawMaterial = rawMaterialRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("RawMaterial not found with ID: " + id));
