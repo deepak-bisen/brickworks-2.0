@@ -11,6 +11,7 @@
 
     <artifactId>orders-api</artifactId>
     <name>orders-api</name>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
