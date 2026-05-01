@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Data
 public class UserDTO {
     // Used for responses
-    private String id;
+    private String userId;
 
     // Used for both requests and responses
     private String username;
@@ -16,7 +16,6 @@ public class UserDTO {
     private Role role;
     private String fullName;
     private String phoneNumber;
-    private String companyName;
 
     // Used ONLY for registration requests.
     // It will be ignored (left null) when returning responses to hide it.

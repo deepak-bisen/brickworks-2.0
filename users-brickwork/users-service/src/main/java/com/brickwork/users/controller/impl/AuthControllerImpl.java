@@ -1,10 +1,11 @@
 package com.brickwork.users.controller.impl;
 
 import com.brickwork.users.controller.AuthController;
+import com.brickwork.users.dto.CustomerRegistrationDTO;
+import com.brickwork.users.dto.EmployeeRegistrationDTO;
 import com.brickwork.users.dto.JwtResponseDTO;
 import com.brickwork.users.dto.LoginRequestDTO;
 import com.brickwork.users.dto.UserDTO;
-import com.brickwork.users.dto.UserRegistrationDTO;
 import com.brickwork.users.entity.User;
 import com.brickwork.users.security.JwtUtil;
 import com.brickwork.users.service.UserService;
@@ -29,47 +30,74 @@ public class AuthControllerImpl implements AuthController {
     private JwtUtil jwtUtil;
 
     @Override
-    public ResponseEntity<?> registerUser(UserRegistrationDTO registrationDTO) {
-      // 1. Validation Checks
-      if (userService.existsByEmail(registrationDTO.getEmail())) {
-          return ResponseEntity.badRequest().body("Error: Email already exists!");
-      }
-      if (userService.existsByUsername(registrationDTO.getUsername())) {
-          return ResponseEntity.badRequest().body("Error: Username already exists!");
-      }
+    public ResponseEntity<?> registerUser(UserDTO userDTO) {
+        if (userService.existsByUsername(userDTO.getUsername())) {
+            return ResponseEntity.badRequest().body("Error: Username is already taken!");
+        }
+        if (userService.existsByEmail(userDTO.getEmail())) {
+            return ResponseEntity.badRequest().body("Error: Email is already in use!");
+        }
 
-      //2. Delegate to Service Layer
-        UserDTO savedUser = userService.registerUser(registrationDTO);
+        UserDTO savedUser = userService.registerUser(userDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+    }
 
-      // Return the DTO in the 201 Created response
+    @Override
+    public ResponseEntity<?> registerCustomer(CustomerRegistrationDTO registrationDTO) {
+        if (userService.existsByUsername(registrationDTO.getUsername())) {
+            return ResponseEntity.badRequest().body("Error: Username is already taken!");
+        }
+        if (userService.existsByEmail(registrationDTO.getEmail())) {
+            return ResponseEntity.badRequest().body("Error: Email is already in use!");
+        }
+
+        // Custom Validation: If it's a BUSINESS, they must provide a Company Name
+        if (registrationDTO.getCustomerType() == com.brickwork.users.enums.CustomerType.BUSINESS) {
+            if (registrationDTO.getCompanyName() == null || registrationDTO.getCompanyName().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Error: Business customers must provide a Company Name.");
+            }
+        }
+
+        UserDTO savedUser = userService.registerCustomer(registrationDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+    }
+
+    @Override
+    public ResponseEntity<?> registerEmployee(EmployeeRegistrationDTO registrationDTO) {
+        if (userService.existsByUsername(registrationDTO.getUsername())) {
+            return ResponseEntity.badRequest().body("Error: Username is already taken!");
+        }
+        if (userService.existsByEmail(registrationDTO.getEmail())) {
+            return ResponseEntity.badRequest().body("Error: Email is already in use!");
+        }
+
+        UserDTO savedUser = userService.registerEmployee(registrationDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 
     @Override
     public ResponseEntity<?> authenticateUser(LoginRequestDTO loginRequest) {
-      try{
-          //1. Authentication the user
-          Authentication authentication = authenticationManager.authenticate(
-                  new UsernamePasswordAuthenticationToken(
-                          loginRequest.getUsername(),
-                          loginRequest.getPassword()
-                  )
-          );
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()
+                    )
+            );
 
-          //2. Load the user details and generate token
-          User  user = userService.findByUsername(loginRequest.getUsername())
-                  .orElseThrow(() -> new RuntimeException("User not found"));
+            User user = userService.findByUsername(loginRequest.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-          String jwt = jwtUtil.generateToken(user);
+            String jwt = jwtUtil.generateToken(user);
 
-          return ResponseEntity.ok(new JwtResponseDTO(
-                  jwt,
-                  user.getUsername(),
-                  user.getRole().name()
-          ));
-      } catch (Exception e) {
-          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error: Invalid username or password!");
-      }
+            return ResponseEntity.ok(new JwtResponseDTO(
+                    jwt,
+                    user.getUsername(),
+                    user.getRole().name()
+            ));
 
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+        }
     }
 }

@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
+@Inheritance(strategy = InheritanceType.JOINED)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,20 +28,15 @@ public class User {
     private String email;
 
     @Column(nullable = false)
-    private String password; // This will be Bcrypt hashed!
+    private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
-    // Profile Info
-    @Column(nullable = false)
+    // Common Profile Info
     private String fullName;
-
-    @Column(nullable = false)
     private String phoneNumber;
-
-    private String companyName; // Optional, useful for contractors
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
