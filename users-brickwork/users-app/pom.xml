@@ -20,6 +20,11 @@
             <artifactId>users-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.brickwork.app</groupId>
+            <artifactId>users-service</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- external dependencies -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
