@@ -1,5 +1,6 @@
 package com.brickwork.users.controller.impl;
 
+import com.brickwork.security.util.JwtUtil;
 import com.brickwork.users.controller.AuthController;
 import com.brickwork.users.dto.CustomerRegistrationDTO;
 import com.brickwork.users.dto.EmployeeRegistrationDTO;
@@ -7,7 +8,6 @@ import com.brickwork.users.dto.JwtResponseDTO;
 import com.brickwork.users.dto.LoginRequestDTO;
 import com.brickwork.users.dto.UserDTO;
 import com.brickwork.users.entity.User;
-import com.brickwork.users.security.JwtUtil;
 import com.brickwork.users.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -88,8 +88,12 @@ public class AuthControllerImpl implements AuthController {
             User user = userService.findByUsername(loginRequest.getUsername())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            String jwt = jwtUtil.generateToken(user);
-
+            // Call the new overloaded method from the common library!
+            String jwt = jwtUtil.generateCustomToken(
+                    user.getUsername(),
+                    user.getRole().name(),
+                    user.getUserId()
+            );
             return ResponseEntity.ok(new JwtResponseDTO(
                     jwt,
                     user.getUsername(),

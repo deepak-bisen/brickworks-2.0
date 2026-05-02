@@ -21,6 +21,8 @@
         <module>products-brickwork</module>
         <module>orders-brickwork</module>
         <module>users-brickwork</module>
+        <module>service-registry-brickwork</module>
+        <module>common-security-brickwork</module>
     </modules>
 
     <properties>

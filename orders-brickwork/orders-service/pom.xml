@@ -18,27 +18,10 @@
             <artifactId>orders-api</artifactId>
             <version>${project.version}</version>
         </dependency>
-
+        <!-- Shared Security Logic -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-api</artifactId>
-            <version>0.11.5</version>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-impl</artifactId>
-            <version>0.11.5</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-jackson</artifactId>
-            <version>0.11.5</version>
-            <scope>runtime</scope>
-        </dependency>
-    </dependencies>
+            <groupId>com.brickwork.app</groupId>
+            <artifactId>common-security-brickwork</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>    </dependencies>
 </project>

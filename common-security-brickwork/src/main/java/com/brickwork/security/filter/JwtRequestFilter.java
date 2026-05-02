@@ -1,6 +1,6 @@
-package com.brickwork.orders.security.config;
+package com.brickwork.security.filter;
 
-import com.brickwork.orders.security.util.JwtUtil;
+import com.brickwork.security.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,11 +40,18 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             }
         }
 
+        // Stateless check: Only validate the token signature and extract the role.
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (jwtUtil.validateToken(jwt)) {
                 String role = jwtUtil.extractRole(jwt);
 
-                SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role != null ? role : "ROLE_CUSTOMER");
+                // Ensure the role has the "ROLE_" prefix if Spring expects it (often true for hasRole())
+                String authorityString = (role != null) ? role : "ROLE_CUSTOMER";
+                if (!authorityString.startsWith("ROLE_")) {
+                    authorityString = "ROLE_" + authorityString;
+                }
+
+                SimpleGrantedAuthority authority = new SimpleGrantedAuthority(authorityString);
 
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         username, null, Collections.singletonList(authority));
