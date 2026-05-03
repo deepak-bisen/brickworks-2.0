@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class RefundRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private String refundId;
 
     @ManyToOne
     @JoinColumn(name = "payment_transaction_id", nullable = false)

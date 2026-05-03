@@ -10,20 +10,17 @@ import java.time.LocalDateTime;
 public class InvoiceRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private String invoiceId;
 
     @Column(unique = true, nullable = false)
-    private String invoiceNumber; // e.g., INV-2026-0001
+    private String invoiceNumber;
 
     @Column(unique = true, nullable = false)
     private String orderId;
 
     private Double totalAmount;
     private Double taxAmount;
-
-    // EXTRA PIECE: Document Storage Strategy.
-    // Instead of regenerating the PDF every time, we save it locally or to S3 and store the URL here.
-    private String filePath;
+    private String filePath; // Path where PDF is stored
 
     private LocalDateTime generatedDate = LocalDateTime.now();
 }
