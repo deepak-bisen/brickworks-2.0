@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Map;
 
 // Connects to the orders-brickwork service via Eureka
-@FeignClient(name = "orders-service", path = "/api/orders")
+@FeignClient(name = "orders-brickwork", path = "/api/orders")
 public interface OrderFeignClient {
 
     // Fetch order details dynamically as a Map to populate the PDF
