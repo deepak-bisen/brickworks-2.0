@@ -37,6 +37,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 username = jwtUtil.extractUsername(jwt);
             } catch (Exception e) {
                 System.out.println("JWT Token is invalid or expired");
+                e.printStackTrace();
             }
         }
 
