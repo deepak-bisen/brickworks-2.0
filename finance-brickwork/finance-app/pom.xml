@@ -1,24 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.brickwork.app</groupId>
-        <artifactId>orders-brickwork</artifactId>
+        <artifactId>finance-brickwork</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>orders-app</artifactId>
-    <name>orders-app</name>
+    <groupId>com.brickwork.finance</groupId>
+    <artifactId>finance-app</artifactId>
+    <name>finance-app</name>
     <packaging>jar</packaging>
 
     <dependencies>
         <!-- Import the Service module which contains our business logic -->
         <dependency>
-            <groupId>com.brickwork.app</groupId>
-            <artifactId>orders-service</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.brickwork.finance</groupId>
+            <artifactId>finance-service</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
         <!-- Eureka Client for Microservice Registration -->
@@ -35,7 +34,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <!-- Main entry point for the Order Service application -->
-                    <mainClass>com.brickwork.orders.OrdersBrickworkApplication</mainClass>
+                    <mainClass>com.brickwork.finance.FinanceBrickworkApplication</mainClass>
                 </configuration>
             </plugin>
         </plugins>

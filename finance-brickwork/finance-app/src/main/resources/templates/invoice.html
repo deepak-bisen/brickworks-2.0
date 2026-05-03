@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>BrickWorks Pro - Invoice</title>
+    <!-- Openhtmltopdf requires very strict, well-formed CSS. Use inline or embedded styles -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            width: 100%;
+            border-bottom: 2px solid #D32F2F; /* Brick Red */
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header table {
+            width: 100%;
+        }
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #D32F2F;
+        }
+        .invoice-title {
+            font-size: 28px;
+            text-align: right;
+            color: #555;
+        }
+        .details-section {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        .details-section td {
+            vertical-align: top;
+            width: 50%;
+        }
+        .details-box {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+        .details-box h3 {
+            margin-top: 0;
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        table.items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        table.items th {
+            background-color: #D32F2F;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+        table.items td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        table.items .right {
+            text-align: right;
+        }
+        .totals {
+            width: 50%;
+            float: right;
+            border-top: 2px solid #333;
+            padding-top: 10px;
+        }
+        .totals table {
+            width: 100%;
+        }
+        .totals td {
+            padding: 5px;
+        }
+        .totals .grand-total {
+            font-size: 18px;
+            font-weight: bold;
+            color: #D32F2F;
+        }
+        /* Clearfix for float */
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <table border="0">
+        <tr>
+            <td class="company-name">BrickWorks Pro</td>
+            <td class="invoice-title">TAX INVOICE</td>
+        </tr>
+        <tr>
+            <td>123 Industrial Estate<br/>Nagpur, Maharashtra, 440001<br/>GSTIN: 27AAAAA1234A1Z5</td>
+            <td style="text-align: right;">
+                <strong>Invoice #:</strong> <span th:text="${invoiceNumber}">INV-0000</span><br/>
+                <strong>Date:</strong> <span th:text="${invoiceDate}">2026-05-01</span>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<table class="details-section" border="0">
+    <tr>
+        <td style="padding-right: 10px;">
+            <div class="details-box">
+                <h3>Bill To</h3>
+                <strong th:text="${customerName}">Customer Name</strong><br/>
+                <span th:text="${customerAddress}">Customer Address</span><br/>
+                <span th:if="${customerGst != null}">GSTIN: <span th:text="${customerGst}"></span></span>
+            </div>
+        </td>
+        <td style="padding-left: 10px;">
+            <div class="details-box">
+                <h3>Order Information</h3>
+                <strong>Order ID:</strong> <span th:text="${orderId}">ORD-123</span><br/>
+                <strong>Payment Method:</strong> Razorpay / Online<br/>
+                <strong>Status:</strong> PAID
+            </div>
+        </td>
+    </tr>
+</table>
+
+<table class="items">
+    <thead>
+    <tr>
+        <th>Item Description</th>
+        <th class="right">Quantity</th>
+        <th class="right">Unit Price (₹)</th>
+        <th class="right">Amount (₹)</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- We loop through the items provided by the backend -->
+    <tr th:each="item : ${items}">
+        <td th:text="${item.productName}">Premium Red Brick</td>
+        <td class="right" th:text="${item.quantity}">1000</td>
+        <td class="right" th:text="${#numbers.formatDecimal(item.unitPrice, 1, 'COMMA', 2, 'POINT')}">8.50</td>
+        <td class="right" th:text="${#numbers.formatDecimal(item.totalAmount, 1, 'COMMA', 2, 'POINT')}">8500.00</td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="clearfix">
+    <div class="totals">
+        <table>
+            <tr>
+                <td>Subtotal:</td>
+                <td class="right" th:text="'₹ ' + ${#numbers.formatDecimal(subtotal, 1, 'COMMA', 2, 'POINT')}">₹ 8500.00</td>
+            </tr>
+            <tr>
+                <td>GST (18%):</td>
+                <td class="right" th:text="'₹ ' + ${#numbers.formatDecimal(taxAmount, 1, 'COMMA', 2, 'POINT')}">₹ 1530.00</td>
+            </tr>
+            <tr>
+                <td class="grand-total">Total Amount:</td>
+                <td class="right grand-total" th:text="'₹ ' + ${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 2, 'POINT')}">₹ 10030.00</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div style="margin-top: 50px; font-size: 12px; color: #888; text-align: center;">
+    <p>This is a computer generated invoice and does not require a physical signature.</p>
+    <p>Thank you for choosing BrickWorks Pro.</p>
+</div>
+
+</body>
+</html>

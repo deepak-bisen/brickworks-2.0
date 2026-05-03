@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
-@ComponentScan(basePackages = "com.brickwork.users")
+@ComponentScan(basePackages = "com.brickwork")
 @RestController // <--- TEMPORARY ANNOTATION FOR HEALTH CHECK
 public class UsersBrickworkApplication {
 

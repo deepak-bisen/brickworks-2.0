@@ -11,6 +11,7 @@
 
     <artifactId>orders-service</artifactId>
     <name>orders-service</name>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -23,5 +24,6 @@
             <groupId>com.brickwork.app</groupId>
             <artifactId>common-security-brickwork</artifactId>
             <version>0.0.1-SNAPSHOT</version>
-        </dependency>    </dependencies>
+        </dependency>
+    </dependencies>
 </project>

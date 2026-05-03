@@ -32,7 +32,7 @@ public class SecurityConfig {
 
                         // Admins & Managers updating lifecycles and fetching specific orders
                         .requestMatchers(HttpMethod.GET, "/api/orders/{id}").hasAnyRole("ADMIN", "MANAGER","STAFF", "CUSTOMER")
-                        .requestMatchers(HttpMethod.PUT, "/api/orders/{id}/status").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/orders/{id}/status").hasAnyRole("ADMIN", "MANAGER", "STAFF")
 
                         // Admin Panel specific endpoints
                         .requestMatchers(HttpMethod.GET, "/api/orders/all/orders").hasRole("ADMIN")

@@ -23,6 +23,7 @@
         <module>users-brickwork</module>
         <module>service-registry-brickwork</module>
         <module>common-security-brickwork</module>
+        <module>finance-brickwork</module>
     </modules>
 
     <properties>
