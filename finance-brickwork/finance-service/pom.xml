@@ -24,6 +24,7 @@
         <dependency>
             <groupId>com.razorpay</groupId>
             <artifactId>razorpay-java</artifactId>
+            <version>1.4.6</version>
         </dependency>
 
         <!-- PDF Generation (Thymeleaf to PDF) -->
@@ -34,6 +35,7 @@
         <dependency>
             <groupId>org.xhtmlrenderer</groupId>
             <artifactId>flying-saucer-pdf-openpdf</artifactId>
+            <version>9.1.22</version>
         </dependency>
     </dependencies>
 </project>
