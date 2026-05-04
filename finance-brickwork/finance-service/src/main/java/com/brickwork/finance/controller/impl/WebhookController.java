@@ -1,10 +1,7 @@
 package com.brickwork.finance.controller.impl;
 
-import com.brickwork.finance.entity.PaymentTransaction;
-import com.brickwork.finance.repository.PaymentTransactionRepository;
 import com.razorpay.Utils;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,55 +11,58 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/finance/webhooks")
 public class WebhookController {
 
-    @Value("${razorpay.webhook.secret}") // Add this to your application.properties!
+    @Value("${razorpay.webhook.secret}")
     private String webhookSecret;
 
-    @Autowired
-    private PaymentTransactionRepository transactionRepo;
+    // We inject your PaymentService to actually update the DB once verified
+    // @Autowired
+    // private PaymentService paymentService;
 
-    // EXTRA PIECE: WEBHOOK ENDPOINT
-    // Razorpay sends a POST request here automatically when a payment succeeds.
     @PostMapping("/razorpay")
     public ResponseEntity<String> handleRazorpayWebhook(
             @RequestBody String payload,
             @RequestHeader("X-Razorpay-Signature") String signature) {
 
         try {
-            // 1. Verify the webhook is actually from Razorpay (Security!)
+            // 1. Verify the signature using the Razorpay SDK
             boolean isValid = Utils.verifyWebhookSignature(payload, signature, webhookSecret);
 
             if (!isValid) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Signature");
+                System.err.println("Webhook signature verification failed!");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Signature");
             }
 
-            JSONObject jsonPayload = new JSONObject(payload);
-            String eventName = jsonPayload.getString("event");
+            // 2. Parse the payload to figure out what happened
+            JSONObject event = new JSONObject(payload);
+            String eventType = event.getString("event");
 
-            // 2. Handle the "payment.captured" event
-            if ("payment.captured".equals(eventName)) {
-                JSONObject paymentEntity = jsonPayload.getJSONObject("payload").getJSONObject("payment").getJSONObject("entity");
-                String rzpOrderId = paymentEntity.getString("order_id");
-                String rzpPaymentId = paymentEntity.getString("id");
+            System.out.println("Received verified Razorpay Webhook Event: " + eventType);
 
-                // Find the transaction in our DB
-                transactionRepo.findByRazorpayOrderId(rzpOrderId).ifPresent(transaction -> {
-                    // Idempotency: If the UI already updated it, ignore. If the UI crashed, update it now!
-                    if (transaction.getStatus() != PaymentTransaction.PaymentStatus.SUCCESS) {
-                        transaction.setRazorpayPaymentId(rzpPaymentId);
-                        transaction.setStatus(PaymentTransaction.PaymentStatus.SUCCESS);
-                        transactionRepo.save(transaction);
+            // 3. Handle the specific event
+            if ("order.paid".equals(eventType)) {
+                JSONObject orderEntity = event.getJSONObject("payload").getJSONObject("order").getJSONObject("entity");
+                String rzpOrderId = orderEntity.getString("id");
 
-                        System.out.println("Webhook saved the day! Payment Captured: " + rzpPaymentId);
-                        // TODO: OpenFeign call to Orders Service
-                    }
-                });
+                // Extract receipt (which usually contains your internal orderId if you passed it during creation)
+                String internalOrderId = orderEntity.getString("receipt");
+
+                System.out.println("Order Paid! Razorpay Order ID: " + rzpOrderId);
+
+                // TODO: Call your paymentService here to update the transaction status to SUCCESS
+                // paymentService.processSuccessfulWebhookPayment(rzpOrderId, internalOrderId);
+            }
+            else if ("payment.failed".equals(eventType)) {
+                System.out.println("Payment Failed Event Received.");
+                // TODO: Handle failure logic
             }
 
-            return ResponseEntity.ok("Webhook Processed");
+            // 4. ALWAYS return a 200 OK to Razorpay so they know you received it.
+            // If you don't return 200, Razorpay will keep retrying the webhook!
+            return ResponseEntity.ok("Webhook Received");
 
         } catch (Exception e) {
-            System.err.println("Webhook Error: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            System.err.println("Error processing webhook: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing webhook");
         }
     }
 }

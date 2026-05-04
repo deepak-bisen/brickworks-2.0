@@ -62,6 +62,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public boolean verifyPaymentSignature(String rzpOrderId, String rzpPaymentId, String signature, String orderId) {
+
         try {
             JSONObject options = new JSONObject();
             options.put("razorpay_order_id", rzpOrderId);
@@ -97,7 +98,7 @@ public class PaymentServiceImpl implements PaymentService {
             transactionRepo.save(tx);
 
             // Tell Orders Microservice that payment is done!
-            orderFeignClient.updateOrderStatus(orderId, "CONFIRMED");
+            orderFeignClient.updateOrderStatus(orderId, "PAYMENT_RECEIVED");
         }
     }
 }

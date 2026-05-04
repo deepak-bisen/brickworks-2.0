@@ -27,6 +27,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Webhooks must be public so Razorpay can reach them!
                         .requestMatchers("/api/finance/webhooks/**").permitAll()
+                        .requestMatchers("/error").permitAll()
                         // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
