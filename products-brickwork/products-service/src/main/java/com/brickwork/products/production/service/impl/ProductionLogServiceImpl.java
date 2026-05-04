@@ -29,7 +29,7 @@ public class ProductionLogServiceImpl implements ProductionLogService {
         log.setManagerId(dto.getManagerId());
         log.setStage(dto.getStage());
         log.setQuantity(dto.getQuantity());
-        log.setLogDate(dto.getLogDate());
+        log.setCreatedAt(dto.getCreatedAt());
 
         if (dto.getProductId() != null) {
             Product product = productRepository.findById(dto.getProductId())
@@ -60,7 +60,7 @@ public class ProductionLogServiceImpl implements ProductionLogService {
                 log.getProduct() != null ? log.getProduct().getProductId() : null,
                 log.getStage(),
                 log.getQuantity(),
-                log.getLogDate()
+                log.getCreatedAt()
         );
     }
 }

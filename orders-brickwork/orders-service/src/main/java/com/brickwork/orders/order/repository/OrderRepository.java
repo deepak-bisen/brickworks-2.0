@@ -1,5 +1,7 @@
 package com.brickwork.orders.order.repository;
 
+import com.brickwork.orders.dto.SalesAnalyticsProjection;
+import com.brickwork.orders.dto.TopProductProjection;
 import com.brickwork.orders.entity.Order;
 import com.brickwork.orders.enums.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,4 +23,64 @@ public interface OrderRepository extends JpaRepository<Order,String> {
     // 3. Example of a financial calculation query directly in the database
     @Query("SELECT SUM(o.totalAmount) FROM Order o WHERE o.status != 'QUOTE_REQUEST' AND o.status != 'CANCELLED'")
     Double calculateTotalRealizedRevenue();
+
+
+    //   --  TOTAL SALES AND  PROFIT  ANALYSIS ---
+
+    // 1. YEARLY
+    @Query(value = "SELECT YEAR(created_at) as period, " +
+            "SUM(total_amount) as totalRevenue, SUM(total_profit) as totalProfit " +
+            "FROM orders WHERE status NOT IN ('PENDING', 'CANCELLED') " +
+            "GROUP BY YEAR(order_date) ORDER BY period ASC", nativeQuery = true)
+    List<SalesAnalyticsProjection> getYearlySalesAnalytics();
+
+    // 2. MONTHLY
+    @Query(value = "SELECT DATE_FORMAT(created_at, '%Y-%m') as period, " +
+            "SUM(total_amount) as totalRevenue, SUM(total_profit) as totalProfit " +
+            "FROM orders WHERE status NOT IN ('PENDING', 'CANCELLED') " +
+            "GROUP BY period ORDER BY period ASC", nativeQuery = true)
+    List<SalesAnalyticsProjection> getMonthlySalesAnalytics();
+
+    // 3. WEEKLY
+    @Query(value = "SELECT DATE_FORMAT(created_at, '%Y-W%v') as period, " +
+            "SUM(total_amount) as totalRevenue, SUM(total_profit) as totalProfit " +
+            "FROM orders WHERE status NOT IN ('PENDING', 'CANCELLED') " +
+            "GROUP BY period ORDER BY period ASC", nativeQuery = true)
+    List<SalesAnalyticsProjection> getWeeklySalesAnalytics();
+
+
+    // --- TOP SELLING PRODUCTS ANALYTICS ---
+
+    // 1. YEARLY Top Products
+    @Query(value = "SELECT DATE_FORMAT(o.created_at, '%Y-%m') as period, " +
+            "od.product_id as productId, " +
+            "SUM(od.quantity) as totalQuantitySold " +
+            "FROM orders o " +
+            "JOIN order_details od ON o.order_id = od.order_id " +
+            "WHERE o.status NOT IN ('PENDING', 'CANCELLED') " +
+            "GROUP BY period, productId " +
+            "ORDER BY period DESC, totalQuantitySold DESC", nativeQuery = true)
+    List<TopProductProjection> getYearlyTopProducts();
+
+    // 2. MONTHLY Top Products
+    @Query(value = "SELECT DATE_FORMAT(o.created_at, '%Y-%m') as period, " +
+            "od.product_id as productId, " +
+            "SUM(od.quantity) as totalQuantitySold " +
+            "FROM orders o " +
+            "JOIN order_details od ON o.order_id = od.order_id " +
+            "WHERE o.status NOT IN ('PENDING', 'CANCELLED') " +
+            "GROUP BY period, productId " +
+            "ORDER BY period DESC, totalQuantitySold DESC", nativeQuery = true)
+    List<TopProductProjection> getMonthlyTopProducts();
+
+    // 3. WEEKLY Top Products
+    @Query(value = "SELECT DATE_FORMAT(o.created_at, '%Y-W%v') as period, " +
+            "od.product_id as productId, " +
+            "SUM(od.quantity) as totalQuantitySold " +
+            "FROM orders o " +
+            "JOIN order_details od ON o.order_id = od.order_id " +
+            "WHERE o.status NOT IN ('PENDING', 'CANCELLED') " +
+            "GROUP BY period, productId " +
+            "ORDER BY period DESC, totalQuantitySold DESC", nativeQuery = true)
+    List<TopProductProjection> getWeeklyTopProducts();
 }

@@ -29,7 +29,7 @@ public class Order {
     private String guestEmail;
 
     @Column(nullable = false)
-    private LocalDateTime orderDate;
+    private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING) // Saves the word (e.g., "DISPATCHED") in the DB, not a number
     @Column(nullable = false)

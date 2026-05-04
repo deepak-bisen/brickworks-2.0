@@ -8,7 +8,7 @@ public class OrderResponseDTO {
     private String orderId;
     private String customerId;
     private String status;
-    private LocalDateTime orderDate;
+    private LocalDateTime createdAt;
 
     // Phase 2 Financials
     private Double totalAmount;

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -14,5 +15,5 @@ public class ProductionLogDTO {
     private String productId; // Using String ID for the product reference
     private String stage;
     private Integer quantity;
-    private LocalDate logDate;
+    private LocalDateTime createdAt;
 }

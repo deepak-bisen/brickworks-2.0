@@ -35,7 +35,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order order = new Order();
-        order.setOrderDate(LocalDateTime.now());
+        order.setCreatedAt(LocalDateTime.now());
         order.setDeliveryAddress(requestDTO.getDeliveryAddress());
         order.setCustomerId(requestDTO.getCustomerId());
         order.setGuestName(requestDTO.getGuestName());
@@ -54,7 +54,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order order = new Order();
-        order.setOrderDate(LocalDateTime.now());
+        order.setCreatedAt(LocalDateTime.now());
         order.setDeliveryAddress(requestDTO.getDeliveryAddress());
         order.setGuestName(requestDTO.getGuestName());
         order.setGuestEmail(requestDTO.getGuestEmail());
@@ -164,7 +164,7 @@ public class OrderServiceImpl implements OrderService {
         response.setOrderId(order.getOrderId());
         response.setCustomerId(order.getCustomerId());
         response.setStatus(order.getStatus().toString());
-        response.setOrderDate(order.getOrderDate());
+        response.setCreatedAt(order.getCreatedAt());
         response.setTotalAmount(order.getTotalAmount());
         response.setDiscountApplied(order.getDiscountApplied());
         response.setNetProfit(order.getTotalProfit());

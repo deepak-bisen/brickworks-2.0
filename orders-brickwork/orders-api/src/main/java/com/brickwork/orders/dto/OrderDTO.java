@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 public class OrderDTO {
     private String orderId;
     private String customerId;
-    private LocalDateTime orderDate;
+    private LocalDateTime createdAt;
     private String status;
     private Double totalCost;
     private String deliveryAddress;
