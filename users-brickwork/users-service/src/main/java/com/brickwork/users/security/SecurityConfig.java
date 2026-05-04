@@ -1,6 +1,6 @@
 package com.brickwork.users.security;
 
-import com.brickwork.users.service.CustomUserDetailsService;
+import com.brickwork.users.service.impl.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,7 +40,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Crucial for hashing passwords securely!
+        return new BCryptPasswordEncoder();
     }
 
     @Bean

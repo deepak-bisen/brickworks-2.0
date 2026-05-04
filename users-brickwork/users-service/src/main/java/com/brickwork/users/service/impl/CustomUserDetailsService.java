@@ -1,4 +1,4 @@
-package com.brickwork.users.service;
+package com.brickwork.users.service.impl;
 
 import com.brickwork.users.entity.User;
 import com.brickwork.users.repository.UserRepository;

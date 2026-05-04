@@ -9,8 +9,8 @@ import com.brickwork.users.entity.User;
 import com.brickwork.users.enums.Role;
 import com.brickwork.users.repository.UserRepository;
 import com.brickwork.users.service.UserService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,13 +23,13 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
 
     @Autowired
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private PasswordEncoder passwordEncoder;
 
     // --- REUSABLE HELPER METHOD ---
     private void populateBaseUserFields(User targetEntity, UserDTO sourceDto) {
         targetEntity.setUsername(sourceDto.getUsername());
         targetEntity.setEmail(sourceDto.getEmail());
-        targetEntity.setPassword(bCryptPasswordEncoder.encode(sourceDto.getPassword()));
+        targetEntity.setPassword(passwordEncoder.encode(sourceDto.getPassword()));
         targetEntity.setFullName(sourceDto.getFullName());
         targetEntity.setPhoneNumber(sourceDto.getPhoneNumber());
     }
@@ -89,6 +89,38 @@ public class UserServiceImpl implements UserService {
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }
+
+    @Override
+    @Transactional
+    public void registerNewAdmin(EmployeeRegistrationDTO request) {
+
+        // 1. Validation: Check if username already exists
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("Username '" + request.getUsername() + "' is already taken.");
+        }
+
+        // 2. Map DTO to User Entity
+        User newAdmin = new User();
+        newAdmin.setUsername(request.getUsername());
+
+        // 3. Security: ALWAYS hash the password before saving!
+        newAdmin.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // 4. Force the Role to ADMIN (Ignore whatever the user sent in the request)
+        newAdmin.setRole(Role.ADMIN);
+
+        // 5. Map the remaining fields based on your DB schema/DTO
+        newAdmin.setEmail(request.getEmail());
+        newAdmin.setFullName(request.getFullName());
+        newAdmin.setPhoneNumber(request.getPhoneNumber());
+
+        // Note: If your User entity doesn't auto-generate UUIDs, uncomment the next line:
+        // newAdmin.setId(java.util.UUID.randomUUID().toString());
+
+        // 6. Save to Database
+        userRepository.save(newAdmin);
+    }
+
 
     // Helper method to map Entity to DTO
     private UserDTO mapToDTO(User user) {
