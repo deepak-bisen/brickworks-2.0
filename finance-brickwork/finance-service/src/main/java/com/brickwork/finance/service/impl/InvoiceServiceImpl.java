@@ -4,7 +4,6 @@ import com.brickwork.finance.client.OrderFeignClient;
 import com.brickwork.finance.entity.InvoiceRecord;
 import com.brickwork.finance.repository.InvoiceRecordRepository;
 import com.brickwork.finance.service.InvoiceService;
-import com.brickwork.finance.service.PdfInvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
