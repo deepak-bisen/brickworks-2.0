@@ -31,6 +31,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers("/error").permitAll()
 
                         // Managers & Admins: Handling factory lifecycle
                         .requestMatchers("/api/raw-materials/**", "/api/production-logs/**").hasAnyRole("ADMIN", "MANAGER","STAFF")

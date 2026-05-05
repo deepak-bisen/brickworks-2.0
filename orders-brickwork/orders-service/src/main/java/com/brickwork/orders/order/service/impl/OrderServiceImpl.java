@@ -1,13 +1,14 @@
 package com.brickwork.orders.order.service.impl;
 
 import com.brickwork.orders.client.ProductClient;
-import com.brickwork.orders.dto.OrderItemRequestDTO;
-import com.brickwork.orders.dto.OrderRequestDTO;
-import com.brickwork.orders.dto.OrderResponseDTO;
-import com.brickwork.orders.dto.ProductDTO;
-import com.brickwork.orders.entity.Order;
-import com.brickwork.orders.entity.OrderDetails;
-import com.brickwork.orders.enums.OrderStatus;
+import com.brickwork.orders.notification.service.WhatsAppNotificationService;
+import com.brickwork.orders.order.dto.OrderItemRequestDTO;
+import com.brickwork.orders.order.dto.OrderRequestDTO;
+import com.brickwork.orders.order.dto.OrderResponseDTO;
+import com.brickwork.orders.order.dto.ProductDTO;
+import com.brickwork.orders.order.entity.Order;
+import com.brickwork.orders.order.entity.OrderDetails;
+import com.brickwork.orders.order.enums.OrderStatus;
 import com.brickwork.orders.order.repository.OrderRepository;
 import com.brickwork.orders.order.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private ProductClient productClient;
+
+    @Autowired
+    private WhatsAppNotificationService whatsAppNotificationService;
+
 
     @Override
     public OrderResponseDTO createOrder(OrderRequestDTO requestDTO) {
@@ -122,22 +127,28 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderResponseDTO updateOrderStatus(String id, OrderStatus status) {
-        Order order = orderRepository.findById(id)
+    public String updateOrderStatus(String orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
         // --- NEW: Deduct stock when the order leaves! ---
-        if (status == OrderStatus.DISPATCHED && order.getStatus() != OrderStatus.DISPATCHED) {
+        if (newStatus == OrderStatus.DISPATCHED && order.getStatus() != OrderStatus.DISPATCHED) {
             for (OrderDetails detail : order.getOrderDetails()) {
                 productClient.deductStock(detail.getProductId(), detail.getQuantity());
             }
         }
 
-        order.setStatus(status);
+        order.setStatus(newStatus);
+        orderRepository.save(order);
 
-        // TODO: Future trigger for Notification Service (FUNC-012)
+        // --- THE WHATSAPP TRIGGER ---
+        if ("DISPATCHED".equalsIgnoreCase(String.valueOf(newStatus))) {
+            // Assume order has a getGuestPhone() or you fetch customer phone
+            String phone = order.getGuestPhone() != null ? order.getGuestPhone() : "+910000000000";
+            whatsAppNotificationService.sendDispatchNotification(phone, orderId);
+        }
 
-        return mapToResponse(orderRepository.save(order));
+        return "Order status updated to " + newStatus;
     }
 
 

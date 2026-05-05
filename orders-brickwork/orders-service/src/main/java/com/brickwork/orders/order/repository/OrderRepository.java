@@ -1,9 +1,9 @@
 package com.brickwork.orders.order.repository;
 
-import com.brickwork.orders.dto.SalesAnalyticsProjection;
-import com.brickwork.orders.dto.TopProductProjection;
-import com.brickwork.orders.entity.Order;
-import com.brickwork.orders.enums.OrderStatus;
+import com.brickwork.orders.analytics.dto.SalesAnalyticsProjection;
+import com.brickwork.orders.analytics.dto.TopProductProjection;
+import com.brickwork.orders.order.entity.Order;
+import com.brickwork.orders.order.enums.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

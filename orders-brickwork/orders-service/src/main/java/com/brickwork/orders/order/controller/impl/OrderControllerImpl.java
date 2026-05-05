@@ -1,9 +1,9 @@
 package com.brickwork.orders.order.controller.impl;
 
-import com.brickwork.orders.controller.OrderController;
-import com.brickwork.orders.dto.OrderRequestDTO;
-import com.brickwork.orders.dto.OrderResponseDTO;
-import com.brickwork.orders.enums.OrderStatus;
+import com.brickwork.orders.order.controller.OrderController;
+import com.brickwork.orders.order.dto.OrderRequestDTO;
+import com.brickwork.orders.order.dto.OrderResponseDTO;
+import com.brickwork.orders.order.enums.OrderStatus;
 import com.brickwork.orders.order.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
