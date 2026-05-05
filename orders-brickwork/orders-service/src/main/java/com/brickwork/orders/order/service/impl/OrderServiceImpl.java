@@ -81,6 +81,16 @@ public class OrderServiceImpl implements OrderService {
             for (OrderItemRequestDTO item : requestDTO.getItems()) {
                 ProductDTO product = productClient.getProductById(item.getProductId());
 
+                // STRICT INVENTORY CHECK LOGIC
+                // ==========================================
+                if (product.getStockQuantity() < item.getQuantity()) {
+                    throw new RuntimeException(
+                            "Order Failed: Insufficient stock for product '" + product.getName() + "'. " +
+                                    "You requested " + item.getQuantity() + " but only " + product.getStockQuantity() + " are available. " +
+                                    "Once the stock is available, you will be notified."
+                    );
+                }
+
                 double itemTotal = product.getUnitPrice() * item.getQuantity();
                 double itemCost = product.getEstimatedCost() * item.getQuantity();
 

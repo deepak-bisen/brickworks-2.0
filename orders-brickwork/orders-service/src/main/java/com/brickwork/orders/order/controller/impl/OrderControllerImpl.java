@@ -26,7 +26,7 @@ public class OrderControllerImpl implements OrderController {
      @Override
     public ResponseEntity<?> requestPublicQuote(@RequestBody OrderRequestDTO orderRequestDTO) {
         try {
-        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.requestPublicQuote(orderRequestDTO));
+            return ResponseEntity.status(HttpStatus.CREATED).body(orderService.requestPublicQuote(orderRequestDTO));
         }catch (IllegalArgumentException e){
             //catching validation errors
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
@@ -45,8 +45,19 @@ public class OrderControllerImpl implements OrderController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<OrderResponseDTO> createOrder(@RequestBody OrderRequestDTO orderRequestDTO) {
-        return ResponseEntity.ok(orderService.createOrder(orderRequestDTO));
+    public ResponseEntity<?> createOrder(@RequestBody OrderRequestDTO orderRequestDTO) {
+        try{
+            return ResponseEntity.ok(orderService.createOrder(orderRequestDTO));
+        }catch (IllegalArgumentException e){
+            //catching validation errors
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }catch (Exception e){
+            e.printStackTrace();
+            //catching unexpected errors
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error: " + e.getMessage()));
+        }
+
     }
 
     // --- NEW ENDPOINTS FOR ADMIN PANEL ---

@@ -20,7 +20,7 @@ public interface OrderController {
      * It will require a valid JWT.
      */
     @PostMapping("/create")
-    ResponseEntity<OrderResponseDTO> createOrder(@RequestBody OrderRequestDTO orderRequestDTO);
+    ResponseEntity<?> createOrder(@RequestBody OrderRequestDTO orderRequestDTO);
 
     @GetMapping("/{id}")
     ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable("id") String id);

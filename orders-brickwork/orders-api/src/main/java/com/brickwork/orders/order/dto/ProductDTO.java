@@ -13,4 +13,6 @@ public class ProductDTO {
     private Double unitPrice; // Selling Price
     private Double estimatedCost; // Needed for Profit calc
     private Integer bulkDiscountThreshold; // Needed for Discount calc
+    private Integer stockQuantity;
+
 }
