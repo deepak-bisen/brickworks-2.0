@@ -28,7 +28,7 @@ public interface OrderController {
     // Endpoint for the secure Customer Dashboard
     // Added for Phase 2: Status updates (e.g. Pending -> Dispatched)
     @PutMapping("/{id}/status")
-    ResponseEntity<?> updateOrderStatus(@PathVariable("id") String id, @RequestParam("status") OrderStatus status);
+    ResponseEntity<?> updateOrderStatus(@PathVariable("id") String id, @RequestParam("status") OrderStatus status, @RequestParam(value = "driverDetails", required = false) String driverDetails);
 
     // RESTORED PHASE 1: Endpoint for the secure Customer Dashboard
     @GetMapping("/customer/{customerId}")

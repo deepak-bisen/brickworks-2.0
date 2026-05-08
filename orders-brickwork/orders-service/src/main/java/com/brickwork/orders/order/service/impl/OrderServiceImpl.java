@@ -137,7 +137,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public String updateOrderStatus(String orderId, OrderStatus newStatus) {
+    public String updateOrderStatus(String orderId, OrderStatus newStatus, String driverDetails) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
@@ -155,7 +155,12 @@ public class OrderServiceImpl implements OrderService {
         if ("DISPATCHED".equalsIgnoreCase(String.valueOf(newStatus))) {
             // Assume order has a getGuestPhone() or you fetch customer phone
             String phone = order.getGuestPhone() != null ? order.getGuestPhone() : "+910000000000";
-            whatsAppNotificationService.sendDispatchNotification(phone, orderId);
+
+            // Handle null or empty driver details gracefully!
+            String finalDriverDetails = (driverDetails == null || driverDetails.trim().isEmpty())
+                    ? "Details will be shared shortly or contact support."
+                    : driverDetails;
+            whatsAppNotificationService.sendDispatchNotification(phone, orderId, driverDetails);
         }
 
         return "Order status updated to " + newStatus;

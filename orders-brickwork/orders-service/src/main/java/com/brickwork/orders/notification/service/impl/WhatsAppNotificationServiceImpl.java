@@ -22,13 +22,14 @@ public class WhatsAppNotificationServiceImpl implements WhatsAppNotificationServ
         private final String API_URL = "https://api.ultramsg.com/" + INSTANCE_ID + "/messages/chat";
 
     @Override
-    public void sendDispatchNotification(String customerPhone, String orderId) {
+    public void sendDispatchNotification(String customerPhone, String orderId, String driverDetails) {
             try {
                 RestTemplate restTemplate = new RestTemplate();
 
                 // Format the message
                 String message = "🚚 *BrickWorks Pro Update* \n\n" +
                         "Your Order #" + orderId + " has been DISPATCHED!\n" +
+                        "Driver Details: " + driverDetails + "\n\n" +
                         "Track your order and download your invoice via the Customer Portal. Thank you for choosing BrickWorks!";
 
                 // Prepare API Request Body

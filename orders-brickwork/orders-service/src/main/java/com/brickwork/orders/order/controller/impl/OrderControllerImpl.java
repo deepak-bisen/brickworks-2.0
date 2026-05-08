@@ -87,8 +87,8 @@ public class OrderControllerImpl implements OrderController {
     }
 
     @Override
-    public ResponseEntity<?> updateOrderStatus(@PathVariable String id, OrderStatus status) {
-        return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
+    public ResponseEntity<?> updateOrderStatus(@PathVariable String id, OrderStatus status, String driverDetails) {
+        return ResponseEntity.ok(orderService.updateOrderStatus(id, status, driverDetails));
     }
 
     @Override
