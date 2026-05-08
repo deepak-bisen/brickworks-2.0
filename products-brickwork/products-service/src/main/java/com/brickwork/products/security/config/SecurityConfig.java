@@ -26,6 +26,9 @@ public class SecurityConfig {
                         // Public Routes (No token needed to view catalog)
                         .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
 
+                        // NEW: Explicitly allow the internal stock deduction endpoint (or secure it for any authenticated user)
+                        .requestMatchers(HttpMethod.PUT, "/api/products/*/deduct-stock").permitAll() // Use permitAll if it's strictly internal or authenticated() if passing tokens
+
                         // Admin Only: Creating or updating products
                         .requestMatchers(HttpMethod.POST, "/api/products").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
