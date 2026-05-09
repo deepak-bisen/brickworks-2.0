@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/api-gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/common-security-brickwork/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/finance-brickwork/finance-api/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/finance-brickwork/finance-app/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/finance-brickwork/finance-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/finance-brickwork/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/finance-brickwork/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/orders-brickwork/orders-api/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/orders-brickwork/orders-app/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/orders-brickwork/orders-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/orders-brickwork/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/orders-brickwork/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/products-brickwork/products-api/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/products-brickwork/products-app/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/products-brickwork/products-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/products-brickwork/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/products-brickwork/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/service-registry-brickwork/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/users-brickwork/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/users-brickwork/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/users-brickwork/users-api/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/users-brickwork/users-app/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/BrickWorkPro-2.0-Backend/users-brickwork/users-service/src/main/java" charset="UTF-8" />
+  </component>
+</project>
