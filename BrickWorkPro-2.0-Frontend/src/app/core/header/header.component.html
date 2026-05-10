@@ -1,0 +1,24 @@
+<header class="bg-white shadow-md sticky top-0 z-50">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="text-2xl font-bold text-red-700">🧱 BrickWorks Pro</div>
+
+        <div class="hidden md:flex items-center space-x-6">
+            <a routerLink="/home" class="text-gray-600 hover:text-red-700 font-medium">Home</a>
+            <a routerLink="/products" class="text-gray-600 hover:text-red-700 font-medium">Products</a>
+            <a routerLink="/contact" class="text-gray-600 hover:text-red-700 font-medium">Contact</a>
+
+            @if (isLoggedIn()) {
+                <a routerLink="/admin-dashboard" class="text-blue-600 hover:text-blue-800 font-medium">Admin Dashboard</a>
+                <button (click)="logout()" class="text-gray-600 hover:text-red-700" title="Logout">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                </button>
+            } @else {
+                <a routerLink="/login" class="text-gray-600 hover:text-red-700" title="Admin Login">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                </a>
+            }
+
+            <a routerLink="/quote" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-300">Get a Quote</a>
+        </div>
+    </nav>
+</header>

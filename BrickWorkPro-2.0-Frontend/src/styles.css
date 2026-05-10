@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+/* BrickWorks Pro Brand Theme */
+:root {
+    --brick-red: #b22222;
+    --industrial-gray: #f3f4f6;
+    --text-dark: #1f2937;
+}
+
+body {
+    background-color: var(--industrial-gray);
+    color: var(--text-dark);
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/* Reusing your Phase 1 transition */
+.page-transition {
+    transition: opacity 0.3s ease-in-out;
+}/* You can add global styles to this file, and also import other style files */
