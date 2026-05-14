@@ -1,0 +1,45 @@
+<div class="container mx-auto px-6 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Our Premium Bricks</h1>
+        <span class="bg-red-100 text-red-700 px-4 py-1 rounded-full text-sm font-semibold">
+            {{ products.length }} Products Available
+        </span>
+    </div>
+
+    @if (isLoading) {
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            @for (i of [1,2,3,4]; track i) {
+                <div class="animate-pulse bg-gray-200 h-64 rounded-xl"></div>
+            }
+        </div>
+    }
+
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        @for (product of products; track product.id) {
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
+                <div class="h-48 bg-gray-200 flex items-center justify-center">
+                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xl font-bold text-gray-800">{{ product.name }}</h3>
+                        <span class="text-red-600 font-bold">₹{{ product.price }}</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4 uppercase tracking-wider">{{ product.brickType }}</p>
+
+                    <div class="flex items-center justify-between mt-4">
+                        <span class="text-xs font-semibold px-2 py-1 rounded"
+                              [ngClass]="product.stockQuantity > 500 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'">
+                            Stock: {{ product.stockQuantity }}
+                        </span>
+                        <button class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition-colors">
+                            Add to Quote
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

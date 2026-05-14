@@ -12,14 +12,20 @@ import { Router } from '@angular/router';
 export class LoginComponent {
   username = '';
   password = '';
-  
+
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  onSubmit() {
-    this.authService.login({ username: this.username, password: this.password }).subscribe({
-      next: () => this.router.navigate(['/admin-dashboard']),
-      error: (err) => alert('Login Failed: ' + err.error.message)
-    });
-  }
+ onSubmit() {
+  this.authService.login({ username: this.username, password: this.password }).subscribe({
+    next: (response) => {
+      console.log('Login Successful', response);
+      this.router.navigate(['/admin-dashboard']); // Only navigate on SUCCESS
+    },
+    error: (err) => {
+      console.error('Login Failed', err);
+      alert('Invalid Credentials. Please try again.');
+    }
+  });
+}
 }
