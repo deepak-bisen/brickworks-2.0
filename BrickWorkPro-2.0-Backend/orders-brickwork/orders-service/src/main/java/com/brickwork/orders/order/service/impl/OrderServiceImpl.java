@@ -43,9 +43,9 @@ public class OrderServiceImpl implements OrderService {
         order.setCreatedAt(LocalDateTime.now());
         order.setDeliveryAddress(requestDTO.getDeliveryAddress());
         order.setCustomerId(requestDTO.getCustomerId());
-        order.setGuestName(requestDTO.getGuestName());
-        order.setGuestEmail(requestDTO.getGuestEmail());
-        order.setGuestPhone(requestDTO.getGuestPhone());
+        order.setCustomerName(requestDTO.getCustomerName());
+        order.setCustomerEmail(requestDTO.getCustomerEmail());
+        order.setCustomerPhone(requestDTO.getCustomerPhone());
         order.setStatus(OrderStatus.PENDING_PAYMENT);
 
         return processOrderItemsAndSave(order, requestDTO);
@@ -54,16 +54,16 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderResponseDTO requestPublicQuote(OrderRequestDTO requestDTO) {
         // Strict validation for public leads
-        if (requestDTO.getGuestPhone() == null || requestDTO.getGuestPhone().length() < 10) {
+        if (requestDTO.getCustomerPhone() == null || requestDTO.getCustomerPhone().length() < 10) {
             throw new IllegalArgumentException("A valid 10-digit phone number is required to request a quote.");
         }
 
         Order order = new Order();
         order.setCreatedAt(LocalDateTime.now());
         order.setDeliveryAddress(requestDTO.getDeliveryAddress());
-        order.setGuestName(requestDTO.getGuestName());
-        order.setGuestEmail(requestDTO.getGuestEmail());
-        order.setGuestPhone(requestDTO.getGuestPhone());
+        order.setCustomerName(requestDTO.getCustomerName());
+        order.setCustomerEmail(requestDTO.getCustomerEmail());
+        order.setCustomerPhone(requestDTO.getCustomerPhone());
         order.setStatus(OrderStatus.QUOTE_REQUEST);
 
         return processOrderItemsAndSave(order, requestDTO);
@@ -153,8 +153,8 @@ public class OrderServiceImpl implements OrderService {
 
         // --- THE WHATSAPP TRIGGER ---
         if ("DISPATCHED".equalsIgnoreCase(String.valueOf(newStatus))) {
-            // Assume order has a getGuestPhone() or you fetch customer phone
-            String phone = order.getGuestPhone() != null ? order.getGuestPhone() : "+910000000000";
+            // Assume order has a getCustomerPhone() or you fetch customer phone
+            String phone = order.getCustomerPhone() != null ? order.getCustomerPhone() : "+910000000000";
 
             // Handle null or empty driver details gracefully!
             String finalDriverDetails = (driverDetails == null || driverDetails.trim().isEmpty())

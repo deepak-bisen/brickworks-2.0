@@ -4,6 +4,7 @@ import { ProductListComponent } from './features/products/product-list/product-l
 import { DashboardComponent } from './features/admin/dashboard/dashboard.component';
 // Import your Home component here
  import { HomeComponent } from './features/home/home.component';
+import { QuoteRequestComponent } from './features/orders/quote-request/quote-request.component';
 
 export const routes: Routes = [
   // 1. Default Route: Points to 'home' when the URL is empty
@@ -14,6 +15,7 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'products', component: ProductListComponent },
   { path: 'admin-dashboard', component: DashboardComponent },
+  { path: 'get-quote', component: QuoteRequestComponent },
   // { path: 'contact', component: ContactComponent },
 
   // 3. Wildcard Route: Catches broken URLs and sends them to 'products'

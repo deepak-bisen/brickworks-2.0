@@ -1,0 +1,35 @@
+<div class="max-w-2xl mx-auto my-12 p-8 bg-white shadow-xl rounded-xl border-t-4 border-red-600">
+  <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Get a Bulk Quote</h2>
+
+  <form [formGroup]="quoteForm" (ngSubmit)="submitQuote()" class="space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <input type="text" formControlName="customerName" placeholder="Full Name"
+             class="p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
+      <input type="email" formControlName="customerEmail" placeholder="Email Address"
+             class="p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <input type="text" formControlName="customerPhone" placeholder="Phone Number"
+             class="p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
+      <select formControlName="productId" class="p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
+  <option value="" disabled selected>Select Brick Type</option>
+
+  @for (product of productService.products(); track product.id) {
+    <option [value]="product.id">{{ product.name }}</option>
+  }
+</select>
+    </div>
+
+    <input type="number" formControlName="quantity" placeholder="Quantity (Min 500)"
+           class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
+
+    <textarea formControlName="deliveryAddress" placeholder="Delivery Address" rows="3"
+              class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none"></textarea>
+
+    <button type="submit" [disabled]="quoteForm.invalid"
+            class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition-colors">
+      Submit Request
+    </button>
+  </form>
+</div>

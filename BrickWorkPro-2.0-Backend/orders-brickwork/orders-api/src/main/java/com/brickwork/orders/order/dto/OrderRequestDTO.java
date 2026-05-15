@@ -20,13 +20,13 @@ public class OrderRequestDTO {
 
     //for save customers when they request a quote
     @NotBlank(message = "name is required")
-    private String guestName;
+    private String customerName;
 
     @NotBlank(message = "phone number is required")
     @Pattern(regexp = "^\\d{10}$", message = "Phone must be between 10 digits")
-    private String guestPhone;
+    private String customerPhone;
 
     @NotBlank(message = "email number is required")
     @Email(message = "Please provide a valid email address")
-    private String guestEmail;
+    private String customerEmail;
 }

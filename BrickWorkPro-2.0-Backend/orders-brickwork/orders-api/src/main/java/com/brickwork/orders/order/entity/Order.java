@@ -24,9 +24,9 @@ public class Order {
     private String customerId;
 
     // RESTORED PHASE 1: For Public Lead Generation (FUNC-005)
-    private String guestName;
-    private String guestPhone;
-    private String guestEmail;
+    private String customerName;
+    private String customerPhone;
+    private String customerEmail;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
