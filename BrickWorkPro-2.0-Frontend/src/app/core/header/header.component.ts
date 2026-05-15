@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -13,11 +13,13 @@ import { AuthService } from '../services/auth.service';
 export class HeaderComponent {
   // Injecting the service we created earlier
   authService = inject(AuthService);
+  private router = inject(Router);
 
   // We use the signal from our service to drive the UI
-  isLoggedIn = this.authService.isLoggedIn;
+  isLoggedIn = this.authService.isAuthenticated;
 
-  logout() {
+ onLogout() {
     this.authService.logout();
+    this.router.navigate(['/login']);
   }
-} 
+}

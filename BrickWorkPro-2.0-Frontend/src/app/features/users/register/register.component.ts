@@ -17,6 +17,7 @@ export class RegisterComponent {
 
   isEmployeeMode = signal(false); // Toggle Signal
 
+// Updated form controls to match exact payload
   regForm = this.fb.group({
     username: ['', [Validators.required, Validators.minLength(4)]],
     email: ['', [Validators.required, Validators.email]],
@@ -24,31 +25,58 @@ export class RegisterComponent {
     fullName: ['', Validators.required],
     phoneNumber: ['', Validators.required],
     // Customer specific
-    address: [''],
     customerType: ['INDIVIDUAL'],
+    billingAddress: [''],
     // Employee specific
-    employeeCode: [''],
-    designation: ['']
+    shiftTiming: ['MORNING']
   });
 
-  toggleMode(isEmployee: boolean) {
+ toggleMode(isEmployee: boolean) {
     this.isEmployeeMode.set(isEmployee);
-    this.regForm.reset({ customerType: 'INDIVIDUAL' });
+    // Reset specific fields when toggling
+    this.regForm.patchValue({ customerType: 'INDIVIDUAL', shiftTiming: 'MORNING' });
   }
 
   onSubmit() {
     if (this.regForm.valid) {
-      const data = this.regForm.value as any;
-      const request = this.isEmployeeMode()
-        ? this.authService.registerEmployee(data)
-        : this.authService.registerCustomer(data);
+      const formValue = this.regForm.value;
 
-      request.subscribe({
+      // 1. Extract the shared base data
+      const baseData = {
+        username: formValue.username!,
+        email: formValue.email!,
+        password: formValue.password!,
+        fullName: formValue.fullName!,
+        phoneNumber: formValue.phoneNumber!
+      };
+
+      // 2. Build the EXACT payload based on the mode
+      let request$;
+
+      if (this.isEmployeeMode()) {
+        const employeePayload = { ...baseData, shiftTiming: formValue.shiftTiming! };
+        console.log('Sending Employee Payload:', employeePayload);
+        request$ = this.authService.registerEmployee(employeePayload as any);
+      } else {
+        const customerPayload = {
+          ...baseData,
+          customerType: formValue.customerType!,
+          billingAddress: formValue.billingAddress!
+        };
+        console.log('Sending Customer Payload:', customerPayload);
+        request$ = this.authService.registerCustomer(customerPayload as any);
+      }
+
+      // 3. Send the request
+      request$.subscribe({
         next: () => {
           alert('Registration successful! Please login.');
           this.router.navigate(['/login']);
         },
-        error: (err) => console.error('Registration failed', err)
+        error: (err) => {
+          console.error('Registration failed', err);
+          alert('Registration failed. Check the console for details.');
+        }
       });
     }
   }

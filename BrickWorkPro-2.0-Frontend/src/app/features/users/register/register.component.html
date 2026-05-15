@@ -1,40 +1,95 @@
-<div class="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-  <div class="max-w-md w-full bg-white rounded-xl shadow-lg overflow-hidden border-t-4 border-red-600">
+<div class="min-h-[90vh] flex items-center justify-center p-4 bg-gray-50">
+  <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-t-8 border-red-700">
     <div class="p-8">
-      <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Create Account</h2>
+      <header class="text-center mb-8">
+        <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">BrickWorks Pro</h2>
+        <p class="text-gray-500 mt-2 text-sm">Join the industrial supply network</p>
+      </header>
 
-      <div class="flex mb-6 bg-gray-200 rounded-lg p-1">
+      <div class="flex mb-8 bg-gray-100 rounded-xl p-1.5 border border-gray-200">
         <button (click)="toggleMode(false)"
                 [class.bg-white]="!isEmployeeMode()"
-                class="flex-1 py-2 rounded-md text-sm font-medium transition-all">Customer</button>
+                [class.shadow-md]="!isEmployeeMode()"
+                [class.text-red-700]="!isEmployeeMode()"
+                class="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 text-gray-500">
+          Customer
+        </button>
         <button (click)="toggleMode(true)"
                 [class.bg-white]="isEmployeeMode()"
-                class="flex-1 py-2 rounded-md text-sm font-medium transition-all">Employee</button>
+                [class.shadow-md]="isEmployeeMode()"
+                [class.text-red-700]="isEmployeeMode()"
+                class="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 text-gray-500">
+          Employee
+        </button>
       </div>
 
-      <form [formGroup]="regForm" (ngSubmit)="onSubmit()" class="space-y-4">
-        <input type="text" formControlName="fullName" placeholder="Full Name" class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
-        <input type="email" formControlName="email" placeholder="Email Address" class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
-        <input type="text" formControlName="username" placeholder="Username" class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
-        <input type="password" formControlName="password" placeholder="Password" class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
-        <input type="text" formControlName="phoneNumber" placeholder="Phone Number" class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
+      <form [formGroup]="regForm" (ngSubmit)="onSubmit()" class="space-y-5">
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-gray-500 uppercase px-1">Full Name</label>
+          <input type="text" formControlName="fullName" placeholder="Deepak Bisen"
+                 class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+        </div>
 
-        @if (!isEmployeeMode()) {
-          <select formControlName="customerType" class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
-            <option value="INDIVIDUAL">Individual</option>
-            <option value="CONTRACTOR">Contractor</option>
-          </select>
-          <textarea formControlName="address" placeholder="Delivery Address" class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none"></textarea>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-gray-500 uppercase px-1">Username</label>
+            <input type="text" formControlName="username" placeholder="deepak123"
+                   class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-gray-500 uppercase px-1">Phone</label>
+            <input type="text" formControlName="phoneNumber" placeholder="9876543210"
+                   class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-gray-500 uppercase px-1">Email Address</label>
+          <input type="email" formControlName="email" placeholder="deepak@example.com"
+                 class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-gray-500 uppercase px-1">Password</label>
+          <input type="password" formControlName="password" placeholder="••••••••"
+                 class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+        </div>
+
+       @if (!isEmployeeMode()) {
+          <div class="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
+            <label class="text-xs font-bold text-gray-500 uppercase px-1">Customer Type</label>
+            <select formControlName="customerType"
+                    class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+              <option value="INDIVIDUAL">Individual</option>
+              <option value="CONTRACTOR">Contractor</option>
+            </select>
+          </div>
+          <div class="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
+            <label class="text-xs font-bold text-gray-500 uppercase px-1">Billing Address</label>
+            <textarea formControlName="billingAddress" rows="2" placeholder="e.g. 45 Residential Park, Delhi"
+                      class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all"></textarea>
+          </div>
         } @else {
-          <input type="text" formControlName="employeeCode" placeholder="Employee ID/Code" class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
-          <input type="text" formControlName="designation" placeholder="Designation (e.g. Driver, Sales)" class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
+          <div class="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
+            <label class="text-xs font-bold text-gray-500 uppercase px-1">Shift Timing</label>
+            <select formControlName="shiftTiming"
+                    class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+              <option value="MORNING">Morning Shift</option>
+              <option value="EVENING">Evening Shift</option>
+              <option value="NIGHT">Night Shift</option>
+            </select>
+          </div>
         }
-
         <button type="submit" [disabled]="regForm.invalid"
-                class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition-colors">
-          Sign Up as {{ isEmployeeMode() ? 'Employee' : 'Customer' }}
+                class="w-full py-4 mt-4 bg-red-700 text-white rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-red-800 hover:shadow-red-200/50 disabled:bg-gray-300 disabled:shadow-none transition-all active:scale-[0.98]">
+          Create {{ isEmployeeMode() ? 'Employee' : 'Customer' }} Account
         </button>
       </form>
+
+      <footer class="mt-8 text-center text-sm text-gray-500">
+        Already have an account?
+        <a routerLink="/login" class="text-red-700 font-bold hover:underline">Log In</a>
+      </footer>
     </div>
   </div>
 </div>

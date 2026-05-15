@@ -12,6 +12,5 @@ export interface CustomerRegistration extends BaseRegistration {
 }
 
 export interface EmployeeRegistration extends BaseRegistration {
-  employeeCode: string;
-  designation: string;
+  shiftTiming: string;
 }

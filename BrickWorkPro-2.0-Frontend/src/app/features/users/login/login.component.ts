@@ -1,31 +1,39 @@
 import { Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink], // RouterLink is critical for the "Register" button
   templateUrl: './login.component.html'
 })
 export class LoginComponent {
-  username = '';
-  password = '';
-
+  private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
 
- onSubmit() {
-  this.authService.login({ username: this.username, password: this.password }).subscribe({
-    next: (response) => {
-      console.log('Login Successful', response);
-      this.router.navigate(['/admin-dashboard']); // Only navigate on SUCCESS
-    },
-    error: (err) => {
-      console.error('Login Failed', err);
-      alert('Invalid Credentials. Please try again.');
-    }
+  // Exact match to backend LoginRequestDTO
+  loginForm = this.fb.group({
+    username: ['', Validators.required],
+    password: ['', Validators.required]
   });
-}
+
+  onSubmit() {
+    if (this.loginForm.valid) {
+      this.authService.login(this.loginForm.value as any).subscribe({
+        next: () => {
+          alert('Login successful!');
+          // Redirect to the home page or admin dashboard upon success
+          this.router.navigate(['/home']);
+        },
+        error: (err) => {
+          console.error('Login failed', err);
+          alert('Invalid username or password. Please try again.');
+        }
+      });
+    }
+  }
 }

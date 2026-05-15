@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable, tap } from 'rxjs';
@@ -6,18 +6,24 @@ import { CustomerRegistration, EmployeeRegistration } from '../../features/users
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  // Use the signal to drive the state
-  isLoggedIn = signal<boolean>(!!localStorage.getItem('adminToken'));
+  private http = inject(HttpClient);
+  private apiUrl = `${environment.apiUrl}/api/auth`;
 
-  constructor(private http: HttpClient) {}
+  // Signal to track if the user is currently logged in
+  isAuthenticated = signal<boolean>(this.hasToken());
 
-  login(credentials: any): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/api/auth/login`, credentials).pipe(
+  private hasToken(): boolean {
+    // Check if the token exists in local storage
+    return !!localStorage.getItem('adminToken'); // Ensure this key matches what your auth.interceptor.ts expects
+  }
+
+  login(credentials: { username: string; password: string }) {
+    return this.http.post<any>(`${this.apiUrl}/login`, credentials).pipe(
       tap(response => {
-        if (response.jwt) {
-          localStorage.setItem('adminToken', response.jwt);
-          // Manually update the signal so the UI and Interceptor react instantly
-          this.isLoggedIn.set(true);
+        // Assuming your backend JwtResponseDTO returns the token in a 'token' field
+        if (response && response.token) {
+          localStorage.setItem('adminToken', response.token);
+          this.isAuthenticated.set(true);
         }
       })
     );
@@ -25,12 +31,12 @@ export class AuthService {
 
   logout() {
     localStorage.removeItem('adminToken');
-    this.isLoggedIn.set(false);
+    this.isAuthenticated.set(false);
   }
 
 
-//register customer
-private apiUrl = `${environment.apiUrl}/api/auth`;
+//register customer and employee
+
 
   registerCustomer(data: CustomerRegistration) {
     return this.http.post(`${this.apiUrl}/register/customer`, data);
