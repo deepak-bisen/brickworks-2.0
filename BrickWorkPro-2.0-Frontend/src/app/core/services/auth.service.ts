@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable, tap } from 'rxjs';
+import { CustomerRegistration, EmployeeRegistration } from '../../features/users/models/registration.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -26,4 +27,17 @@ export class AuthService {
     localStorage.removeItem('adminToken');
     this.isLoggedIn.set(false);
   }
+
+
+//register customer
+private apiUrl = `${environment.apiUrl}/api/auth`;
+
+  registerCustomer(data: CustomerRegistration) {
+    return this.http.post(`${this.apiUrl}/register/customer`, data);
+  }
+
+  registerEmployee(data: EmployeeRegistration) {
+    return this.http.post(`${this.apiUrl}/register/employee`, data);
+  }
+
 }

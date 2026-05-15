@@ -13,7 +13,7 @@
       <input type="text" formControlName="customerPhone" placeholder="Phone Number"
              class="p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
       <select formControlName="productId" class="p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none">
-  <option value="" disabled selected>Select Brick Type</option>
+  <option value="">Select Brick Type</option>
 
   @for (product of productService.products(); track product.id) {
     <option [value]="product.id">{{ product.name }}</option>

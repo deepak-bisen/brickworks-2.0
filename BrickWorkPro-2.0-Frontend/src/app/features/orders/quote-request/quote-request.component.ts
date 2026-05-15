@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { OrderService } from '../services/order.service';
 import { ProductService } from '../../products/services/product.service';
+import { OrderRequest } from '../models/order-request.model';
 
 @Component({
   selector: 'app-quote-request',
@@ -16,41 +17,46 @@ export class QuoteRequestComponent implements OnInit {
   private orderService = inject(OrderService);
   productService = inject(ProductService); // To list brick types in dropdown
 
-  ngOnInit(): void {
-    // Fetch products so they appear in the dropdown
-    this.productService.getAllProducts().subscribe();
-  }
-
-  quoteForm = this.fb.group({
-    customerName: ['', Validators.required],
-    customerEmail: ['', [Validators.required, Validators.email]],
-    customerPhone: ['', Validators.required],
-    deliveryAddress: ['', Validators.required],
-    productId: ['', Validators.required],
-    quantity: [1000, [Validators.required, Validators.min(500)]]
+ ngOnInit(): void {
+  this.productService.getAllProducts().subscribe({
+    next: (data) => {
+      console.log('Products loaded for dropdown:', data);
+      // Verify if 'id' exists in the data. If your backend uses 'productId' instead of 'id',
+      // you must change [value]="product.productId" in the HTML.
+    }
   });
+}
+
+quoteForm = this.fb.group({
+  customerName: ['', Validators.required],
+  customerEmail: ['', [Validators.required, Validators.email]],
+  customerPhone: ['', Validators.required],
+  deliveryAddress: ['', Validators.required],
+  // FIX: Match the value="" of the first <option>
+  productId: ['', Validators.required],
+  quantity: [1000, [Validators.required, Validators.min(500)]]
+});
 
   submitQuote() {
     if (this.quoteForm.valid) {
-      const formValue = this.quoteForm.value;
+    const formValue = this.quoteForm.value;
 
-      // DEBUG: Check what the form is actually holding
-     console.log('Form Value:', formValue);
-
-     // 1. Verify the ID isn't null or "undefined"
+    // FIX: Explicitly check for 'undefined' to prevent backend crash
     if (!formValue.productId || formValue.productId === 'undefined') {
-      console.error('Validation Error: Product ID is undefined');
-      alert('Please select a brick type from the list.');
+      alert('Please select a valid brick type from the list.');
       return;
     }
 
-      const requestData = {
-        customerName: formValue.customerName!,
-        customerEmail: formValue.customerEmail!,
-        customerPhone: formValue.customerPhone!,
-        deliveryAddress: formValue.deliveryAddress!,
-        items: [{ productId: formValue.productId!, quantity: Number(formValue.quantity!) }]
-      };
+      const requestData: OrderRequest = {
+      customerName: formValue.customerName!,
+      customerEmail: formValue.customerEmail!,
+      customerPhone: formValue.customerPhone!,
+      deliveryAddress: formValue.deliveryAddress!,
+      items: [{
+        productId: formValue.productId, // Now verified as a real ID
+        quantity: Number(formValue.quantity!)
+      }]
+    };
 
       console.log('Sending Quote Request:', requestData);
 
