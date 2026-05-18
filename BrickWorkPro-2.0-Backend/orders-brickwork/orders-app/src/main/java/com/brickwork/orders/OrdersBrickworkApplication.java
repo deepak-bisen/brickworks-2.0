@@ -10,7 +10,8 @@ import org.springframework.context.annotation.ComponentScan;
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.brickwork.orders.client")
 @ComponentScan(basePackages = {"com.brickwork"})
-public class OrdersBrickworkApplication {
+public class
+OrdersBrickworkApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(OrdersBrickworkApplication.class, args);

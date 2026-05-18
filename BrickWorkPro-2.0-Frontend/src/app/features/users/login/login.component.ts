@@ -7,7 +7,7 @@ import { Router, RouterLink } from '@angular/router';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink], // RouterLink is critical for the "Register" button
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html'
 })
 export class LoginComponent {
@@ -15,7 +15,6 @@ export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  // Exact match to backend LoginRequestDTO
   loginForm = this.fb.group({
     username: ['', Validators.required],
     password: ['', Validators.required]
@@ -24,9 +23,27 @@ export class LoginComponent {
   onSubmit() {
     if (this.loginForm.valid) {
       this.authService.login(this.loginForm.value as any).subscribe({
-        next: () => {
+        next: (res) => {
           alert('Login successful!');
-          // Redirect to the home page or admin dashboard upon success
+
+          try {
+            const token = localStorage.getItem('adminToken');
+            if (token) {
+              // Decode the JWT payload to find the user's role
+              const payload = JSON.parse(atob(token.split('.')[1]));
+              const roles = payload.role || payload.roles || payload.authorities || '';
+
+              // If user is admin, send them to the dashboard
+              if (roles.includes('ADMIN') || roles.includes('ROLE_ADMIN')) {
+                this.router.navigate(['/admin-dashboard']);
+                return;
+              }
+            }
+          } catch (e) {
+            console.error('Error parsing token', e);
+          }
+
+          // Default redirect for Customers/Employees
           this.router.navigate(['/home']);
         },
         error: (err) => {

@@ -11,5 +11,6 @@ export interface Product {
   bulkDiscountThreshold: number;
   imageName?: string;
   imageType?: string;
+  imageData?: string; // Note: imageData (byte[]) from backend is typically converted to a base64 string or an image URL by your service layer.
   // Note: imageData (byte[]) from backend is typically converted to a base64 string or an image URL by your service layer.
 }

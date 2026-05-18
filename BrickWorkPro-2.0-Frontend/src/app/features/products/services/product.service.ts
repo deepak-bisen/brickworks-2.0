@@ -11,7 +11,6 @@ export class ProductService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/api/products`;
 
-  // Signal storing the current list of products
   products = signal<Product[]>([]);
 
   getAllProducts(): Observable<Product[]> {
@@ -20,21 +19,23 @@ export class ProductService {
     );
   }
 
-  // New method for creating products with images
+  // UPDATED METHOD
   addProduct(productData: any, imageFile: File): Observable<Product> {
     const formData = new FormData();
 
-    // Append the JSON part as a Blob with type application/json
-    formData.append('product', new Blob([JSON.stringify(productData)], {
-      type: 'application/json'
-    }));
+    // 1. Loop through the productData object and append each key/value pair separately
+    // This perfectly matches the Spring Boot @ModelAttribute requirement
+    Object.keys(productData).forEach(key => {
+      if (productData[key] !== null && productData[key] !== undefined) {
+        formData.append(key, productData[key].toString());
+      }
+    });
 
-    // Append the actual file
-    formData.append('image', imageFile);
+    // 2. Use 'imageFile' as the exact key to match @RequestParam("imageFile")
+    formData.append('imageFile', imageFile);
 
     // Hit the Admin POST endpoint
     return this.http.post<Product>(this.apiUrl, formData).pipe(
-      // Refresh the signal immediately after successful creation
       tap(() => this.getAllProducts().subscribe())
     );
   }

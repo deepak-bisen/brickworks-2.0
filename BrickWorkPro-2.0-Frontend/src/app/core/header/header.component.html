@@ -11,21 +11,21 @@
         class="text-gray-600 hover:text-red-800 font-medium">Contact</a>
 
       <div class="flex items-center gap-4">
-        @if (authService.isAuthenticated()) {
-        <button (click)="onLogout()" class="text-sm font-bold text-gray-500 hover:text-red-800 transition-colors">
-          Logout
-        </button>
-        } @else {
-        <a routerLink="/login" routerLinkActive="text-red-600"
-          class="text-sm font-bold text-gray-500 hover:text-red-800 transition-colors">
-          Log In
-        </a>
-        <a routerLink="/register"
-          class="bg-red-700 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-red-800 transition-colors shadow-md hover:shadow-red-200/50">
-          Register
-        </a>
-        }
-      </div>
+  @if (authService.isAuthenticated()) {
+
+    @if (authService.isAdmin()) {
+      <a routerLink="/admin-dashboard" routerLinkActive="text-red-600" class="text-sm font-bold text-gray-700 hover:text-red-600">Dashboard</a>
+      <a routerLink="/admin/products" routerLinkActive="text-red-600" class="text-sm font-bold text-gray-700 hover:text-red-600">Add Product</a>
+    }
+
+    <button (click)="onLogout()" class="text-sm font-bold text-gray-500 hover:text-red-600 transition-colors">
+      Logout
+    </button>
+  } @else {
+    <a routerLink="/login" routerLinkActive="text-red-600" class="text-sm font-bold text-gray-500 hover:text-red-600 transition-colors">Log In</a>
+    <a routerLink="/register" class="bg-red-700 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-red-800 transition-colors shadow-md">Register</a>
+  }
+</div>
 
       <a routerLink="/get-quote" routerLinkActive="text-red-700 underline"
         class="bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition duration-300">Get a Quote</a>

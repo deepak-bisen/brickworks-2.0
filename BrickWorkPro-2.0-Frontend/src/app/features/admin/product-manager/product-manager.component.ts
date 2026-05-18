@@ -38,22 +38,29 @@ export class ProductManagerComponent {
   }
 
   onSubmit() {
-    if (this.productForm.valid && this.selectedFile()) {
-      // Pass the exact form value object which now perfectly matches the DTO
-      const productData = this.productForm.value;
-
-      this.productService.addProduct(productData, this.selectedFile()!).subscribe({
-        next: () => {
-          alert('Product added successfully!');
-          this.productForm.reset({
-            unitPrice: 0, estimatedCost: 0, stockQuantity: 0, bulkDiscountThreshold: 0
-          });
-          this.selectedFile.set(null);
-        },
-        error: (err) => console.error('Failed to add product', err)
-      });
-    } else {
-      alert('Please fill all fields and select an image.');
+    // 1. Check File
+    if (!this.selectedFile()) {
+      alert('Please upload an image file.');
+      return;
     }
+
+    // 2. Check Form
+    if (this.productForm.invalid) {
+      alert('Form is incomplete! Check the red fields.');
+      this.productForm.markAllAsTouched(); // Highlights missing fields
+      console.log('Form Errors:', this.productForm.errors);
+      return;
+    }
+
+    // 3. Submit
+    const productData = this.productForm.value;
+    this.productService.addProduct(productData, this.selectedFile()!).subscribe({
+      next: () => {
+        alert('Product added successfully!');
+        this.productForm.reset({ unitPrice: 0, estimatedCost: 0, stockQuantity: 0, bulkDiscountThreshold: 0 });
+        this.selectedFile.set(null);
+      },
+      error: (err) => console.error('Failed to add product', err)
+    });
   }
 }
