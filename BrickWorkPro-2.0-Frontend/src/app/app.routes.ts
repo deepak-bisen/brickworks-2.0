@@ -6,6 +6,7 @@ import { DashboardComponent } from './features/admin/dashboard/dashboard.compone
  import { HomeComponent } from './features/home/home.component';
 import { QuoteRequestComponent } from './features/orders/quote-request/quote-request.component';
 import { RegisterComponent } from './features/users/register/register.component';
+import { ProductManagerComponent } from './features/admin/product-manager/product-manager.component';
 
 export const routes: Routes = [
   // 1. Default Route: Points to 'home' when the URL is empty
@@ -18,6 +19,7 @@ export const routes: Routes = [
   { path: 'products', component: ProductListComponent },
   { path: 'admin-dashboard', component: DashboardComponent },
   { path: 'get-quote', component: QuoteRequestComponent },
+  { path: 'admin/products', component: ProductManagerComponent },
 
   // { path: 'contact', component: ContactComponent },
 

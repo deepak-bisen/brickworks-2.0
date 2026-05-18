@@ -1,8 +1,15 @@
 export interface Product {
-  id?: number;
+  productId: string; // Matches backend exact key
   name: string;
-  brickType: string;
-  price: number;
+  description: string;
+  category: string;
+  unitPrice: number; // Replaced 'price'
   stockQuantity: number;
-  imageUrl?: string;
+  brickType: string;
+  dimensions: string;
+  estimatedCost: number;
+  bulkDiscountThreshold: number;
+  imageName?: string;
+  imageType?: string;
+  // Note: imageData (byte[]) from backend is typically converted to a base64 string or an image URL by your service layer.
 }
