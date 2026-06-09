@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.brickwork.app</groupId>
+		<artifactId>brick-work-pro</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>finance-brickwork</artifactId>
+	<packaging>pom</packaging>
+	<name>finance-brickwork</name>
+    <description>Payment and Billing Service for Brickwork</description>
+
+	<modules>
+		<module>finance-api</module>
+		<module>finance-app</module>
+		<module>finance-service</module>
+	</modules>
+
+
+</project>

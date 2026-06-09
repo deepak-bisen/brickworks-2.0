@@ -1,0 +1,58 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+
+
+# --- Backend (Java/Maven) ---
+**/BrickWorkPro-2.0-Backend/target/
+**/BrickWorkPro-2.0-Backend/.mvn/wrapper/maven-wrapper.jar
+**/BrickWorkPro-2.0-Backend/.apt_generated
+**/BrickWorkPro-2.0-Backend/.classpath
+**/BrickWorkPro-2.0-Backend/.factorypath
+**/BrickWorkPro-2.0-Backend/.project
+**/BrickWorkPro-2.0-Backend/.settings/
+
+# --- Frontend (Angular/Node) ---
+**/BrickWorkPro-2.0-Frontend/node_modules/
+**/BrickWorkPro-2.0-Frontend/dist/
+**/BrickWorkPro-2.0-Frontend/.angular/cache/
+**/BrickWorkPro-2.0-Frontend/tmp/
+**/BrickWorkPro-2.0-Frontend/.env*
+**/BrickWorkPro-2.0-Frontend/npm-debug.log*
+
+# --- General IDEs & OS ---
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+Thumbs.db
+
+
+# Ensure critical config is NOT ignored
+!**/BrickWorkPro-2.0-Frontend/.postcssrc.json
+!**/BrickWorkPro-2.0-Frontend/tailwind.config.js

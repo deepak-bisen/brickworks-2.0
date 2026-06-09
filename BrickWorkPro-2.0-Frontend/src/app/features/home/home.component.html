@@ -1,0 +1,107 @@
+<div class="page-section bg-white">
+
+  <div class="relative min-h-[80vh] flex items-center justify-center overflow-hidden pt-24 pb-16">
+    <div class="absolute inset-0 bg-cover bg-center"
+      style="background-image: url('https://placehold.co/1920x1080/6b2121/FFFFFF?text=Industrial+Brick+Manufacturing');">
+      <div class="absolute inset-0 bg-linear-to-r from-gray-900/90 via-gray-900/80 to-gray-900/50"></div>
+    </div>
+
+    <div class="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center justify-center">
+
+      <span
+        class="inline-block py-1.5 px-4 rounded-full bg-red-600/20 text-red-400 border border-red-500/30 text-sm font-bold tracking-widest uppercase mb-10 backdrop-blur-sm animate-fade-in-up">
+        Building The Future
+      </span>
+
+      <h1 class="text-5xl md:text-7xl font-extrabold text-white mb-8 tracking-tight leading-[1.1] shadow-sm">
+        Foundation of <span
+          class="text-transparent bg-clip-text bg-linear-to-r from-red-500 to-red-400">Excellence</span>
+      </h1>
+      <p class="text-xl md:text-2xl text-gray-300 mb-10 max-w-4xl mx-auto font-light leading-relaxed"></p>
+      <p class="text-xl md:text-2xl text-gray-300 mb-10 max-w-4xl mx-auto font-light leading-relaxed">
+        Durable, precision-engineered bricks manufactured from the finest local soil.
+        <strong class="text-white font-normal block mt-2">From large-scale industrial projects to the warm walls of your
+          family home, we build foundations that last generations.</strong>
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center items-center">
+        <a routerLink="/products"
+          class="w-full sm:w-auto bg-red-700 text-white px-8 py-4 rounded-xl text-lg font-bold shadow-[0_0_20px_rgba(220,38,38,0.4)] hover:shadow-[0_0_30px_rgba(220,38,38,0.6)] hover:bg-red-600 transition-all duration-300 uppercase tracking-wider">
+          View Live Catalog
+        </a>
+        <a routerLink="/contact"
+          class="w-full sm:w-auto bg-white/5 text-white backdrop-blur-md border border-white/20 px-8 py-4 rounded-xl text-lg font-bold hover:bg-white hover:text-gray-900 transition-all duration-300 uppercase tracking-wider">
+          Contact Sales
+        </a>
+        <a routerLink="/calculator"
+          class="w-full sm:w-auto bg-gray/10 text-white backdrop-blur-md border border-white/20 px-8 py-4 rounded-xl text-lg font-bold hover:bg-gray-500 hover:text-white transition-all duration-300 uppercase tracking-wider">
+          Brick Calculator
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="bg-gray-900 border-b-4 border-red-700 relative z-20 -mt-8 mx-4 md:mx-auto max-w-6xl rounded-2xl shadow-2xl">
+    <div class="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-800 p-8">
+      @for (stat of stats; track stat.label) {
+      <div class="text-center p-4 hover:scale-105 transition-transform duration-300">
+        <div class="text-3xl md:text-4xl font-black text-white mb-1">{{ stat.number }}</div>
+        <div class="text-xs md:text-sm text-red-500 font-bold uppercase tracking-widest">{{ stat.label }}</div>
+      </div>
+      }
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 py-24">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Why Choose BrickWorks Pro?</h2>
+      <div class="h-1.5 w-24 bg-red-600 mx-auto mt-6 rounded-full"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      @for (feature of features; track feature.title) {
+      <div
+        class="group bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 relative overflow-hidden cursor-default">
+        <div
+          class="absolute top-0 left-0 w-full h-1.5 bg-red-600 transform -translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+        </div>
+
+        <div
+          class="bg-red-50 w-20 h-20 rounded-2xl flex items-center justify-center mb-6 text-3xl shadow-inner group-hover:bg-red-600 group-hover:text-white transition-colors duration-300">
+          {{ feature.icon }}
+        </div>
+
+        <h3 class="text-xl font-bold mb-4 text-gray-900 group-hover:text-red-700 transition-colors duration-300">
+          {{ feature.title }}
+        </h3>
+
+        <p class="text-gray-500 leading-relaxed group-hover:text-gray-700 transition-colors duration-300">
+          {{ feature.description }}
+        </p>
+      </div>
+      }
+    </div>
+  </div>
+
+  <app-our-process></app-our-process>
+  <app-gallery></app-gallery>
+
+
+  <div class="bg-gray-50 border-t border-gray-200">
+    <div class="max-w-5xl mx-auto px-6 py-20 text-center flex flex-col items-center">
+      <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-6 tracking-tight">Ready to start your
+        construction?</h2>
+      <p class="text-lg text-gray-600 mb-10 max-w-2xl">Skip the middleman and order directly from the manufacturer.
+        Browse our real-time inventory and request a quote today.</p>
+      <a routerLink="/products"
+        class="bg-gray-900 text-white px-10 py-4 rounded-xl text-lg font-bold shadow-xl hover:bg-red-700 hover:shadow-[0_0_20px_rgba(220,38,38,0.4)] transition-all duration-300 uppercase tracking-widest flex items-center gap-3">
+        <span>Explore Inventory</span>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+</div>

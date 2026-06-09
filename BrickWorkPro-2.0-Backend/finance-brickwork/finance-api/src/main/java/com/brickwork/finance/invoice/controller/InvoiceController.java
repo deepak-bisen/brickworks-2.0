@@ -1,0 +1,15 @@
+package com.brickwork.finance.invoice.controller;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/finance/invoice")
+public interface InvoiceController {
+
+    @PostMapping("/generate/{orderId}")
+    ResponseEntity<String> generateInvoice(@PathVariable("orderId") String orderId);
+
+    @GetMapping("/download/{orderId}")
+    ResponseEntity<byte[]> downloadInvoice(@PathVariable("orderId") String orderId);
+}

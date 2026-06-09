@@ -1,0 +1,125 @@
+<div class="p-6 sm:p-8 bg-gray-50 min-h-screen font-sans">
+  <div class="max-w-7xl mx-auto">
+
+    <header class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Production Workflow Management</h1>
+        <p class="text-sm text-gray-500 mt-1">Track active manufacturing runs and view baking history logs.</p>
+      </div>
+      <button (click)="loadProductionLogs()" [disabled]="isLoading" class="text-sm bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-orange-600 font-medium px-4 py-2 rounded-lg transition-all flex items-center gap-2 shadow-sm disabled:opacity-50">
+        <svg [ngClass]="{'animate-spin': isLoading}" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        {{ isLoading ? 'Refreshing...' : 'Refresh Data' }}
+      </button>
+    </header>
+
+    <div class="flex border-b border-gray-200 mb-6 gap-2">
+      <button (click)="activeTab = 'active'"
+              [ngClass]="activeTab === 'active' ? 'border-orange-600 text-orange-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+              class="py-2.5 px-4 border-b-2 font-medium text-sm transition-all flex items-center gap-2 focus:outline-none">
+        Active Production
+        <span [ngClass]="activeTab === 'active' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-600'" class="text-xs px-2 py-0.5 rounded-full font-bold">
+          {{ activeLogs.length }}
+        </span>
+      </button>
+
+      <button (click)="activeTab = 'completed'"
+              [ngClass]="activeTab === 'completed' ? 'border-orange-600 text-orange-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+              class="py-2.5 px-4 border-b-2 font-medium text-sm transition-all flex items-center gap-2 focus:outline-none">
+        Completed Logs (Baked)
+        <span [ngClass]="activeTab === 'completed' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-600'" class="text-xs px-2 py-0.5 rounded-full font-bold">
+          {{ completedLogs.length }}
+        </span>
+      </button>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="overflow-x-auto">
+
+        <table *ngIf="activeTab === 'active'" class="min-w-full text-left text-sm text-gray-600">
+          <thead class="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th class="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Product</th>
+              <th class="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Quantity</th>
+              <th class="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Current Stage</th>
+              <th class="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs text-right">Action</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-100">
+            <tr *ngFor="let log of activeLogs" class="hover:bg-gray-50/50 transition-colors duration-150">
+              <td class="px-6 py-4 font-medium text-gray-900">{{ log.productName }}</td>
+              <td class="px-6 py-4 text-gray-600">{{ log.quantity }} Units</td>
+              <td class="px-6 py-4">
+                <span [ngClass]="{
+                  'bg-orange-100 text-orange-800 border-orange-200': log.stage === 'MOLDED',
+                  'bg-amber-100 text-amber-800 border-amber-200': log.stage === 'IN_KILN'
+                }" class="px-3 py-1 text-xs font-bold rounded-full border">
+                  {{ log.stage.replace('_', ' ') }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <button *ngIf="log.stage === 'MOLDED'"
+                        [disabled]="log.isUpdating"
+                        (click)="moveToNextStage(log)"
+                        class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+                  {{ log.isUpdating ? 'Updating...' : 'Move To Kiln' }}
+                </button>
+
+                <button *ngIf="log.stage === 'IN_KILN'"
+                        [disabled]="log.isUpdating"
+                        (click)="moveToNextStage(log)"
+                        class="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+                  {{ log.isUpdating ? 'Updating...' : 'Mark As Baked' }}
+                </button>
+              </td>
+            </tr>
+
+            <tr *ngIf="activeLogs.length === 0 && !isLoading">
+              <td colspan="4" class="px-6 py-12 text-center text-gray-500 bg-gray-50">
+                No active stages left to manage. Excellent!
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table *ngIf="activeTab === 'completed'" class="min-w-full text-left text-sm text-gray-600">
+          <thead class="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th class="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Product</th>
+              <th class="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Quantity</th>
+              <th class="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Final Stage</th>
+              <th class="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs text-right">Logged At</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-100">
+            <tr *ngFor="let log of completedLogs" class="hover:bg-gray-50/50 transition-colors duration-150">
+              <td class="px-6 py-4 font-medium text-gray-900">{{ log.productName }}</td>
+              <td class="px-6 py-4 text-gray-600">{{ log.quantity }} Units</td>
+              <td class="px-6 py-4">
+                <span class="bg-green-100 text-green-800 border-green-200 px-3 py-1 text-xs font-bold rounded-full border inline-flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                  BAKED
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right text-gray-400 text-xs">
+                {{ log.createdAt | date:'medium' }}
+              </td>
+            </tr>
+
+            <tr *ngIf="completedLogs.length === 0 && !isLoading">
+              <td colspan="4" class="px-6 py-12 text-center text-gray-500 bg-gray-50">
+                No baked batch history recorded yet.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div *ngIf="isLoading && activeLogs.length === 0 && completedLogs.length === 0" class="px-6 py-12 text-center text-gray-500 bg-gray-50 animate-pulse">
+          Loading system production records...
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

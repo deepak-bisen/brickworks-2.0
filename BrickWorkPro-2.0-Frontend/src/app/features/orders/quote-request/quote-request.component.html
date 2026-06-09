@@ -1,0 +1,84 @@
+<div class="max-w-2xl mx-auto my-12 p-8 bg-white shadow-xl rounded-xl border-t-4 border-red-600">
+  <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Get a Bulk Quote</h2>
+
+  <form [formGroup]="quoteForm" (ngSubmit)="submitQuote()" class="space-y-5">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="w-full">
+        <input type="text" formControlName="customerName" placeholder="Full Name"
+               class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none transition-colors"
+               [ngClass]="{'border-red-500 bg-red-50': f.customerName.invalid && f.customerName.touched}">
+        @if (f.customerName.invalid && f.customerName.touched) {
+          <p class="text-red-500 text-xs mt-1 font-medium">Full Name is required.</p>
+        }
+      </div>
+
+      <div class="w-full">
+        <input type="email" formControlName="customerEmail" placeholder="Email Address"
+               class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none transition-colors"
+               [ngClass]="{'border-red-500 bg-red-50': f.customerEmail.invalid && f.customerEmail.touched}">
+        @if (f.customerEmail.errors?.['required'] && f.customerEmail.touched) {
+          <p class="text-red-500 text-xs mt-1 font-medium">Email is required.</p>
+        }
+        @if (f.customerEmail.errors?.['email'] && f.customerEmail.touched) {
+          <p class="text-red-500 text-xs mt-1 font-medium">Please enter a valid email address.</p>
+        }
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="w-full">
+        <input type="text" formControlName="customerPhone" placeholder="Phone Number (10 digits)"
+               class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none transition-colors"
+               [ngClass]="{'border-red-500 bg-red-50': f.customerPhone.invalid && f.customerPhone.touched}">
+        @if (f.customerPhone.errors?.['required'] && f.customerPhone.touched) {
+          <p class="text-red-500 text-xs mt-1 font-medium">Phone number is required.</p>
+        }
+        @if (f.customerPhone.errors?.['pattern'] && f.customerPhone.touched) {
+          <p class="text-red-500 text-xs mt-1 font-medium">Please enter exactly 10 digits.</p>
+        }
+      </div>
+
+      <div class="w-full">
+        <select formControlName="productId"
+                class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none transition-colors"
+                [ngClass]="{'border-red-500 bg-red-50': f.productId.invalid && f.productId.touched}">
+          <option value="" disabled selected>Select Brick Type</option>
+          @for (product of productService.products(); track product.productId) {
+            <option [value]="product.productId">{{ product.name }}</option>
+          }
+        </select>
+        @if (f.productId.invalid && f.productId.touched) {
+          <p class="text-red-500 text-xs mt-1 font-medium">Please select a product.</p>
+        }
+      </div>
+    </div>
+
+    <div class="w-full">
+      <input type="number" formControlName="quantity" placeholder="Quantity (Min 200)"
+             class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none transition-colors"
+             [ngClass]="{'border-red-500 bg-red-50': f.quantity.invalid && f.quantity.touched}">
+      @if (f.quantity.errors?.['required'] && f.quantity.touched) {
+        <p class="text-red-500 text-xs mt-1 font-medium">Quantity is required.</p>
+      }
+      @if (f.quantity.errors?.['min'] && f.quantity.touched) {
+        <p class="text-red-500 text-xs mt-1 font-medium">Minimum quantity must be at least 200.</p>
+      }
+    </div>
+
+    <div class="w-full">
+      <textarea formControlName="deliveryAddress" placeholder="Delivery Address" rows="3"
+                class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none transition-colors"
+                [ngClass]="{'border-red-500 bg-red-50': f.deliveryAddress.invalid && f.deliveryAddress.touched}"></textarea>
+      @if (f.deliveryAddress.invalid && f.deliveryAddress.touched) {
+        <p class="text-red-500 text-xs mt-1 font-medium">Delivery Address is required.</p>
+      }
+    </div>
+
+    <button type="submit"
+            class="w-full bg-red-600 text-white font-bold py-3 rounded-lg transition-all duration-300 transform hover:bg-red-700 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-red-300"
+            [ngClass]="{'opacity-50 cursor-not-allowed hover:transform-none hover:shadow-none hover:bg-red-600': quoteForm.invalid}">
+      Submit Request
+    </button>
+  </form>
+</div>

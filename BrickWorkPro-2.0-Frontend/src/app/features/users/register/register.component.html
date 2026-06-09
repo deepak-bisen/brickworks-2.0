@@ -1,0 +1,95 @@
+<div class="min-h-[90vh] flex items-center justify-center p-4 bg-gray-50">
+  <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border-t-8 border-red-700">
+    <div class="p-8">
+      <header class="text-center mb-8">
+        <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">BrickWorks Pro</h2>
+        <p class="text-gray-500 mt-2 text-sm">Join the industrial supply network</p>
+      </header>
+
+      <div class="flex mb-8 bg-gray-100 rounded-xl p-1.5 border border-gray-200">
+        <button (click)="toggleMode(false)"
+                [class.bg-white]="!isEmployeeMode()"
+                [class.shadow-md]="!isEmployeeMode()"
+                [class.text-red-700]="!isEmployeeMode()"
+                class="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 text-gray-500">
+          Customer
+        </button>
+        <button (click)="toggleMode(true)"
+                [class.bg-white]="isEmployeeMode()"
+                [class.shadow-md]="isEmployeeMode()"
+                [class.text-red-700]="isEmployeeMode()"
+                class="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 text-gray-500">
+          Employee
+        </button>
+      </div>
+
+      <form [formGroup]="regForm" (ngSubmit)="onSubmit()" class="space-y-5">
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-gray-500 uppercase px-1">Full Name</label>
+          <input type="text" formControlName="fullName" placeholder="Deepak Bisen"
+                 class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-gray-500 uppercase px-1">Username</label>
+            <input type="text" formControlName="username" placeholder="deepak123"
+                   class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-gray-500 uppercase px-1">Phone</label>
+            <input type="text" formControlName="phoneNumber" placeholder="9876543210"
+                   class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-gray-500 uppercase px-1">Email Address</label>
+          <input type="email" formControlName="email" placeholder="deepak@example.com"
+                 class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-gray-500 uppercase px-1">Password</label>
+          <input type="password" formControlName="password" placeholder="••••••••"
+                 class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+        </div>
+
+       @if (!isEmployeeMode()) {
+          <div class="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
+            <label class="text-xs font-bold text-gray-500 uppercase px-1">Customer Type</label>
+            <select formControlName="customerType"
+                    class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+              <option value="INDIVIDUAL">Individual</option>
+              <option value="BUSINESS">Business</option>
+            </select>
+          </div>
+          <div class="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
+            <label class="text-xs font-bold text-gray-500 uppercase px-1">Address</label>
+            <textarea formControlName="address" rows="2" placeholder="e.g. 45 Residential Park, Delhi"
+                      class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all"></textarea>
+          </div>
+        } @else {
+          <div class="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
+            <label class="text-xs font-bold text-gray-500 uppercase px-1">Shift Timing</label>
+            <select formControlName="shiftTiming"
+                    class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all">
+              <option value="MORNING">Morning Shift</option>
+              <option value="EVENING">Evening Shift</option>
+              <option value="NIGHT">Night Shift</option>
+            </select>
+          </div>
+        }
+        <button type="submit" [disabled]="regForm.invalid"
+                class="w-full py-4 mt-4 bg-red-700 text-white rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-red-800 hover:shadow-red-200/50 disabled:bg-gray-300 disabled:shadow-none transition-all active:scale-[0.98]">
+          Create {{ isEmployeeMode() ? 'Employee' : 'Customer' }} Account
+        </button>
+      </form>
+
+      <footer class="mt-8 text-center text-sm text-gray-500">
+        Already have an account?
+        <a routerLink="/login" class="text-red-700 font-bold hover:underline">Log In</a>
+      </footer>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,37 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.brickwork.app</groupId>
+        <artifactId>users-brickwork</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>users-service</artifactId>
+    <packaging>jar</packaging>
+    <name>users-service</name>
+    <description>Users Service for storing and authentication of users</description>
+
+    <dependencies>
+        <!-- Import API module to map Entities to DTOs -->
+        <dependency>
+            <groupId>com.brickwork.app</groupId>
+            <artifactId>users-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- SHARED SECURITY MODULE (Replaces jjwt dependencies) -->
+        <dependency>
+            <groupId>com.brickwork.app</groupId>
+            <artifactId>common-security-brickwork</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- We still need Security starter here for PasswordEncoder and AuthenticationManager -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+    </dependencies>
+</project>

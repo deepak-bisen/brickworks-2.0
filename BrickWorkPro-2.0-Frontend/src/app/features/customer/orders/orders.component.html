@@ -1,0 +1,127 @@
+<div class="max-w-6xl mx-auto p-4 md:p-8">
+  <div class="mb-8">
+    <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">My Order History</h2>
+    <p class="text-gray-500 mt-1">Track your orders, delivery status, and download invoices.</p>
+  </div>
+
+  @if (loading) {
+    <div class="flex justify-center items-center py-20 flex-col gap-3">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-red-700"></div>
+      <p class="text-gray-500 font-bold text-sm">Loading your orders...</p>
+    </div>
+  } @else {
+    @if (orders.length === 0) {
+      <div class="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
+        <div class="text-5xl mb-4">📦</div>
+        <h3 class="text-xl font-bold text-gray-800">No orders found</h3>
+        <p class="text-gray-500 mt-2 mb-6">You haven't placed any orders with us yet.</p>
+        <a routerLink="/products" class="bg-red-700 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-red-800 transition-colors uppercase tracking-wider text-sm">
+          Start Shopping
+        </a>
+      </div>
+    } @else {
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold border-b border-gray-200">
+              <tr>
+                <th class="p-5">Order Details</th>
+                <th class="p-5">Date</th>
+                <th class="p-5 text-center">Amount</th>
+                <th class="p-5 text-center">Status</th>
+                <th class="p-5 text-right">Invoice / Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              @for (order of orders; track order.orderId) {
+                <tr class="hover:bg-gray-50/80 transition-colors">
+
+                  <td class="p-5 align-top">
+                    <div class="font-mono text-[11px] leading-tight font-bold text-gray-900 break-all max-w-[180px]">
+                      #{{ order.orderId ? order.orderId.toString().toUpperCase() : 'N/A' }}
+                    </div>
+
+                    <div class="mt-2">
+                      <span class="text-[10px] font-extrabold px-2 py-1 rounded-md border shadow-sm inline-block"
+                            [ngClass]="order.status === 'CONFIRMED_COD' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-blue-50 text-blue-700 border-blue-200'">
+                        💳 {{ order.status === 'CONFIRMED_COD' ? 'CASH ON DELIVERY' : 'PREPAID / ONLINE' }}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td class="p-5">
+                    <div class="font-bold text-gray-800">{{ order.createdAt | date: 'dd MMM yyyy' }}</div>
+                    <div class="text-xs text-gray-500 mt-0.5">{{ order.createdAt | date: 'shortTime' }}</div>
+                  </td>
+
+                  <td class="p-5 text-center">
+                    @if (order.discountApplied > 0) {
+                      <div class="text-[11px] text-gray-400 line-through font-bold mb-0.5">
+                        M.R.P: ₹{{ order.grossAmount  }}
+                      </div>
+                    }
+
+                    <div class="font-black text-gray-900 text-lg">
+                      ₹{{ order.totalAmount  }}
+                    </div>
+
+                    @if (order.discountApplied > 0) {
+                      <div class="mt-1 inline-flex items-center gap-1 bg-green-50 text-green-700 px-2 py-0.5 rounded text-[10px] font-black tracking-wide border border-green-200">
+                        <span>🏷️</span> Saved ₹{{ order.discountApplied  }}
+                      </div>
+                    }
+                  </td>
+
+                  <td class="p-5 text-center">
+                    <span class="px-3 py-1.5 rounded-md text-[10px] font-black tracking-widest uppercase border"
+                      [ngClass]="{
+                        'bg-yellow-50 text-yellow-800 border-yellow-200': order.status === 'PENDING_PAYMENT',
+                        'bg-blue-50 text-blue-800 border-blue-200': order.status === 'CONFIRMED_COD' || order.status === 'PAYMENT_RECEIVED' || order.status === 'IN_PRODUCTION',
+                        'bg-indigo-50 text-indigo-800 border-indigo-200': order.status === 'DISPATCHED',
+                        'bg-green-50 text-green-800 border-green-200': order.status === 'DELIVERED',
+                        'bg-red-50 text-red-800 border-red-200': order.status === 'CANCELLED'}">
+                      {{ order.status ? order.status.replace('_', ' ') : 'UNKNOWN' }}
+                    </span>
+                  </td>
+
+                  <td class="p-5 text-right">
+                    @if (['CONFIRMED_COD', 'PAYMENT_RECEIVED', 'IN_PRODUCTION', 'DISPATCHED', 'DELIVERED'].includes(order.status || '')) {
+                      <div class="flex flex-col items-end justify-center">
+                        @if (invoiceErrors[order.orderId]) {
+                          <p class="text-[10px] text-red-600 font-bold mb-1 max-w-[150px] whitespace-normal">
+                            {{ invoiceErrors[order.orderId] }}
+                          </p>
+                          <button
+                            (click)="generateInvoice(order.orderId)"
+                            [disabled]="generatingInvoice[order.orderId]"
+                            class="text-blue-700 hover:bg-blue-50 bg-white border border-blue-200 text-xs font-bold px-3 py-1.5 rounded disabled:opacity-50 transition-colors shadow-sm mt-1">
+                            @if (generatingInvoice[order.orderId]) {
+                              <span class="animate-spin inline-block mr-1">⟳</span> Generating...
+                            } @else {
+                              ⟳ Retry Generation
+                            }
+                          </button>
+                        } @else {
+                          <button
+                            (click)="downloadInvoice(order.orderId)"
+                            class="text-green-700 hover:bg-green-600 hover:text-white font-bold text-xs uppercase tracking-wider bg-green-50 px-4 py-2 rounded-lg border border-green-200 transition-all shadow-sm flex items-center gap-1">
+                            📄 Download Invoice
+                          </button>
+                        }
+                      </div>
+                    } @else if (order.status === 'PENDING_PAYMENT') {
+                      <span class="text-xs text-gray-400 font-bold italic">Awaiting Payment</span>
+                    } @else {
+                      <span class="text-xs text-gray-400 font-bold italic">-</span>
+                    }
+                  </td>
+
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  }
+</div>

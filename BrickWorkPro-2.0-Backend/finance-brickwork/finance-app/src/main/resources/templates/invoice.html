@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>BrickWorks Pro - Tax Invoice</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; margin: 0; padding: 25px; font-size: 13px; line-height: 1.5; }
+        .header { width: 100%; border-bottom: 3px solid #b91c1c; padding-bottom: 15px; margin-bottom: 25px; }
+        .header table { width: 100%; border-collapse: collapse; }
+        .company-name { font-size: 26px; font-weight: 900; color: #b91c1c; letter-spacing: -0.5px; }
+        .invoice-title { font-size: 24px; text-align: right; color: #444; font-weight: bold; letter-spacing: 2px; }
+        .company-details { font-size: 11px; color: #666; margin-top: 5px; }
+
+        .details-section { width: 100%; margin-bottom: 30px; border-collapse: collapse; }
+        .details-section td { vertical-align: top; width: 50%; }
+        .details-box { background-color: #fcfcfc; padding: 15px; border-radius: 6px; border: 1px solid #eaeaea; min-height: 110px; }
+        .details-box h3 { margin-top: 0; font-size: 12px; color: #888; text-transform: uppercase; border-bottom: 1px solid #e0e0e0; padding-bottom: 6px; margin-bottom: 8px; letter-spacing: 1px; }
+
+        table.items { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        table.items th { background-color: #b91c1c; color: white; padding: 12px 10px; text-align: left; font-size: 12px; text-transform: uppercase; }
+        table.items td { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 13px; }
+        table.items .right { text-align: right; }
+
+        .totals-container { width: 100%; margin-top: 20px; }
+        .totals-spacer { width: 55%; float: left; }
+        .totals { width: 45%; float: right; border: 1px solid #eaeaea; border-radius: 6px; background-color: #fcfcfc; }
+        .totals table { width: 100%; border-collapse: collapse; }
+        .totals td { padding: 8px 15px; border-bottom: 1px solid #eaeaea; font-size: 12px;}
+        .totals tr:last-child td { border-bottom: none; }
+        .totals .discount-row { color: #16a34a; font-weight: bold; }
+        .totals .grand-total { font-size: 16px; font-weight: 900; color: #b91c1c; background-color: #fef2f2;}
+
+        .footer { margin-top: 60px; font-size: 10px; color: #999; text-align: center; border-top: 1px dashed #ccc; padding-top: 20px; }
+        .clearfix::after { content: ""; clear: both; display: table; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <table border="0">
+        <tr>
+            <td>
+                <div class="company-name">BrickWorks Pro</div>
+                <div class="company-details">
+                    Industrial Estate, Balaghat<br/>
+                    Madhya Pradesh, India - 481331<br/>
+                    <strong>GSTIN:</strong> 23AAACG1234A1Z5 | <strong>Email:</strong> support@brickworks.in
+                </div>
+            </td>
+            <td style="text-align: right; vertical-align: top;">
+                <div class="invoice-title">TAX INVOICE</div>
+                <div style="margin-top: 10px; font-size: 13px;">
+                    <strong>Invoice No:</strong> <span th:text="${invoiceNumber}">INV-00000000</span><br/>
+                    <strong>Date:</strong> <span th:text="${invoiceDate}">YYYY-MM-DD</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<table class="details-section" border="0">
+    <tr>
+        <td style="padding-right: 15px;">
+            <div class="details-box">
+                <h3>Billed To (Customer)</h3>
+                <strong style="font-size: 14px; color:#111;" th:text="${customerName}">Customer Name</strong><br/>
+                <span th:text="${deliveryAddress}">Delivery Address</span><br/>
+                <div style="margin-top: 5px;">
+                    <strong>📞 Phone:</strong> <span th:text="${customerPhone}">N/A</span><br/>
+                    <strong>✉️ Email:</strong> <span th:text="${customerEmail}">N/A</span>
+                </div>
+            </div>
+        </td>
+        <td style="padding-left: 15px;">
+            <div class="details-box">
+                <h3>Order Details</h3>
+                <strong>Order ID:</strong> <span th:text="${orderId}" style="font-family: monospace;">ORD-123</span><br/><br/>
+                <strong>Payment Mode:</strong> <span th:text="${paymentMethod}">Online / Prepaid</span><br/>
+                <strong>Order Status:</strong> <span th:text="${status}">DELIVERED</span>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<table class="items">
+    <thead>
+    <tr>
+        <th style="width: 5%;">#</th>
+        <th style="width: 45%;">Item Description</th>
+        <th class="right" style="width: 15%;">Quantity</th>
+        <th class="right" style="width: 15%;">Unit Rate (₹)</th>
+        <th class="right" style="width: 20%;">Total (₹)</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="item, iterStat : ${items}">
+        <td th:text="${iterStat.count}">1</td>
+        <td th:text="${item.productName}">Premium Red Brick</td>
+        <td class="right" th:text="${item.quantity}">1000</td>
+        <td class="right" th:text="${#numbers.formatDecimal(item.unitPrice, 1, 'COMMA', 2, 'POINT')}">8.50</td>
+        <td class="right" th:text="${#numbers.formatDecimal(item.unitPrice * item.quantity, 1, 'COMMA', 2, 'POINT')}">8500.00</td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="clearfix totals-container">
+    <div class="totals-spacer">
+        <p style="font-size: 11px; color: #777; margin-top: 10px;">
+            <strong>Bank Details for NEFT/RTGS:</strong><br/>
+            Account Name: BrickWorks Pro Ltd.<br/>
+            Account No: 1234567890123<br/>
+            IFSC Code: HDFC0001234
+        </p>
+    </div>
+    <div class="totals">
+        <table>
+            <tr th:if="${grossAmount != null}">
+                <td>Subtotal (M.R.P):</td>
+                <td class="right" th:text="'₹ ' + ${#numbers.formatDecimal(grossAmount, 1, 'COMMA', 2, 'POINT')}">₹ 0.00</td>
+            </tr>
+            <tr class="discount-row" th:if="${discountApplied != null and discountApplied > 0}">
+                <td>Bulk Discount Applied:</td>
+                <td class="right" th:text="'- ₹ ' + ${#numbers.formatDecimal(discountApplied, 1, 'COMMA', 2, 'POINT')}">- ₹ 0.00</td>
+            </tr>
+            <tr>
+                <td>Taxable Value:</td>
+                <td class="right" th:text="'₹ ' + ${#numbers.formatDecimal(taxableAmount, 1, 'COMMA', 2, 'POINT')}">₹ 0.00</td>
+            </tr>
+            <tr>
+                <td>CGST (9%):</td>
+                <td class="right" th:text="'₹ ' + ${#numbers.formatDecimal(cgst, 1, 'COMMA', 2, 'POINT')}">₹ 0.00</td>
+            </tr>
+            <tr>
+                <td>SGST (9%):</td>
+                <td class="right" th:text="'₹ ' + ${#numbers.formatDecimal(sgst, 1, 'COMMA', 2, 'POINT')}">₹ 0.00</td>
+            </tr>
+            <tr>
+                <td class="grand-total">Grand Total:</td>
+                <td class="right grand-total" th:text="'₹ ' + ${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 2, 'POINT')}">₹ 0.00</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="footer">
+    <p>This is a computer generated tax invoice and does not require a physical signature.</p>
+    <p><strong>Thank you for doing business with BrickWorks Pro.</strong></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,519 @@
+<div class="p-8 bg-gray-50 min-h-screen">
+  <div class="max-w-7xl mx-auto">
+
+    @if (loadError()) {
+    <div
+      class="mb-6 p-4 bg-red-100 border-l-4 border-red-600 text-red-800 rounded-r-lg font-bold text-sm shadow-sm animate-fade-in-up">
+      ⚠️ {{ loadError() }}
+    </div>
+    }
+
+    <header class="mb-8 flex justify-between items-end">
+      <div>
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Admin Control Center</h1>
+        <p class="text-gray-500 text-sm mt-1">Manage operations, inventory, and customer communications.</p>
+      </div>
+
+      @if (activeTab() === 'overview') {
+      <div class="flex bg-gray-200 p-1 rounded-xl border border-gray-300 shadow-inner">
+        @for (tf of ['weekly', 'monthly', 'yearly']; track tf) {
+        <button (click)="changeTimeframe(tf)" [class.bg-white]="currentTimeframe() === tf"
+          [class.text-red-700]="currentTimeframe() === tf" [class.shadow-sm]="currentTimeframe() === tf"
+          class="px-4 py-2 text-xs font-bold uppercase rounded-lg transition-all duration-200 text-gray-600">
+          {{ tf }}
+        </button>
+        }
+      </div>
+      }
+    </header>
+
+    <div class="flex space-x-1 bg-gray-200/50 p-1 rounded-xl mb-8 w-fit border border-gray-200">
+      <button (click)="switchTab('overview')" [class.bg-white]="activeTab() === 'overview'"
+        [class.shadow-sm]="activeTab() === 'overview'" [class.text-red-700]="activeTab() === 'overview'"
+        class="px-6 py-2.5 rounded-lg text-sm font-bold text-gray-600 transition-all uppercase tracking-wider">
+        Telemetry Overview
+      </button>
+      <button (click)="switchTab('orders')" [class.bg-white]="activeTab() === 'orders'"
+        [class.shadow-sm]="activeTab() === 'orders'" [class.text-red-700]="activeTab() === 'orders'"
+        class="px-6 py-2.5 rounded-lg text-sm font-bold text-gray-600 transition-all uppercase tracking-wider flex items-center gap-2">
+        Orders & Quotes
+      </button>
+      <button (click)="switchTab('messages')" [class.bg-white]="activeTab() === 'messages'"
+        [class.shadow-sm]="activeTab() === 'messages'" [class.text-red-700]="activeTab() === 'messages'"
+        class="px-6 py-2.5 rounded-lg text-sm font-bold text-gray-600 transition-all uppercase tracking-wider flex items-center gap-2">
+        Inbox
+        @if (messages().length > 0) { <span class="w-2 h-2 rounded-full bg-red-600"></span> }
+      </button>
+      <button (click)="switchTab('inventory')"
+        [ngClass]="activeTab() === 'inventory' ? 'bg-red-700 text-white shadow-md' : 'text-gray-600 hover:bg-red-50 hover:text-red-700'"
+        class="px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide transition-all flex items-center gap-2">
+        <span>📦</span> Inventory & Catalog
+      </button>
+    </div>
+
+    @if (activeTab() === 'overview') {
+    <div class="space-y-8 animate-fade-in-up">
+      <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-red-700">
+          <h3 class="text-gray-400 font-bold uppercase text-xs">Total Output</h3>
+          <p class="text-4xl font-black mt-2">{{ isLoading() ? '...' : (totalBricksProduced() | number) }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-blue-700">
+          <h3 class="text-gray-400 font-bold uppercase text-xs">System Orders</h3>
+          <p class="text-4xl font-black mt-2">{{ isLoading() ? '...' : totalOrdersCount() }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-green-700">
+          <h3 class="text-gray-400 font-bold uppercase text-xs">Gross Income</h3>
+          <p class="text-4xl font-black mt-2">₹{{ isLoading() ? '...' : (totalRevenue() | number:'1.0-2') }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-amber-700">
+          <h3 class="text-gray-400 font-bold uppercase text-xs">Total Profit</h3>
+          <p class="text-4xl font-black mt-2">₹{{ isLoading() ? '...' : (totalProfit() | number:'1.0-2') }}</p>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 mb-8">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-lg font-bold text-gray-900">Revenue Analytics</h2>
+
+          <div class="flex space-x-2">
+            <button (click)="changeTimeframe('WEEKLY')" [class.bg-red-700]="currentTimeframe() === 'WEEKLY'"
+              [class.text-white]="currentTimeframe() === 'WEEKLY'"
+              class="px-3 py-1 text-xs font-bold rounded-lg border border-gray-200 text-gray-600 hover:bg-red-50">Weekly</button>
+            <button (click)="changeTimeframe('MONTHLY')" [class.bg-red-700]="currentTimeframe() === 'MONTHLY'"
+              [class.text-white]="currentTimeframe() === 'MONTHLY'"
+              class="px-3 py-1 text-xs font-bold rounded-lg border border-gray-200 text-gray-600 hover:bg-red-50">Monthly</button>
+            <button (click)="changeTimeframe('YEARLY')" [class.bg-red-700]="currentTimeframe() === 'YEARLY'"
+              [class.text-white]="currentTimeframe() === 'YEARLY'"
+              class="px-3 py-1 text-xs font-bold rounded-lg border border-gray-200 text-gray-600 hover:bg-red-50">Yearly</button>
+          </div>
+        </div>
+
+        <div class="h-72 w-full relative">
+          @if (isLoading()) {
+          <div class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
+            <p class="text-gray-400 font-bold animate-pulse">Loading telemetry...</p>
+          </div>
+          }
+
+          @if (barChartData.labels && barChartData.labels.length > 0) {
+          <canvas baseChart [data]="barChartData" [options]="barChartOptions" [type]="barChartType">
+          </canvas>
+          } @else if (!isLoading()) {
+          <div class="h-full flex flex-col items-center justify-center text-gray-400">
+            <svg class="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+              </path>
+            </svg>
+            <p class="text-sm font-bold">No sales data found for this period.</p>
+          </div>
+          }
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-bold text-gray-900">Inventory Action Panel</h2>
+          <p class="text-sm text-gray-500">Update configurations or browse items</p>
+        </div>
+        <div class="flex gap-3"><a routerLink="/admin/products"
+            class="bg-red-700 text-white font-bold px-6 py-3 rounded-xl hover:bg-red-800 text-sm uppercase">Add
+            Product</a></div>
+      </section>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-1">
+          <h3 class="text-md font-bold text-gray-900 mb-4 tracking-tight border-b pb-2">Top Performing Products</h3>
+          <div class="space-y-4">
+            @for (prod of topProducts(); track prod.productId) {
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+              <div>
+                <h4 class="font-bold text-sm text-gray-800">{{ prod.productName }}</h4>
+                <p class="text-xs text-gray-400 mt-0.5">Sold: {{ prod.totalQuantitySold || prod.quantitySold || 0 }}
+                  units</p>
+              </div>
+              <span class="text-sm font-extrabold text-green-700">₹{{ (prod.totalRevenueGenerated || prod.revenue || 0)
+                | number }}</span>
+            </div>
+            } @empty {
+            <div class="text-center py-8 text-gray-400 text-sm">No recent product sales recorded.</div>
+            }
+          </div>
+        </section>
+
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2 overflow-hidden">
+          <h3 class="text-md font-bold text-gray-900 mb-4 tracking-tight border-b pb-2">Recent Factory Production Output
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-gray-500">
+              <thead class="text-xs text-gray-400 uppercase bg-gray-50 rounded-lg">
+                <tr>
+                  <th class="py-3 px-4 font-bold">Date</th>
+                  <th class="py-3 px-4 font-bold">Brick Variety</th>
+                  <th class="py-3 px-4 font-bold text-center">Stage</th>
+                  <th class="py-3 px-4 font-bold text-right">Quantity</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                @for (log of productionLogs(); track log.logId || $index) {
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="py-3.5 px-4 text-gray-600 whitespace-nowrap">{{ log.productionDate | date:'mediumDate' }}
+                  </td>
+                  <td class="py-3.5 px-4 font-bold text-gray-900">{{ log.productName || 'Brick Item' }}</td>
+                  <td class="py-3.5 px-4 text-center">
+                    <span [class.bg-orange-100]="log.shiftType === 'MORNING'"
+                      [class.text-orange-700]="log.shiftType === 'MORNING'"
+                      [class.bg-indigo-100]="log.shiftType === 'EVENING'"
+                      [class.text-indigo-700]="log.shiftType === 'EVENING'"
+                      [class.bg-slate-800]="log.shiftType === 'NIGHT'"
+                      [class.text-slate-100]="log.shiftType === 'NIGHT'"
+                      class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full tracking-wider">
+                      {{ log.shiftType }}
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-4 font-mono font-bold text-right text-gray-900">{{ (log.quantityProduced ||
+                    log.quantity || 0) | number }}</td>
+                </tr>
+                } @empty {
+                <tr>
+                  <td colspan="4" class="text-center py-12 text-gray-400">No batch manufacturing logs available.</td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+    }
+
+    @if (activeTab() === 'orders') {
+    <app-utr-verification-modal #utrModal (close)="onUtrModalClose()"></app-utr-verification-modal>
+
+    <div class="flex gap-4 mb-4 border-b border-gray-200">
+      <button (click)="orderSubTab.set('orders')"
+        [ngClass]="orderSubTab() === 'orders' ? 'border-red-700 text-red-700 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'"
+        class="pb-2 px-2 border-b-2 text-sm transition-all">
+        Live Orders ({{ activeOrdersList().length }})
+      </button>
+      <button (click)="orderSubTab.set('quotes')"
+        [ngClass]="orderSubTab() === 'quotes' ? 'border-red-700 text-red-700 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'"
+        class="pb-2 px-2 border-b-2 text-sm transition-all">
+        Quote Requests ({{ quoteRequestsList().length }})
+      </button>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-fade-in-up">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm whitespace-nowrap">
+          <thead class="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold border-b border-gray-300">
+            <tr>
+              <th class="p-5">Customer & Order</th>
+              <th class="p-5">Date & Time</th>
+              <th class="p-5">Delivery Address</th>
+              <th class="p-5 text-center">Total Value</th>
+              <th class="p-5 text-center">Current Status</th>
+              <th class="p-5 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+
+            @for (order of (orderSubTab() === 'orders' ? activeOrdersList() : quoteRequestsList()); track order.orderId)
+            {
+            <tr class="hover:bg-gray-50/80 transition-colors"
+              [class.bg-blue-50]="processingOrderId() === order.orderId">
+
+              <td class="p-5">
+                <div class="font-bold text-gray-900 flex items-center gap-2 text-base mb-1">
+                  {{ order.customerName || 'No Name' }}
+                  <span class="text-[9px] px-2 py-0.5 rounded font-black tracking-widest text-white shadow-sm"
+                    [ngClass]="order.requestType === 'DIRECT ORDER' ? 'bg-indigo-600' : 'bg-orange-500'">
+                    {{ order.requestType || 'ORDER' }}
+                  </span>
+                </div>
+                <div class="text-xs text-gray-500 font-medium flex items-center gap-2">
+                  <span class="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 border border-gray-200"
+                    title="{{ order.orderId }}">
+                    #{{ order.orderId.toString().substring(0, 8) }}
+                  </span>
+                  <span class="text-gray-300">|</span>
+                  <span>📞 {{ order.customerPhone || 'No Phone' }}</span>
+                </div>
+              </td>
+
+              <td class="p-5">
+                <div class="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                  📅 {{ order.createdAt | date:'dd MMM yyyy' }}
+                </div>
+                <div class="text-[11px] text-gray-500 font-bold mt-1 flex items-center gap-1.5">
+                  ⏰ {{ order.createdAt | date:'shortTime' }}
+                </div>
+              </td>
+
+              <td class="p-5 text-gray-600 max-w-xs whitespace-normal break-words font-medium leading-relaxed">
+                {{ order.deliveryAddress || order.deliveryLocation || 'No Address Provided' }}
+              </td>
+
+              <td class="p-5 text-center">
+
+                    @if (order.discountApplied > 0) {
+                      <div class="text-[10px] text-gray-400 line-through font-bold mb-0.5">
+                        M.R.P: ₹{{ order.grossAmount | number:'1.0-0' }}
+                      </div>
+                    }
+
+                    <div class="font-black text-gray-900 text-base">
+                      ₹{{ order.totalAmount || order.totalCost | number:'1.0-0' }}
+                    </div>
+
+                    @if (order.discountApplied > 0) {
+                      <div class="text-[10px] text-red-600 font-extrabold mt-0.5 tracking-wide bg-red-50 rounded-md inline-block px-1.5 py-0.5 border border-red-100 block mx-auto w-fit">
+                        -₹{{ order.discountApplied | number:'1.0-0' }} (Discount)
+                      </div>
+                    }
+
+                    @if (order.netProfit > 0) {
+                      <div class="text-[10px] text-green-700 font-extrabold mt-0.5 tracking-wide bg-green-50 rounded-md inline-block px-1.5 py-0.5 border border-green-200 block mx-auto w-fit">
+                        +₹{{ order.netProfit | number:'1.0-0' }} Profit
+                      </div>
+                    }
+                  </td>
+
+              <td class="p-5 text-center">
+                <span class="px-3 py-1.5 rounded-md text-[10px] font-black tracking-widest uppercase border" [ngClass]="{
+                        'bg-yellow-50 text-yellow-800 border-yellow-200': order.status === 'QUOTE_REQUEST' || order.status === 'PENDING_PAYMENT',
+                        'bg-blue-50 text-blue-800 border-blue-200': order.status === 'CONFIRMED_COD' || order.status === 'PAYMENT_RECEIVED' || order.status === 'IN_PRODUCTION',
+                        'bg-indigo-50 text-indigo-800 border-indigo-200': order.status === 'DISPATCHED',
+                        'bg-green-50 text-green-800 border-green-200': order.status === 'DELIVERED',
+                        'bg-red-50 text-red-800 border-red-200': order.status === 'CANCELLED'}">
+                  {{ order.status.replace('_', ' ') }}
+                </span>
+              </td>
+
+              <td class="p-5 text-right space-x-2">
+
+                @if (orderSubTab() === 'quotes' && order.status === 'QUOTE_REQUEST') {
+                <button (click)="convertToOrder(order)"
+                  class="text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold text-[10px] uppercase tracking-wider bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-200 transition-all shadow-sm">
+                  Approve Quote
+                </button>
+                <button (click)="rejectOrder(order)"
+                  class="text-red-700 hover:bg-red-600 hover:text-white font-bold text-[10px] uppercase tracking-wider bg-red-50 px-3 py-2 rounded-lg border border-red-200 transition-all shadow-sm">
+                  ✕ Reject
+                </button>
+                }
+
+                @else if (orderSubTab() === 'orders' && order.status === 'PENDING_PAYMENT') {
+                <div class="flex justify-end gap-2 flex-wrap">
+                  <button (click)="requestUtrVerification(order)" [disabled]="processingOrderId() === order.orderId"
+                    class="text-green-700 hover:bg-green-600 hover:text-white font-bold text-[10px] uppercase tracking-wider bg-green-50 px-3 py-2 rounded-lg border border-green-200 transition-all shadow-sm disabled:opacity-50">
+                    Verify UTR
+                  </button>
+                  <button (click)="approveAsCOD(order)"
+                    class="text-blue-700 hover:bg-blue-600 hover:text-white font-bold text-[10px] uppercase tracking-wider bg-blue-50 px-3 py-2 rounded-lg border border-blue-200 transition-all shadow-sm">
+                    Confirm COD
+                  </button>
+                  <button (click)="rejectOrder(order)"
+                    class="text-red-700 hover:bg-red-600 hover:text-white font-bold text-[10px] uppercase tracking-wider bg-red-50 px-3 py-2 rounded-lg border border-red-200 transition-all shadow-sm">
+                    ✕ Cancel
+                  </button>
+                </div>
+                }
+
+                @else if (orderSubTab() === 'orders' && (order.status === 'CONFIRMED_COD' || order.status ===
+                'PAYMENT_RECEIVED' || order.status === 'IN_PRODUCTION')) {
+                <button (click)="updateOrderStatus(order.orderId, 'DISPATCHED')"
+                  class="text-blue-700 hover:bg-blue-600 hover:text-white font-bold text-[10px] uppercase tracking-wider bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 transition-all shadow-sm">
+                  🚚 Dispatch
+                </button>
+                }
+
+                @else if (orderSubTab() === 'orders' && order.status === 'DISPATCHED') {
+                <button (click)="updateOrderStatus(order.orderId, 'DELIVERED')"
+                  class="text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold text-[10px] uppercase tracking-wider bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-200 transition-all shadow-sm">
+                  📦 Delivered
+                </button>
+                }
+
+                @else if (order.status === 'CANCELLED') {
+                  <div class="flex items-center justify-end gap-2">
+                    <button (click)="processRefund(order)" class="text-orange-700 hover:bg-orange-600 hover:text-white bg-orange-50 px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider border border-orange-200 transition-all shadow-sm">
+                      💸 Refund
+                    </button>
+                    <span class="text-gray-400 text-xs italic font-bold">❌ Cancelled</span>
+                  </div>
+                }
+                @else {
+                  <span class="text-gray-400 text-xs italic font-bold px-2">✅ Processed</span>
+                }
+              </td>
+
+            </tr>
+            } @empty {
+            <tr>
+              <td colspan="6" class="p-16 text-center">
+                <p class="text-gray-500 font-bold text-sm">No items found in this section.</p>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    }
+
+    @if (activeTab() === 'messages') {
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="divide-y divide-gray-100">
+
+        @for (msg of messages(); track msg.messageId) {
+        @if (msg.status !== 'RESOLVED') {
+
+        <div class="p-5 transition-colors hover:bg-gray-50 cursor-pointer"
+          [ngClass]="msg.status === 'UNREAD' ? 'bg-blue-50/50 border-l-4 border-blue-500' : 'bg-white'"
+          (click)="markMessageAsRead(msg)">
+
+          <div class="flex justify-between items-start mb-2">
+            <div class="flex items-center gap-3">
+
+              @if (msg.status === 'UNREAD') {
+              <span class="w-2 h-2 rounded-full bg-blue-600 shadow-sm"></span>
+              }
+
+              <h3 class="text-base text-gray-900" [ngClass]="msg.status === 'UNREAD' ? 'font-black' : 'font-medium'">
+                {{ msg.name || 'Unknown Sender' }}
+              </h3>
+            </div>
+            <span class="text-xs text-gray-400 font-medium">
+              {{ msg.createdAt | date:'mediumDate' }} • {{ msg.createdAt | date:'shortTime' }}
+            </span>
+          </div>
+
+          <div class="flex gap-4 text-xs text-gray-500 mb-3 ml-5">
+            <span class="flex items-center gap-1">✉️ {{ msg.email }}</span>
+
+            <span class="flex items-center gap-1 font-semibold text-gray-700">
+              📞 {{ msg.mobileNumber || 'No Contact Number' }}
+            </span>
+          </div>
+
+          <p class="text-sm text-gray-700 ml-5 leading-relaxed">
+            {{ msg.message }}
+          </p>
+
+          <div class="mt-4 ml-5 flex gap-3">
+            <a [href]="'mailto:' + msg.email + '?subject=Re: Your Inquiry at BrickWorks'"
+              (click)="$event.stopPropagation()"
+              class="text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-lg text-[10px] uppercase font-bold tracking-wider border border-blue-200 transition-all shadow-sm">
+              ↩️ Quick Reply
+            </a>
+
+            <button (click)="resolveMessage(msg); $event.stopPropagation()"
+              class="text-green-700 bg-green-50 hover:bg-green-600 hover:text-white px-4 py-2 rounded-lg text-[10px] uppercase font-bold tracking-wider border border-green-200 transition-all shadow-sm">
+              ✅ Mark Resolved
+            </button>
+          </div>
+
+        </div>
+        }
+        } @empty {
+        <div class="p-16 text-center text-gray-500 flex flex-col items-center">
+          <span class="text-4xl mb-3">🎉</span>
+          <p class="font-bold">No new messages! Inbox is clean.</p>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+   @if (activeTab() === 'inventory') {
+    <div class="space-y-6 animate-fade-in-up">
+
+      <div class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div>
+          <h3 class="text-xl font-black text-gray-900">Product Inventory Manager</h3>
+          <p class="text-sm text-gray-500 mt-1">Manage catalog, track stock, and control pricing.</p>
+        </div>
+        <a routerLink="/admin/products" class="bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-red-800 transition-colors shadow-sm flex items-center gap-2 text-sm">
+          <span>+</span> Add New Product
+        </a>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold border-b border-gray-200">
+              <tr>
+                <th class="p-4">Product Info</th>
+                <th class="p-4 text-center">Current Stock</th>
+                <th class="p-4 text-center">Making Cost</th>
+                <th class="p-4 text-center">Selling Price</th>
+                <th class="p-4 text-center">Profit Margin</th>
+                <th class="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              @for (product of allProducts(); track product.productId) {
+                <tr class="hover:bg-gray-50/80 transition-colors">
+
+                  <td class="p-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded bg-gray-100 overflow-hidden border border-gray-200 flex-shrink-0">
+                        <img [src]="getImageSrc(product)" alt="img" class="w-full h-full object-cover">
+                      </div>
+                      <div>
+                        <p class="font-bold text-gray-900 text-sm">{{ product.name }}</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">{{ product.category }} • {{ product.brickType }}</p>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td class="p-4 text-center">
+                    <span class="px-2 py-1 rounded text-[11px] font-black"
+                          [ngClass]="product.stockQuantity < 1000 ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'">
+                      {{ product.stockQuantity | number }} Units
+                    </span>
+                  </td>
+
+                  <td class="p-4 text-center text-gray-500 font-medium">
+                    ₹{{ product.estimatedCost | number:'1.2-2' }}
+                  </td>
+
+                  <td class="p-4 text-center">
+                    <div class="font-black text-gray-900">₹{{ product.unitPrice | number:'1.2-2' }}</div>
+                    @if(product.bulkDiscountThreshold) {
+                      <div class="text-[9px] text-blue-600 font-bold uppercase mt-1">2% off @ {{product.bulkDiscountThreshold}}+</div>
+                    }
+                  </td>
+
+                  <td class="p-4 text-center">
+                     <span class="font-black text-xs" [ngClass]="(product.unitPrice - product.estimatedCost) <= 0 ? 'text-red-600' : 'text-green-600'">
+                       {{ ((product.unitPrice - product.estimatedCost) / product.unitPrice * 100) | number:'1.0-1' }}%
+                     </span>
+                  </td>
+
+                  <td class="p-4 text-right space-x-2">
+                    <a [routerLink]="['/admin/products/edit', product.productId]" class="inline-block px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white rounded font-bold text-[10px] uppercase tracking-wider border border-blue-200 transition-all">
+                      Edit
+                    </a>
+                    <button (click)="deleteProduct(product.productId, product.name)" class="px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-600 hover:text-white rounded font-bold text-[10px] uppercase tracking-wider border border-red-200 transition-all">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="p-10 text-center text-gray-500 font-bold">No products found in catalog.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    }
+
+  </div>
+</div>

@@ -1,0 +1,232 @@
+<div class="max-w-7xl mx-auto px-4 py-12">
+  <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-8 tracking-tight border-b pb-4">Secure Checkout</h1>
+
+  @if (cartService.items().length === 0) {
+  <div class="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
+    <div class="text-6xl mb-4">🛒</div>
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">Your cart is empty</h2>
+    <p class="text-gray-500 mb-6">Looks like you haven't added any bricks to your order yet.</p>
+    <a routerLink="/products"
+      class="bg-red-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-800 transition-colors uppercase tracking-wider">
+      Browse Catalog
+    </a>
+  </div>
+  } @else {
+  @if (!authService.isAuthenticated()) {
+  <div class="mb-6 rounded-2xl bg-yellow-50 border border-yellow-200 p-5 text-yellow-900">
+    <div class="flex items-start gap-3">
+      <div class="mt-1 text-xl">⚠️</div>
+      <div>
+        <h2 class="font-bold text-gray-900">Recommended</h2>
+        <p class="text-sm text-gray-700 mt-1">
+          Register or login to track your order history and download invoices. Guest checkout is available, but signing
+          in before placing an order gives you better visibility and a faster experience.
+        </p>
+        <div class="mt-3 text-sm font-semibold">
+          <a routerLink="/login" class="text-red-700 hover:text-red-900">Login</a>
+          <span class="px-2">or</span>
+          <a routerLink="/register" class="text-red-700 hover:text-red-900">Register</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+    <div class="lg:col-span-7">
+      <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <span class="bg-gray-900 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
+          Shipping Information
+        </h2>
+        <form [formGroup]="checkoutForm" class="space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Full Name</label>
+              <input type="text" formControlName="customerName"
+                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 outline-none">
+              @if (checkoutForm.get('customerName')?.invalid && checkoutForm.get('customerName')?.touched) {
+              <p class="text-red-600 text-xs mt-1">Name is required.</p>
+              }
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Phone Number</label>
+              <input type="tel" formControlName="customerPhone"
+                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 outline-none">
+              @if (checkoutForm.get('customerPhone')?.invalid && checkoutForm.get('customerPhone')?.touched) {
+              <p class="text-red-600 text-xs mt-1">Must be exactly 10 digits.</p>
+              }
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Email Address</label>
+            <input type="email" formControlName="customerEmail"
+              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 outline-none">
+            @if (checkoutForm.get('customerEmail')?.invalid && checkoutForm.get('customerEmail')?.touched) {
+            <p class="text-red-600 text-xs mt-1">A valid email is required.</p>
+            }
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Complete Delivery Address
+              &amp; Pincode</label>
+            <textarea formControlName="deliveryAddress" rows="3"
+              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 outline-none resize-none"></textarea>
+            @if (checkoutForm.get('deliveryAddress')?.invalid && checkoutForm.get('deliveryAddress')?.touched) {
+            <p class="text-red-600 text-xs mt-1">Delivery address is required.</p>
+            }
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="lg:col-span-5">
+      <div class="bg-gray-50 p-8 rounded-2xl border border-gray-200 sticky top-24">
+        @if (!orderCreated()) {
+        <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <span class="bg-gray-900 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
+          Order Summary
+        </h2>
+
+        @if (checkoutError()) {
+        <div
+          class="mb-6 p-4 bg-red-100 border-l-4 border-red-600 text-red-800 rounded-r-lg font-bold text-sm shadow-sm">
+          {{ checkoutError() }}
+        </div>
+        }
+
+        <div class="space-y-4 mb-6">
+          @for (item of cartService.items(); track item.product.productId) {
+          <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div class="flex-1">
+              <h4 class="font-bold text-gray-800">{{ item.product.name }}</h4>
+              <div class="text-xs text-gray-500 mt-1">₹{{ item.product.unitPrice }} / unit</div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-2 bg-gray-100 rounded-lg p-2">
+                <button (click)="decreaseQuantity(item.product.productId)"
+                  class="text-gray-600 hover:text-gray-900 font-bold w-8 h-8 flex items-center justify-center hover:bg-gray-200 rounded transition-colors">−</button>
+                <input type="number" [value]="item.quantity" (blur)="onQuantityChange(item.product.productId, $event)"
+                  (keyup.enter)="onQuantityChange(item.product.productId, $event)" min="500"
+                  class="text-sm font-bold text-gray-900 w-20 text-center bg-white border border-gray-300 rounded-md py-1 px-2 mx-2 focus:ring-2 focus:ring-red-600 focus:border-red-600 outline-none transition-all shadow-inner">
+                <button (click)="increaseQuantity(item.product.productId)"
+                  class="text-gray-600 hover:text-gray-900 font-bold w-8 h-8 flex items-center justify-center hover:bg-gray-200 rounded transition-colors">+</button>
+              </div>
+              <div class="text-right">
+                <div class="font-black text-gray-900">₹{{ (item.product.unitPrice * item.quantity) | number:'1.2-2' }}
+                </div>
+                <button (click)="removeItem(item.product.productId)"
+                  class="text-xs text-red-600 hover:text-red-800 font-bold mt-1 hover:underline">Remove</button>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+
+        <div class="border-t border-gray-200 mt-6 pt-5 space-y-3">
+
+          <div class="flex justify-between items-center text-gray-500 font-medium text-sm">
+            <span>Subtotal (M.R.P)</span>
+            <span>₹{{ grossTotal | number:'1.0-0' }}</span>
+          </div>
+
+          @if (totalDiscount > 0) {
+            <div class="flex justify-between items-center text-green-600 font-bold text-sm">
+              <span class="flex items-center gap-1">🏷️ Bulk Discount</span>
+              <span>- ₹{{ totalDiscount | number:'1.0-0' }}</span>
+            </div>
+          }
+
+          <div class="flex justify-between items-start pt-3 border-t border-gray-200">
+            <span class="text-2xl font-black text-gray-900">Total Payable</span>
+            <div class="text-right">
+              <div class="text-2xl font-black text-gray-900">₹{{ totalPrice | number:'1.0-0' }}</div>
+              <div class="text-[10px] text-gray-400 font-bold mt-1">
+                (Inclusive of 18% GST: ₹{{ (totalPrice - (totalPrice / 1.18)) | number:'1.0-0' }})
+              </div>
+            </div>
+          </div>
+
+          @if (totalDiscount > 0) {
+            <div class="bg-green-50 border border-green-200 rounded-lg p-3 mt-4 text-center">
+              <p class="text-green-800 text-xs font-bold uppercase tracking-wider">
+                🎉 You are saving <span class="text-green-700 text-sm">₹{{ totalDiscount | number:'1.0-0' }}</span>
+              </p>
+            </div>
+          }
+        </div>
+
+        <button (click)="confirmOrder()" [disabled]="isSubmitting()"
+          class="w-full bg-gray-900 text-white py-4 rounded-xl font-black shadow-lg hover:bg-red-700 transition-all uppercase tracking-widest text-lg disabled:opacity-50">
+          {{ isSubmitting() ? 'Processing...' : 'Proceed to Payment' }}
+        </button>
+        }
+
+        @else {
+        <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <span class="bg-green-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">✓</span>
+          Select Payment Method
+        </h2>
+
+        @if (checkoutError()) {
+        <div
+          class="mb-6 p-4 bg-red-100 border-l-4 border-red-600 text-red-800 rounded-r-lg font-bold text-sm shadow-sm">
+          {{ checkoutError() }}
+        </div>
+        }
+
+        <div class="space-y-3 mb-8">
+          <label class="flex items-center p-4 border rounded-xl cursor-pointer transition-colors"
+            [ngClass]="paymentMethod() === 'UPI' ? 'border-red-600 bg-red-50' : 'border-gray-200 bg-white hover:bg-gray-50'">
+            <input type="radio" name="payment" (click)="paymentMethod.set('UPI')"
+              class="text-red-600 focus:ring-red-500 h-4 w-4">
+            <div class="ml-3">
+              <span class="block text-sm font-bold text-gray-900">Pay Instantly (UPI/Card)</span>
+              <span class="block text-xs text-gray-500 mt-1">Secure payment via Razorpay</span>
+            </div>
+          </label>
+
+          <label class="flex items-center p-4 border rounded-xl cursor-pointer transition-colors"
+            [ngClass]="paymentMethod() === 'COD' ? 'border-red-600 bg-red-50' : 'border-gray-200 bg-white hover:bg-gray-50'">
+            <input type="radio" name="payment" (click)="paymentMethod.set('COD')"
+              class="text-red-600 focus:ring-red-500 h-4 w-4">
+            <div class="ml-3">
+              <span class="block text-sm font-bold text-gray-900">Cash on Delivery</span>
+              <span class="block text-xs text-gray-500 mt-1">Pay physical cash when materials arrive</span>
+            </div>
+          </label>
+
+          <label class="flex items-center p-4 border rounded-xl cursor-pointer transition-colors"
+            [ngClass]="paymentMethod() === 'UTR' ? 'border-red-600 bg-red-50' : 'border-gray-200 bg-white hover:bg-gray-50'">
+            <input type="radio" name="payment" (click)="paymentMethod.set('UTR')"
+              class="text-red-600 focus:ring-red-500 h-4 w-4">
+            <div class="ml-3">
+              <span class="block text-sm font-bold text-gray-900">Direct Bank Transfer</span>
+              <span class="block text-xs text-gray-500 mt-1">Submit your UTR Number manually</span>
+            </div>
+          </label>
+        </div>
+
+        @if (paymentMethod() === 'UTR') {
+        <!-- FIX: Removed bankName field — backend UtrSubmissionDTO does not have it -->
+        <form [formGroup]="utrForm" class="space-y-4 mb-6 p-4 bg-white border border-gray-200 rounded-xl">
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">12-Digit UTR Number</label>
+            <input type="text" formControlName="utrNumber"
+              class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none"
+              placeholder="e.g. 123456789012">
+            @if (utrForm.get('utrNumber')?.invalid && utrForm.get('utrNumber')?.touched) {
+            <p class="text-red-600 text-xs mt-1">UTR Number is required.</p>
+            }
+          </div>
+        </form>
+        }
+
+        <button (click)="submitPayment()" [disabled]="!paymentMethod()"
+          class="w-full bg-red-700 text-white py-4 rounded-xl font-black shadow-lg hover:bg-red-800 disabled:bg-gray-400 disabled:shadow-none transition-all uppercase tracking-widest text-lg">
+          Complete Order
+        </button>
+        }
+      </div>
+    </div>
+  </div>
+  }
+</div>

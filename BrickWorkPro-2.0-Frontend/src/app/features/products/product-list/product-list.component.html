@@ -1,0 +1,86 @@
+<div class="container mx-auto px-6 py-12">
+  <div class="flex justify-between items-end mb-10">
+    <div>
+      <h1 class="text-3xl font-black text-gray-900 tracking-tight">Our Inventory</h1>
+      <p class="text-gray-500 mt-2">Premium quality bricks for your next project.</p>
+    </div>
+    <span class="bg-red-50 text-green-700 px-4 py-2 rounded-xl text-sm font-bold border border-red-100">
+      {{ products().length }} Products Available
+    </span>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="bg-red-50 text-red-800 p-6 rounded-2xl mb-8 font-bold border border-red-200">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="animate-pulse bg-gray-100 h-80 rounded-2xl"></div>
+      }
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      @for (product of products(); track product.productId) {
+        <div class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden">
+
+<div class="h-52 w-full bg-gray-50 relative">
+            @if (getImageSrc(product)) {
+              <img [src]="getImageSrc(product)" [alt]="product.name" class="w-full h-full object-cover">
+            } @else {
+              <div class="w-full h-full flex items-center justify-center text-gray-300">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              </div>
+            }
+
+            @if (product.bulkDiscountThreshold) {
+              <div class="absolute top-2 left-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-[10px] font-black px-2 py-1 rounded shadow-md flex items-center gap-1 z-10">
+                <span>🔥</span> 2% OFF on {{ product.bulkDiscountThreshold }}+ pcs
+              </div>
+            }
+
+            <div class="absolute top-2 right-2">
+              <span class="px-2 py-1 text-[9px] font-black rounded uppercase tracking-wider shadow-sm"
+                [ngClass]="product.stockQuantity > 500 ? 'bg-white text-green-700' : 'bg-red-50 text-red-700'">
+                {{ product.stockQuantity > 500 ? 'In Stock' : 'Low Stock' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="p-5 flex flex-col grow">
+            <h3 class="text-lg font-bold text-gray-900 mb-1">{{ product.name }}</h3>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">{{ product.brickType }}</p>
+
+            <div class="mt-auto">
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-xl font-black text-red-700">₹{{ product.unitPrice }}/unit</span>
+
+                @if (authService.isAdminRole()) {
+                  <div class="flex gap-2">
+                    <a [routerLink]="['/admin/products/edit', product.productId]" class="text-[10px] font-bold text-gray-400 hover:text-blue-600">EDIT</a>
+                    <button (click)="deleteProduct(product.productId, product.name)" class="text-[10px] font-bold text-gray-400 hover:text-red-600">DEL</button>
+                  </div>
+                }
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <button (click)="goToQuote(product.productId)"
+                  class="w-full bg-gray-50 text-gray-700 py-3 rounded-xl text-xs font-black hover:bg-gray-100 transition-all border border-gray-200">
+                  QUOTE
+                </button>
+                <button (click)="addToCart(product)"
+                  [disabled]="product.stockQuantity < 500"
+                  [ngClass]="product.stockQuantity < 500 ? 'bg-gray-200 cursor-not-allowed' : 'bg-red-700 hover:bg-red-800'"
+                  class="w-full text-white py-3 rounded-xl text-xs font-black transition-all shadow-md">
+                  {{ product.stockQuantity < 500 ? 'OUT OF STOCK' : 'ADD TO CART' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

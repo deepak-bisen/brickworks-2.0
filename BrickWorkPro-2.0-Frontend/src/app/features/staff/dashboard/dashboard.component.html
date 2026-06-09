@@ -1,0 +1,64 @@
+<div class="p-8 bg-gray-50 min-h-screen">
+  <div class="max-w-7xl mx-auto">
+    <header class="mb-8">
+      <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Staff Operations Center</h1>
+      <p class="text-gray-500 text-sm mt-1">Production monitoring, analytics, and log tracking for factory staff.</p>
+    </header>
+
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-indigo-700">
+        <h3 class="text-gray-400 font-bold uppercase text-xs">Today's Production</h3>
+        <p class="text-4xl font-black mt-2">{{ productionStats().dailyProduction | number }}</p>
+        <p class="text-xs text-gray-500 mt-1">Bricks produced today</p>
+        <p class="text-xs text-gray-400 mt-3">Updated {{ productionStats().lastUpdated | date:'short' }}</p>
+      </div>
+      <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-orange-700">
+        <h3 class="text-gray-400 font-bold uppercase text-xs">Logs Recorded</h3>
+        <p class="text-4xl font-black mt-2">{{ logsCount() }}</p>
+        <p class="text-xs text-gray-500 mt-1">Production logs submitted</p>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 mb-8">
+      <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
+        <div>
+          <h2 class="font-bold text-lg">Recent Production Logs</h2>
+          <p class="text-sm text-gray-500">Latest entries from the factory floor.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <a routerLink="/staff/production" class="bg-gray-900 text-white font-bold px-6 py-3 rounded-xl hover:bg-black text-sm uppercase">Submit New Log</a>
+          <a routerLink="/staff/raw-materials" class="bg-blue-700 text-white font-bold px-6 py-3 rounded-xl hover:bg-blue-900 text-sm uppercase">Manage Raw Materials</a>
+          <a routerLink="/production-stage-management" class="bg-green-700 text-white font-bold px-6 py-3 rounded-xl hover:bg-green-900 text-sm uppercase">Manage Production Stages</a>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage()" class="mb-4 text-sm text-red-600">{{ errorMessage() }}</div>
+      <div *ngIf="!isLoading() && logsCount() === 0" class="text-sm text-gray-500">No production logs have been recorded yet.</div>
+
+      <div *ngIf="!isLoading() && logsCount() > 0" class="overflow-x-auto">
+        <table class="min-w-full text-left text-sm text-gray-600">
+          <thead>
+            <tr>
+              <th class="px-4 py-3 border-b border-gray-200 uppercase tracking-wide">Product</th>
+              <th class="px-4 py-3 border-b border-gray-200 uppercase tracking-wide">Quantity</th>
+              <th class="px-4 py-3 border-b border-gray-200 uppercase tracking-wide">Stage</th>
+              <th class="px-4 py-3 border-b border-gray-200 uppercase tracking-wide">Manager</th>
+              <th class="px-4 py-3 border-b border-gray-200 uppercase tracking-wide">Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of recentLogs()">
+              <td class="px-4 py-3 border-b border-gray-100">
+                {{ log.productName || productNameMap()[log.productId] || log.productId || 'Unknown' }}
+              </td>
+              <td class="px-4 py-3 border-b border-gray-100">{{ log.quantity || 0 }}</td>
+              <td class="px-4 py-3 border-b border-gray-100">{{ log.stage || 'N/A' }}</td>
+              <td class="px-4 py-3 border-b border-gray-100">{{ log.managerName || log.managerId || 'N/A' }}</td>
+              <td class="px-4 py-3 border-b border-gray-100">{{ log.createdAt ? (log.createdAt | date:'short') : 'Unknown' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
