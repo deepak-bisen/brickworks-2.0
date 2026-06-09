@@ -131,6 +131,7 @@ public class PaymentServiceImpl implements PaymentService {
                 invoiceService.generateAndSaveInvoice(orderId);
             } catch (Exception e) {
                 System.err.println("Invoice generation failed post-payment: " + e.getMessage());
+                e.printStackTrace();
             }
         }
     }
@@ -202,7 +203,8 @@ public class PaymentServiceImpl implements PaymentService {
         try {
             invoiceService.generateAndSaveInvoice(orderId);
         } catch (Exception e) {
-            System.err.println("Invoice generation failed for COD: " + e.getMessage());
+            System.err.println("Invoice generation failed for COD: " + e.getMessage() );
+            e.printStackTrace();
         }
 
         return "Cash on Delivery selected. Order Confirmed!";

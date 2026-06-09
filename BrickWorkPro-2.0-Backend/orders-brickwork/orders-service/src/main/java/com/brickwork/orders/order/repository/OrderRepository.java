@@ -27,5 +27,7 @@ public interface OrderRepository extends JpaRepository<Order,String> {
     @Query("SELECT SUM(o.totalAmount) FROM Order o WHERE o.status != 'QUOTE_REQUEST' AND o.status != 'CANCELLED'")
     Double calculateTotalRealizedRevenue();
 
+    // Quotes ko chhod kar baaki saare actual orders count karne ke liye
+    long countByStatusNot(OrderStatus status);
 
 }

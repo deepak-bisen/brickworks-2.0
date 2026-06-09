@@ -26,10 +26,10 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     public String generateAndSaveInvoice(String orderId) {
-        // Fetch real order data via Feign!
+        // 1. Fetch order data from Orders Microservice
         Map<String, Object> orderData = orderFeignClient.getOrderById(orderId);
 
-        // 🚀 MAGIC FIX: Extract and reverse calculate 18% GST immediately
+        // 2. Tax & Amount Math
         double totalAmount = Double.parseDouble(orderData.getOrDefault("totalAmount", "0.0").toString());
         double taxableAmount = totalAmount / 1.18;
         double totalGst = totalAmount - taxableAmount;
@@ -39,42 +39,40 @@ public class InvoiceServiceImpl implements InvoiceService {
         String status = (String) orderData.getOrDefault("status", "PENDING");
         String paymentMode = status.contains("COD") ? "Cash On Delivery (COD)" : "Online / Prepaid";
 
-        // Setup Invoice Record
+        // 3. Setup Invoice Record Safely
         InvoiceRecord invoice = new InvoiceRecord();
         invoice.setOrderId(orderId);
         invoice.setInvoiceNumber("INV-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         invoice.setTotalAmount(Double.valueOf(orderData.getOrDefault("totalAmount", 0.0).toString()));
         invoice.setTaxAmount(Double.valueOf(orderData.getOrDefault("taxAmount", 0.0).toString()));
         invoice.setFilePath("PENDING");
+
+        // FIX 1: Explicitly set Date to prevent DB Integrity Violation Crash
+        invoice.setGeneratedDate(java.time.LocalDateTime.now());
+
+        // Ab ye 100% database me save hoga!
         invoiceRepo.save(invoice);
 
-        // Inject invoice details into the map for Thymeleaf
+        // 4. Inject safe values for Thymeleaf HTML Template
         orderData.put("invoiceNumber", invoice.getInvoiceNumber());
-
-        //  FIX: Safely handle Date to prevent NullPointerException Crash
-        String dateStr = (invoice.getGeneratedDate() != null)
-                ? invoice.getGeneratedDate().toString().substring(0, 10)
-                : java.time.LocalDate.now().toString();
-        orderData.put("invoiceDate", dateStr);
-
-        // 🚀 CRITICAL FIX: Inject all proper metrics for first-time Thymeleaf Template rendering
+        orderData.put("invoiceDate", invoice.getGeneratedDate().toString().substring(0, 10));
         orderData.put("paymentMethod", paymentMode);
         orderData.put("taxableAmount", taxableAmount);
         orderData.put("cgst", cgst);
         orderData.put("sgst", sgst);
 
-        // Ensure missing fields have fallbacks
+        // FIX 2: Safeguard against Null variables that crash Thymeleaf
+        orderData.putIfAbsent("items", new java.util.ArrayList<>()); // Agar items nahi hain toh khali array bhejo
         orderData.putIfAbsent("customerPhone", "N/A");
         orderData.putIfAbsent("customerEmail", "N/A");
 
-        // Generate the PDF Bytes
+        // 5. Generate PDF
         byte[] pdfBytes = pdfInvoiceService.generatePdfFromHtml("invoice", orderData);
-
-        // In a real enterprise app, you upload pdfBytes to AWS S3 here and save the URL.
-        // For now, we rely on dynamic regeneration for downloads.
 
         return invoice.getInvoiceNumber();
     }
+
+
     @Override
     public byte[] getInvoicePdfBytes(String orderId) {
         Optional<InvoiceRecord> invoiceOptional = invoiceRepo.findByOrderId(orderId);

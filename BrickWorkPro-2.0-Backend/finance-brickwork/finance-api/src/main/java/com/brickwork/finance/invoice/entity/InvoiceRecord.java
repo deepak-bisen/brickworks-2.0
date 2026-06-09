@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 public class InvoiceRecord {
     @Id
-    @Column(name = "ID")
+    @Column(name = "INVOICE_ID")
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
