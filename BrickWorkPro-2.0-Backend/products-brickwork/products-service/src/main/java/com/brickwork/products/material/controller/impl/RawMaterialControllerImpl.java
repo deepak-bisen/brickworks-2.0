@@ -3,12 +3,14 @@ package com.brickwork.products.material.controller.impl;
 import com.brickwork.products.material.controller.RawMaterialController;
 import com.brickwork.products.material.dto.RawMaterialDTO;
 import com.brickwork.products.material.service.RawMaterialService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 public class RawMaterialControllerImpl implements RawMaterialController {
 
@@ -27,6 +29,7 @@ public class RawMaterialControllerImpl implements RawMaterialController {
 
     @Override
     public ResponseEntity<RawMaterialDTO> addMaterial(RawMaterialDTO rawMaterialDTO) {
+        log.debug("Adding raw material: name={}", rawMaterialDTO.getMaterialName());
         return ResponseEntity.ok(rawMaterialService.addMaterial(rawMaterialDTO));
     }
 

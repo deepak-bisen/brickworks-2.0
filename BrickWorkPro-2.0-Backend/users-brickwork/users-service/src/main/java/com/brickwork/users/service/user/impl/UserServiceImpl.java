@@ -1,5 +1,6 @@
 package com.brickwork.users.service.user.impl;
 
+import com.brickwork.exception.NotFoundException;
 import com.brickwork.users.dto.CustomerRegistrationDTO;
 import com.brickwork.users.dto.CustomerUpdateDTO;
 import com.brickwork.users.dto.EmployeeRegistrationDTO;
@@ -11,12 +12,14 @@ import com.brickwork.users.enums.Role;
 import com.brickwork.users.repository.UserRepository;
 import com.brickwork.users.service.user.UserService;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -54,6 +57,7 @@ public class UserServiceImpl implements UserService {
         user.setRole(userDTO.getRole());
 
         User savedUser = userRepository.save(user);
+        log.info("Registered user: username={}, role={}", savedUser.getUsername(), savedUser.getRole());
         return mapToDTO(savedUser);
     }
 
@@ -70,6 +74,7 @@ public class UserServiceImpl implements UserService {
         customer.setBillingAddress(customerDTO.getBillingAddress());
 
         Customer savedCustomer = userRepository.save(customer);
+        log.info("Registered customer: username={}", savedCustomer.getUsername());
         return mapToDTO(savedCustomer);
     }
 
@@ -84,6 +89,7 @@ public class UserServiceImpl implements UserService {
         employee.setShiftTiming(employeeDTO.getShiftTiming());
 
         Employee savedEmployee = userRepository.save(employee);
+        log.info("Registered employee: username={}, code={}", savedEmployee.getUsername(), savedEmployee.getEmployeeCode());
         return mapToDTO(savedEmployee);
     }
 
@@ -129,14 +135,14 @@ public class UserServiceImpl implements UserService {
         // Note: If your User entity doesn't auto-generate UUIDs, uncomment the next line:
         // newAdmin.setId(java.util.UUID.randomUUID().toString());
 
-        // 6. Save to Database
         userRepository.save(newAdmin);
+        log.info("Registered new admin: username={}", newAdmin.getUsername());
     }
 
     @Override
     public UserDTO getUserByUsername(String username) { // Method ka naam chaho toh getUserByUsername kar lo
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+                .orElseThrow(() -> new NotFoundException("User not found with username: " + username));
         return mapToDTO(user);
     }
 
@@ -145,7 +151,7 @@ public class UserServiceImpl implements UserService {
     public UserDTO updateCustomerProfile(String username, CustomerUpdateDTO updateDTO) {
         User user = userRepository.findByUsername(username)
 
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+                .orElseThrow(() -> new NotFoundException("User not found with username: " + username));
 
         if (updateDTO.getName() != null && !updateDTO.getName().trim().isEmpty()) {
             user.setFullName(updateDTO.getName());
@@ -177,6 +183,7 @@ public class UserServiceImpl implements UserService {
             userRepository.save(user);
         }
 
+        log.info("Updated customer profile: username={}", username);
         return mapToDTO(user);
     }
 

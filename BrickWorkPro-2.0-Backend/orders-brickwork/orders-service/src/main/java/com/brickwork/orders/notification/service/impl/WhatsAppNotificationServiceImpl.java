@@ -6,12 +6,14 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class WhatsAppNotificationServiceImpl implements WhatsAppNotificationService {
 
@@ -47,14 +49,14 @@ public class WhatsAppNotificationServiceImpl implements WhatsAppNotificationServ
             new Thread(() -> {
                 try {
                     ResponseEntity<String> response = restTemplate.postForEntity(getApiUrl(), request, String.class);
-                    System.out.println("WhatsApp Webhook Fired for order Confirmation: " + response.getStatusCode());
+                    log.info("WhatsApp dispatch notification sent for order {}, status={}", orderId, response.getStatusCode());
                 } catch (Exception e) {
-                    System.err.println("Failed to send WhatsApp message for order Confirmation: " + e.getMessage());
+                    log.error("Failed to send WhatsApp dispatch notification for order {}", orderId, e);
                 }
             }).start();
 
         } catch (Exception e) {
-            System.err.println("Error formatting WhatsApp request: " + e.getMessage());
+            log.error("Error preparing WhatsApp dispatch notification for order {}", orderId, e);
         }
     }
 
@@ -80,14 +82,14 @@ public class WhatsAppNotificationServiceImpl implements WhatsAppNotificationServ
             new Thread(() -> {
                 try {
                     ResponseEntity<String> response = restTemplate.postForEntity(getApiUrl(), request, String.class);
-                    System.out.println("WhatsApp Order Dispatch Confirmation Fired: " + response.getStatusCode());
+                    log.info("WhatsApp order confirmation sent for order {}, status={}", orderId, response.getStatusCode());
                 } catch (Exception e) {
-                    System.err.println("Failed to send Order Dispatch WhatsApp confirmation: " + e.getMessage());
+                    log.error("Failed to send WhatsApp order confirmation for order {}", orderId, e);
                 }
             }).start();
 
         } catch (Exception e) {
-            System.err.println("Error formatting WhatsApp request: " + e.getMessage());
+            log.error("Error preparing WhatsApp order confirmation for order {}", orderId, e);
         }
     }
 }

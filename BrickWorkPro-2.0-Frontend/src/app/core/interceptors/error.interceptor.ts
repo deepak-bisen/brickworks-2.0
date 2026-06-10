@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { NotificationService } from '../services/notification.service';
+import { extractApiErrorMessage } from '../../shared/utils/api-error.util';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
@@ -17,6 +18,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.error instanceof ErrorEvent) {
         errorMessage = `Network error: ${error.error.message}`;
       } else {
+        const apiMessage = extractApiErrorMessage(error);
+
         // Handled inline: optional payment prefetch and invoice actions.
         if (req.url.includes('/api/finance/payments/order/')) {
           if (error.status === 404 || error.status === 403) {
@@ -31,6 +34,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           case 401:
             if (req.url.includes('/api/auth/login')) {
               errorMessage =
+                apiMessage ||
                 (typeof error.error === 'string' ? error.error : null) ||
                 'Invalid username or password.';
             } else {
@@ -40,24 +44,26 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             }
             break;
           case 403:
-            errorMessage = 'You are not authorized to access this resource.';
+            errorMessage = apiMessage || 'You are not authorized to access this resource.';
             break;
           case 404:
-            errorMessage = 'The requested resource was not found.';
+            errorMessage = apiMessage || 'The requested resource was not found.';
+            break;
+          case 409:
+            errorMessage = apiMessage || 'This action conflicts with current data. Please review and try again.';
             break;
           case 500:
-            errorMessage = 'Server is experiencing issues. Please try again later.';
+            errorMessage = apiMessage || 'Server is experiencing issues. Please try again later.';
             break;
           default:
             errorMessage =
-              error.error?.message ||
-              (typeof error.error === 'string' ? error.error : null) ||
+              apiMessage ||
               `Server returned error code ${error.status}.`;
         }
       }
 
       notification.error(errorMessage);
-      return throwError(() => new Error(errorMessage));
+      return throwError(() => error);
     }),
   );
 };

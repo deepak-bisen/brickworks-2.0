@@ -5,6 +5,11 @@ import com.brickwork.orders.client.ProductionClient;
 import com.brickwork.orders.client.ProductionLogFromOrderRequest;
 import com.brickwork.orders.notification.service.EmailNotificationService;
 import com.brickwork.orders.notification.service.WhatsAppNotificationService;
+import com.brickwork.exception.BadRequestException;
+import com.brickwork.exception.ForbiddenException;
+import com.brickwork.exception.InsufficientStockException;
+import com.brickwork.exception.NotFoundException;
+import com.brickwork.exception.UnauthorizedException;
 import com.brickwork.orders.order.dto.*;
 import com.brickwork.orders.order.entity.Order;
 import com.brickwork.orders.order.entity.OrderDetails;
@@ -13,6 +18,7 @@ import com.brickwork.orders.order.repository.OrderRepository;
 import com.brickwork.orders.order.service.OrderService;
 import com.brickwork.security.util.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
 
@@ -101,10 +108,10 @@ public class OrderServiceImpl implements OrderService {
                 ProductDTO product = productClient.getProductById(item.getProductId());
 
                 if (product.getStockQuantity() < item.getQuantity()) {
-                    throw new RuntimeException(
-                            "Order Failed: Insufficient stock for product '" + product.getName() + "'. " +
-                                    "You requested " + item.getQuantity() + " but only " + product.getStockQuantity() + " are available. " +
-                                    "Once the stock is available, you will be notified."
+                    throw new InsufficientStockException(
+                            "Insufficient stock for \"" + product.getName() + "\". " +
+                                    "You requested " + item.getQuantity() + " units but only " +
+                                    product.getStockQuantity() + " are available."
                     );
                 }
 
@@ -140,6 +147,9 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderDetails(detailsList);
 
         Order savedOrder = orderRepository.save(order);
+        log.info("Order saved: id={}, status={}, customerId={}, items={}, total={}",
+                savedOrder.getOrderId(), savedOrder.getStatus(), savedOrder.getCustomerId(),
+                detailsList.size(), savedOrder.getTotalAmount());
 
         try {
             String phone = savedOrder.getCustomerPhone() != null ? savedOrder.getCustomerPhone() : "910000000000";
@@ -148,7 +158,7 @@ public class OrderServiceImpl implements OrderService {
                 whatsAppNotificationService.sendOrderConfirmation(phone, savedOrder.getOrderId(), savedOrder.getTotalAmount());
             }
         } catch (Exception e) {
-            System.err.println("Order Creation Notification Failed: " + e.getMessage());
+            log.error("Order creation notification failed for order {}", savedOrder.getOrderId(), e);
         }
 
         return mapToResponse(savedOrder);
@@ -158,7 +168,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponseDTO getOrderById(String id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new NotFoundException("Order not found"));
         validateOrderOwnership(order);
         return mapToResponse(order);
     }
@@ -178,13 +188,14 @@ public class OrderServiceImpl implements OrderService {
         validateStaffStatusChange(newStatus);
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new NotFoundException("Order not found"));
 
         if ((newStatus == OrderStatus.PAYMENT_RECEIVED || newStatus == OrderStatus.CONFIRMED_COD)
                 && (order.getStatus() == OrderStatus.PENDING_PAYMENT)) {
             for (OrderDetails detail : order.getOrderDetails()) {
                 productClient.deductStock(detail.getProductId(), detail.getQuantity());
             }
+            log.info("Stock deducted for order {}, moving to IN_PRODUCTION", orderId);
             newStatus = OrderStatus.IN_PRODUCTION;
 
             try {
@@ -196,12 +207,13 @@ public class OrderServiceImpl implements OrderService {
                         .collect(Collectors.toList()));
                 productionClient.createFromOrder(productionRequest);
             } catch (Exception e) {
-                System.err.println("Failed to create production logs for order " + orderId + ": " + e.getMessage());
+                log.error("Failed to create production logs for order {}", orderId, e);
             }
         }
 
         order.setStatus(newStatus);
         orderRepository.save(order);
+        log.info("Order status updated: id={}, status={}", orderId, newStatus);
 
         if ("DISPATCHED".equalsIgnoreCase(String.valueOf(newStatus))) {
             try {
@@ -214,7 +226,7 @@ public class OrderServiceImpl implements OrderService {
                 whatsAppNotificationService.sendDispatchNotification(phone, orderId, finalDriverDetails);
                 emailNotificationService.sendDispatchEmail(order.getCustomerEmail(), order.getCustomerName(), orderId, finalDriverDetails);
             } catch (Exception e) {
-                System.err.println("Dispatch Notification Failed: " + e.getMessage());
+                log.error("Dispatch notification failed for order {}", orderId, e);
             }
         }
 
@@ -243,15 +255,16 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponseDTO trackPublicOrder(String orderId, String phone) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found! Please check your Order ID."));
+                .orElseThrow(() -> new NotFoundException("Order not found! Please check your Order ID."));
 
         String formattedInputPhone = formatPhoneNumberForWhatsApp(phone);
         String storedPhone = formatPhoneNumberForWhatsApp(order.getCustomerPhone());
         if (order.getCustomerPhone() == null || order.getCustomerPhone().isBlank()
                 || !storedPhone.equals(formattedInputPhone)) {
-            throw new RuntimeException("Phone number does not match in our records for this order.");
+            throw new BadRequestException("Phone number does not match in our records for this order.");
         }
 
+        log.info("Order tracked successfully: orderId={}", orderId);
         return mapToResponse(order);
     }
 
@@ -261,9 +274,9 @@ public class OrderServiceImpl implements OrderService {
         }
         if (SecurityUtils.hasRole("CUSTOMER")) {
             String userId = SecurityUtils.getUserId()
-                    .orElseThrow(() -> new RuntimeException("Unauthorized: user identity not available"));
+                    .orElseThrow(() -> new UnauthorizedException("Unauthorized: user identity not available"));
             if (order.getCustomerId() == null || !order.getCustomerId().equals(userId)) {
-                throw new RuntimeException("Access denied: you can only view your own orders");
+                throw new ForbiddenException("Access denied: you can only view your own orders");
             }
         }
     }
@@ -273,9 +286,9 @@ public class OrderServiceImpl implements OrderService {
             return;
         }
         String userId = SecurityUtils.getUserId()
-                .orElseThrow(() -> new RuntimeException("Unauthorized: user identity not available"));
+                .orElseThrow(() -> new UnauthorizedException("Unauthorized: user identity not available"));
         if (!userId.equals(customerId)) {
-            throw new RuntimeException("Access denied: you can only view your own orders");
+            throw new ForbiddenException("Access denied: you can only view your own orders");
         }
     }
 
@@ -284,7 +297,7 @@ public class OrderServiceImpl implements OrderService {
                 && !SecurityUtils.isAdmin()
                 && !SecurityUtils.hasRole("INTERNAL_SERVICE")) {
             if (newStatus != OrderStatus.DISPATCHED && newStatus != OrderStatus.DELIVERED) {
-                throw new RuntimeException("STAFF can only set order status to DISPATCHED or DELIVERED");
+                throw new ForbiddenException("STAFF can only set order status to DISPATCHED or DELIVERED");
             }
         }
     }

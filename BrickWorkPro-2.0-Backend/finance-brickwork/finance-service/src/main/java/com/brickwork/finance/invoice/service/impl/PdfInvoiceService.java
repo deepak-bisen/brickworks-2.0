@@ -1,6 +1,7 @@
 package com.brickwork.finance.invoice.service.impl;
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
@@ -9,6 +10,7 @@ import org.thymeleaf.context.Context;
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class PdfInvoiceService {
 
@@ -41,6 +43,7 @@ public class PdfInvoiceService {
             builder.toStream(outputStream);
             builder.run();
 
+            log.info("PDF generated: template={}, orderId={}", templateName, variables.get("orderId"));
             return outputStream.toByteArray();
 
         } catch (Exception e) {

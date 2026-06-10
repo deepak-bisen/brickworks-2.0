@@ -14,9 +14,15 @@ import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import com.razorpay.Utils;
 import org.json.JSONObject;
+import com.brickwork.exception.BadRequestException;
+import com.brickwork.exception.ConflictException;
+import com.brickwork.exception.ForbiddenException;
+import com.brickwork.exception.NotFoundException;
+import com.brickwork.exception.UnauthorizedException;
 import com.brickwork.security.util.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import static com.brickwork.finance.payment.enums.PaymentMethod.*;
@@ -27,6 +33,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 
+@Slf4j
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
@@ -57,34 +64,39 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public RazorpayOrderResponseDTO createRazorpayOrder(String orderId, Double amount) throws RazorpayException {
+    public RazorpayOrderResponseDTO createRazorpayOrder(String orderId, Double amount) {
         // Idempotency check
         Optional<PaymentTransaction> existingTxOpt = paymentTransactionRepository.findByOrderId(orderId);
         if (existingTxOpt.isPresent() && existingTxOpt.get().getPaymentStatus() == SUCCESS) {
-            throw new RuntimeException("Payment already completed for this order.");
+            throw new ConflictException("Payment already completed for this order.");
         }
         if (amount == null || amount <= 0) {
             throw new IllegalArgumentException("Invalid payment amount");
         }
 
+        try {
+            RazorpayClient razorpay = new RazorpayClient(keyId, keySecret);
+            JSONObject orderRequest = new JSONObject();
+            orderRequest.put("amount", amount * 100); // Razorpay uses paise
+            orderRequest.put("currency", "INR");
+            orderRequest.put("receipt", orderId);
 
-        RazorpayClient razorpay = new RazorpayClient(keyId, keySecret);
-        JSONObject orderRequest = new JSONObject();
-        orderRequest.put("amount", amount * 100); // Razorpay uses paise
-        orderRequest.put("currency", "INR");
-        orderRequest.put("receipt", orderId);
+            Order razorpayOrder = razorpay.orders.create(orderRequest);
 
-        Order razorpayOrder = razorpay.orders.create(orderRequest);
+            PaymentTransaction transaction = existingTxOpt.orElse(new PaymentTransaction());
+            transaction.setOrderId(orderId);
+            transaction.setAmount(amount);
+            transaction.setRazorpayOrderId(razorpayOrder.get("id"));
+            transaction.setPaymentStatus(CREATED);
+            transaction.setPaymentMethod(ONLINE);
+            paymentTransactionRepository.save(transaction);
 
-        PaymentTransaction transaction = existingTxOpt.orElse(new PaymentTransaction());
-        transaction.setOrderId(orderId);
-        transaction.setAmount(amount);
-        transaction.setRazorpayOrderId(razorpayOrder.get("id"));
-        transaction.setPaymentStatus(CREATED);
-        transaction.setPaymentMethod(ONLINE);
-        paymentTransactionRepository.save(transaction);
-
-        return new RazorpayOrderResponseDTO(razorpayOrder.get("id"), amount, "INR");
+            log.info("Razorpay order created: orderId={}, razorpayOrderId={}, amount={}",
+                    orderId, razorpayOrder.get("id"), amount);
+            return new RazorpayOrderResponseDTO(razorpayOrder.get("id"), amount, "INR");
+        } catch (RazorpayException e) {
+            throw new BadRequestException("Payment gateway error: " + e.getMessage());
+        }
     }
 
     @Override
@@ -100,8 +112,10 @@ public class PaymentServiceImpl implements PaymentService {
             boolean isValid = Utils.verifyPaymentSignature(options, keySecret);
             if (isValid) {
                 processSuccessfulPayment(rzpOrderId, rzpPaymentId, orderId);
+                log.info("Payment signature verified for order {}", orderId);
                 return true;
             }
+            log.warn("Invalid payment signature for order {}", orderId);
             return false;
         } catch (RazorpayException e) {
             return false;
@@ -118,12 +132,13 @@ public class PaymentServiceImpl implements PaymentService {
 
     private void processSuccessfulPayment(String rzpOrderId, String rzpPaymentId, String orderId) {
         PaymentTransaction tx = paymentTransactionRepository.findByRazorpayOrderId(rzpOrderId)
-                .orElseThrow(() -> new RuntimeException("Transaction not found"));
+                .orElseThrow(() -> new NotFoundException("Transaction not found"));
 
         if (tx.getPaymentStatus() != SUCCESS) {
             tx.setRazorpayPaymentId(rzpPaymentId);
             tx.setPaymentStatus(SUCCESS);
             paymentTransactionRepository.save(tx);
+            log.info("Payment marked successful for order {}, razorpayPaymentId={}", orderId, rzpPaymentId);
 
             // Tell Orders Microservice that payment is done!
             orderFeignClient.updateOrderStatus(orderId, "PAYMENT_RECEIVED");
@@ -132,8 +147,7 @@ public class PaymentServiceImpl implements PaymentService {
             try {
                 invoiceService.generateAndSaveInvoice(orderId);
             } catch (Exception e) {
-                System.err.println("Invoice generation failed post-payment: " + e.getMessage());
-                e.printStackTrace();
+                log.error("Invoice generation failed post-payment for order {}", orderId, e);
             }
         }
     }
@@ -150,6 +164,7 @@ public class PaymentServiceImpl implements PaymentService {
         transaction.setPaymentStatus(PENDING); // Waiting for admin
 
         paymentTransactionRepository.save(transaction);
+        log.info("UTR submitted for order {}, amount={}", dto.getOrderId(), dto.getAmount());
         return "UTR Submitted. Pending Admin Verification.";
     }
 
@@ -159,11 +174,12 @@ public class PaymentServiceImpl implements PaymentService {
     public String verifyUtrPayment(String orderId, boolean isApproved) {
         // Changed findById to findByOrderId
         PaymentTransaction transaction = paymentTransactionRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RuntimeException("Payment record not found for Order ID: " + orderId));
+                .orElseThrow(() -> new NotFoundException("Payment record not found for Order ID: " + orderId));
 
         if (isApproved) {
             transaction.setPaymentStatus(SUCCESS);
             paymentTransactionRepository.save(transaction);
+            log.info("UTR approved for order {}", orderId);
 
             // MAGIC HAPPENS HERE: We trigger the exact same automation as Razorpay!
             orderFeignClient.updateOrderStatus(transaction.getOrderId(), "PAYMENT_RECEIVED");
@@ -171,13 +187,14 @@ public class PaymentServiceImpl implements PaymentService {
             try {
                 invoiceService.generateAndSaveInvoice(transaction.getOrderId());
             } catch (Exception e) {
-                System.err.println("Invoice generation failed, but payment successful: " + e.getMessage());
+                log.error("Invoice generation failed after UTR approval for order {}", transaction.getOrderId(), e);
             }
 
             return "Payment Approved. Order marked as PAID and Invoice Generated.";
         } else {
             transaction.setPaymentStatus(REJECTED);
             paymentTransactionRepository.save(transaction);
+            log.info("UTR rejected for order {}", orderId);
 
             // Optionally: Tell order service payment failed
             orderFeignClient.updateOrderStatus(transaction.getOrderId(), "PENDING_PAYMENT");
@@ -197,6 +214,7 @@ public class PaymentServiceImpl implements PaymentService {
         transaction.setPaymentStatus(PENDING); // Cash is not collected yet!
 
         paymentTransactionRepository.save(transaction);
+        log.info("COD selected for order {}, amount={}", orderId, amount);
 
         // Tell the Orders Service that the order is confirmed so the factory can start molding/dispatching
         orderFeignClient.updateOrderStatus(orderId, "CONFIRMED_COD");
@@ -205,8 +223,7 @@ public class PaymentServiceImpl implements PaymentService {
         try {
             invoiceService.generateAndSaveInvoice(orderId);
         } catch (Exception e) {
-            System.err.println("Invoice generation failed for COD: " + e.getMessage() );
-            e.printStackTrace();
+            log.error("Invoice generation failed for COD order {}", orderId, e);
         }
 
         return "Cash on Delivery selected. Order Confirmed!";
@@ -217,15 +234,16 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public String confirmCodCollection(String paymentId) {
         PaymentTransaction transaction = paymentTransactionRepository.findById(paymentId)
-                .orElseThrow(() -> new RuntimeException("Payment record not found"));
+                .orElseThrow(() -> new NotFoundException("Payment record not found"));
 
         if (!CASH_ON_DELIVERY.equals(transaction.getPaymentMethod())) {
-            throw new RuntimeException("This is not a COD transaction!");
+            throw new BadRequestException("This is not a COD transaction!");
         }
 
         // Mark the cash as successfully received
         transaction.setPaymentStatus(SUCCESS);
         paymentTransactionRepository.save(transaction);
+        log.info("COD cash collected: paymentId={}, orderId={}", paymentId, transaction.getOrderId());
 
         // Update the order status to reflect completion
         orderFeignClient.updateOrderStatus(transaction.getOrderId(), "DELIVERED");
@@ -242,7 +260,7 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentTransaction getPaymentDetailsByOrderId(String orderId) {
         validateOrderAccess(orderId);
         return paymentTransactionRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RuntimeException("Payment record not found for Order ID: " + orderId));
+                .orElseThrow(() -> new NotFoundException("Payment record not found for Order ID: " + orderId));
     }
 
     private void validateOrderAccess(String orderId) {
@@ -251,11 +269,11 @@ public class PaymentServiceImpl implements PaymentService {
         }
         if (SecurityUtils.hasRole("CUSTOMER")) {
             String userId = SecurityUtils.getUserId()
-                    .orElseThrow(() -> new RuntimeException("Unauthorized: user identity not available"));
+                    .orElseThrow(() -> new UnauthorizedException("Unauthorized: user identity not available"));
             Map<String, Object> order = orderFeignClient.getOrderById(orderId);
             Object ownerId = order.get("customerId");
             if (ownerId == null || !userId.equals(ownerId.toString())) {
-                throw new RuntimeException("Access denied: you can only access your own orders");
+                throw new ForbiddenException("Access denied: you can only access your own orders");
             }
         }
     }
@@ -265,11 +283,11 @@ public class PaymentServiceImpl implements PaymentService {
     public String initiateRefund(String orderId) {
         // 1. Find the payment transaction for this order
         PaymentTransaction tx = paymentTransactionRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RuntimeException("Payment record not found for Order ID: " + orderId));
+                .orElseThrow(() -> new NotFoundException("Payment record not found for Order ID: " + orderId));
 
         // 2. Hum sirf SUCCESS payments ka hi refund karenge
         if (tx.getPaymentStatus() != SUCCESS) {
-            throw new RuntimeException("Cannot process refund. Payment was not successful or already refunded.");
+            throw new BadRequestException("Cannot process refund. Payment was not successful or already refunded.");
         }
 
         // 3. Create Refund Record
@@ -284,7 +302,7 @@ public class PaymentServiceImpl implements PaymentService {
 
                 if (isTestMode) {
                     // --- TEST MODE: SIMULATE REFUND ---
-                    System.out.println("⚠️ TEST MODE ACTIVE: Simulating Razorpay Refund for Order: " + orderId);
+                    log.warn("Test mode active: simulating Razorpay refund for order {}", orderId);
                     refund.setRazorpayRefundId("test_rfnd_" + UUID.randomUUID().toString().substring(0, 8));
                     refund.setRefundStatus("PROCESSED_TEST");
                 } else {
@@ -305,7 +323,7 @@ public class PaymentServiceImpl implements PaymentService {
                 refund.setRefundStatus("PENDING_MANUAL_TRANSFER");
             }
         } catch (RazorpayException e) {
-            throw new RuntimeException("Razorpay Gateway Error: Failed to process refund - " + e.getMessage());
+            throw new BadRequestException("Razorpay Gateway Error: Failed to process refund - " + e.getMessage());
         }
 
         refundRecordRepository.save(refund);
@@ -313,6 +331,7 @@ public class PaymentServiceImpl implements PaymentService {
         // 4. Update transaction status
         tx.setPaymentStatus(REFUNDED);
         paymentTransactionRepository.save(tx);
+        log.info("Refund initiated for order {}, amount={}, status={}", orderId, tx.getAmount(), refund.getRefundStatus());
 
         // Return meaningful messages based on what happened
         if ("PENDING_MANUAL_TRANSFER".equals(refund.getRefundStatus())) {

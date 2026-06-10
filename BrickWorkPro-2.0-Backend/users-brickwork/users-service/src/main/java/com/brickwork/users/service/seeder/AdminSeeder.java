@@ -6,11 +6,13 @@ import com.brickwork.users.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+@Slf4j
 @Component
 public class AdminSeeder implements CommandLineRunner {
 
@@ -27,7 +29,7 @@ public class AdminSeeder implements CommandLineRunner {
         Optional<User> existingAdmin = userRepository.findByUsername("superadmin");
 
         if (existingAdmin.isEmpty()) {
-            System.out.println("No Admin found. Bootstrapping default superadmin account...");
+            log.warn("No admin found. Bootstrapping default superadmin account...");
 
             User admin = new User();
             admin.setUsername("superadmin");
@@ -41,7 +43,7 @@ public class AdminSeeder implements CommandLineRunner {
             // Set other required fields if your User entity has them (email, phone, etc.)
 
             userRepository.save(admin);
-            System.out.println("Default Admin created! Username: superadmin | Password: Admin@123");
+            log.warn("Default admin created: username=superadmin (change password after first login)");
         }
     }
 }

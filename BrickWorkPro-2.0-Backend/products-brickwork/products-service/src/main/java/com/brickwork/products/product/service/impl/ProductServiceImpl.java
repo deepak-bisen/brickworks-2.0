@@ -1,11 +1,14 @@
 package com.brickwork.products.product.service.impl;
 
+import com.brickwork.exception.ConflictException;
+import com.brickwork.exception.NotFoundException;
 import com.brickwork.products.product.dto.ProductDTO;
 import com.brickwork.products.product.dto.ProductImageData;
 import com.brickwork.products.product.entity.Product;
 import com.brickwork.products.product.entity.ProductAttachment;
 import com.brickwork.products.product.repository.ProductRepository;
 import com.brickwork.products.product.service.ProductService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class ProductServiceImpl implements ProductService {
 
@@ -36,7 +40,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public ProductDTO getProductById(String productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+                .orElseThrow(() -> new NotFoundException("Product not found with id: " + productId));
         return  mapToDTO(product);
     }
 
@@ -44,10 +48,10 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public ProductImageData getProductImage(String productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+                .orElseThrow(() -> new NotFoundException("Product not found with id: " + productId));
 
         if (product.getAttachments() == null || product.getAttachments().isEmpty()) {
-            throw new RuntimeException("No image found for product: " + productId);
+            throw new NotFoundException("No image found for product: " + productId);
         }
 
         ProductAttachment attachment = product.getAttachments().getFirst();
@@ -82,6 +86,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         Product savedProduct = productRepository.save(product);
+        log.info("Created product: id={}, name={}", savedProduct.getProductId(), savedProduct.getName());
         return mapToDTO(savedProduct);
     }
 
@@ -95,23 +100,25 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProduct(String productID) {
         if (!productRepository.existsById(productID)) {
             // Or you could throw a custom ResourceNotFoundException
-            throw new RuntimeException("Product not found with id: " + productID);
+            throw new NotFoundException("Product not found with id: " + productID);
         }
         productRepository.deleteById(productID);
+        log.info("Deleted product: id={}", productID);
     }
 
     @Override
     @Transactional
     public void deductStock(String productId, int quantity) {
         Product product = productRepository.findByIdForUpdate(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new NotFoundException("Product not found"));
 
         if (product.getStockQuantity() < quantity) {
-            throw new IllegalArgumentException("Not enough stock for product: " + product.getName());
+            throw new ConflictException("Not enough stock for product: " + product.getName());
         }
 
         product.setStockQuantity(product.getStockQuantity() - quantity);
         productRepository.save(product);
+        log.info("Deducted stock for product {}: quantity={}, remaining={}", productId, quantity, product.getStockQuantity());
     }
 
     /**
@@ -127,7 +134,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductDTO updateProduct(String productId, ProductDTO productDTO, MultipartFile imageFile) throws IOException {
         // Find the existing product
         Product existingProduct = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+                .orElseThrow(() -> new NotFoundException("Product not found with id: " + productId));
 
         // Only update fields if they are NOT null in the DTO
         if (productDTO.getName() != null) existingProduct.setName(productDTO.getName());
@@ -161,8 +168,9 @@ public class ProductServiceImpl implements ProductService {
         }
 
 
-        // Save the updated product back to the database
-        return mapToDTO(productRepository.save(existingProduct));
+        Product updatedProduct = productRepository.save(existingProduct);
+        log.info("Updated product: id={}", productId);
+        return mapToDTO(updatedProduct);
     }
 
     private ProductDTO mapToSummaryDTO(Product product) {

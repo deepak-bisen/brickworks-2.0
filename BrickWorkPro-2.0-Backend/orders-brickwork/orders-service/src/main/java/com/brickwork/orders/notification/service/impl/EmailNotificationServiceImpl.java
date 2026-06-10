@@ -4,8 +4,10 @@ import com.brickwork.orders.notification.service.EmailNotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class EmailNotificationServiceImpl implements EmailNotificationService {
 
@@ -15,7 +17,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     @Override
     public void sendOrderConfirmationEmail(String toEmail, String customerName, String orderId, double totalAmount) {
         if (toEmail == null || toEmail.trim().isEmpty() || toEmail.equals("N/A")) return;
-        System.out.println("Sending email to " + toEmail);
+        log.info("Sending order confirmation email to {}", toEmail);
         new Thread(() -> {
             try {
                 SimpleMailMessage message = new SimpleMailMessage();
@@ -29,9 +31,9 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
                         "Regards,\nBrickWorks Pro Team");
 
                 mailSender.send(message);
-                System.out.println("✅ Order Confirmation Email sent to " + toEmail);
+                log.info("Order confirmation email sent to {}", toEmail);
             } catch (Exception e) {
-                System.err.println("❌ Failed to send email: " + e.getMessage() + "/n" +e.getStackTrace());
+                log.error("Failed to send order confirmation email to {}", toEmail, e);
             }
         }).start();
     }
@@ -52,9 +54,9 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
                         "Regards,\nBrickWorks Pro Team");
 
                 mailSender.send(message);
-                System.out.println("✅ Dispatch Order Email sent to " + toEmail);
+                log.info("Dispatch email sent to {}", toEmail);
             } catch (Exception e) {
-                System.err.println("❌ Failed to send dispatch email: " + e.getMessage() + "/n" +e.getStackTrace());
+                log.error("Failed to send dispatch email to {}", toEmail, e);
             }
         }).start();
     }

@@ -1,5 +1,6 @@
 package com.brickwork.users.controller.impl;
 
+import com.brickwork.exception.NotFoundException;
 import com.brickwork.security.util.JwtUtil;
 import com.brickwork.users.controller.AuthController;
 import com.brickwork.users.dto.*;
@@ -11,8 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 public class AuthControllerImpl implements AuthController {
 
@@ -73,53 +76,39 @@ public class AuthControllerImpl implements AuthController {
 
     @Override
     public ResponseEntity<?> authenticateUser(LoginRequestDTO loginRequest) {
-        try {
-            String username = loginRequest.getUsername() == null
-                    ? null
-                    : loginRequest.getUsername().trim();
-            String password = loginRequest.getPassword();
+        String username = loginRequest.getUsername() == null
+                ? null
+                : loginRequest.getUsername().trim();
+        String password = loginRequest.getPassword();
 
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password)
-            );
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password)
+        );
 
-            User user = userService.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
-            // Call the new overloaded method from the common library!
-            String jwt = jwtUtil.generateCustomToken(
-                    user.getUsername(),
-                    user.getRole().name(),
-                    user.getId()
-            );
-            return ResponseEntity.ok(new JwtResponseDTO(
-                    jwt,
-                    user.getUsername(),
-                    user.getRole().name()
-            ));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
-        }
+        String jwt = jwtUtil.generateCustomToken(
+                user.getUsername(),
+                user.getRole().name(),
+                user.getId()
+        );
+        log.info("User authenticated successfully: username={}, role={}", user.getUsername(), user.getRole());
+        return ResponseEntity.ok(new JwtResponseDTO(
+                jwt,
+                user.getUsername(),
+                user.getRole().name()
+        ));
     }
 
     @Override
     public ResponseEntity<?> getProfile(String username) {
-        try {
-            return ResponseEntity.ok(userService.getUserByUsername(username)); // ya getUserByUsername jo bhi naam rakha ho
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return ResponseEntity.ok(userService.getUserByUsername(username));
     }
 
     @Override
     public ResponseEntity<?> updateProfile(String username, CustomerUpdateDTO updateDTO) {
-        try {
-            return ResponseEntity.ok(userService.updateCustomerProfile(username, updateDTO));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return ResponseEntity.ok(userService.updateCustomerProfile(username, updateDTO));
     }
 
 }

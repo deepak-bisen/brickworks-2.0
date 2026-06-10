@@ -4,14 +4,13 @@ import feign.Logger;
 import feign.Request;
 import feign.Retryer;
 import feign.codec.ErrorDecoder;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@Slf4j
 @Configuration
 public class FeignConfig {
-
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(FeignConfig.class);
 
     @Bean
     public Retryer feignRetryer() {

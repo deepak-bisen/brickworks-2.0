@@ -7,6 +7,7 @@ import { ProductService } from '../../products/services/product.service';
 import { OrderRequest } from '../models/order-request.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ORDER_POLICY } from '../../../shared/constants/order-policy';
+import { extractApiErrorMessage } from '../../../shared/utils/api-error.util';
 
 @Component({
   selector: 'app-quote-request',
@@ -25,6 +26,7 @@ export class QuoteRequestComponent implements OnInit {
   private notification = inject(NotificationService);
 
   isSubmitting = signal(false);
+  submitError = signal('');
 
   quoteForm = this.fb.group({
     customerName: ['', Validators.required],
@@ -92,6 +94,7 @@ ngOnInit(): void {
       }]
     };
 
+    this.submitError.set('');
     this.isSubmitting.set(true);
 
     this.orderService.requestPublicQuote(requestData).subscribe({
@@ -101,8 +104,12 @@ ngOnInit(): void {
         this.isSubmitting.set(false);
         this.router.navigate(['/products']);
       },
-      error: () => {
+      error: (err) => {
         this.isSubmitting.set(false);
+        const message = extractApiErrorMessage(err);
+        if (message) {
+          this.submitError.set(message);
+        }
       },
     });
   }

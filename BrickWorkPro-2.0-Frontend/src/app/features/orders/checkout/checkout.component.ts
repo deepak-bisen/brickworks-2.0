@@ -14,6 +14,7 @@ import { CheckoutStepsComponent, CheckoutStep } from '../../../shared/components
 import { PolicyBannerComponent } from '../../../shared/components/policy-banner/policy-banner.component';
 import { BwInputDirective } from '../../../shared/components/ui/bw-input.directive';
 import { BwFormLabelComponent } from '../../../shared/components/ui/bw-form-label.component';
+import { extractApiErrorMessage } from '../../../shared/utils/api-error.util';
 
 declare var Razorpay: any;
 
@@ -165,16 +166,18 @@ export class CheckoutComponent implements OnInit {
         this.isSubmitting.set(false);
       },
       error: (err) => {
-        console.error('Checkout failed:', err);
         this.isSubmitting.set(false);
-        if (err.status === 400 && err.error) {
-          const errorMessages = Object.values(err.error).join(' | ');
-          this.checkoutError.set(`Validation Error: ${errorMessages}`);
-        } else {
-          this.checkoutError.set(
-            'Server Error: Failed to process your order. Please try again.'
-          );
+        const apiMessage = extractApiErrorMessage(err);
+        if (apiMessage) {
+          this.checkoutError.set(apiMessage);
+          return;
         }
+        if (err?.status === 400 && err?.error && typeof err.error === 'object') {
+          const errorMessages = Object.values(err.error).join(' | ');
+          this.checkoutError.set(errorMessages);
+          return;
+        }
+        this.checkoutError.set('Failed to process your order. Please try again.');
       },
     });
   }

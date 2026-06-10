@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -26,12 +27,12 @@ public interface ProductController {
     ResponseEntity<List<ProductDTO>> getProductsByCategory(@PathVariable("category") String category);
 
     @PostMapping
-    ResponseEntity<?> createProduct(@ModelAttribute ProductDTO productDTO, @RequestParam("imageFile") MultipartFile imageFile); // @RequestBody tells Spring to convert the incoming JSON into a Product object
+    ResponseEntity<?> createProduct(@ModelAttribute ProductDTO productDTO, @RequestParam("imageFile") MultipartFile imageFile) throws IOException; // @RequestBody tells Spring to convert the incoming JSON into a Product object
 
     @PatchMapping(value = "/{productID}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<?> updateProduct(@PathVariable("productID") String productID,
                                     @ModelAttribute ProductDTO productDTO,
-                                    @RequestPart(value = "imageFile", required = false) MultipartFile imageFile);
+                                    @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) throws IOException;
 
     @DeleteMapping("/{productId}")
     ResponseEntity<Void> deleteProduct(@PathVariable String productId);

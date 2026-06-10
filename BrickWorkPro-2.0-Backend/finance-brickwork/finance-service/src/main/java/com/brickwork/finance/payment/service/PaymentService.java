@@ -3,10 +3,8 @@ package com.brickwork.finance.payment.service;
 import com.brickwork.finance.payment.dto.RazorpayOrderResponseDTO;
 import com.brickwork.finance.payment.dto.UtrSubmissionDTO;
 import com.brickwork.finance.payment.entity.PaymentTransaction;
-import com.razorpay.RazorpayException;
-
 public interface PaymentService {
-    RazorpayOrderResponseDTO createRazorpayOrder(String orderId, Double amount) throws RazorpayException;
+    RazorpayOrderResponseDTO createRazorpayOrder(String orderId, Double amount);
     boolean verifyPaymentSignature(String rzpOrderId, String rzpPaymentId, String signature, String orderId);
     void handleWebhookPaymentCaptured(String rzpOrderId, String rzpPaymentId);
     String submitUtrPayment(UtrSubmissionDTO dto);

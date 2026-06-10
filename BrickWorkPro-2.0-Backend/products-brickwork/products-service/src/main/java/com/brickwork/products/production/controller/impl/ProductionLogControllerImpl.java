@@ -5,11 +5,13 @@ import com.brickwork.products.production.dto.ProductionLogDTO;
 import com.brickwork.products.production.dto.ProductionLogFromOrderRequest;
 import com.brickwork.products.production.dto.UpdateStageRequestDTO;
 import com.brickwork.products.production.service.ProductionLogService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
+@Slf4j
 @RestController
 public class ProductionLogControllerImpl implements ProductionLogController {
 
@@ -23,6 +25,7 @@ public class ProductionLogControllerImpl implements ProductionLogController {
 
     @Override
     public ResponseEntity<ProductionLogDTO> createLog(ProductionLogDTO logDTO) {
+        log.debug("Creating production log for productId={}", logDTO.getProductId());
         return ResponseEntity.ok(productionLogService.createLog(logDTO));
     }
 

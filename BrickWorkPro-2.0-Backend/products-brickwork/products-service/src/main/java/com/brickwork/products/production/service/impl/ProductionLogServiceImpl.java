@@ -8,11 +8,13 @@ import com.brickwork.products.product.repository.ProductRepository;
 import com.brickwork.products.production.enums.ProductionStage;
 import com.brickwork.products.production.repository.ProductionLogRepository;
 import com.brickwork.products.production.service.ProductionLogService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.brickwork.exception.NotFoundException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class ProductionLogServiceImpl implements ProductionLogService {
 
@@ -41,15 +44,15 @@ public class ProductionLogServiceImpl implements ProductionLogService {
         }
 
         // 1. save the logs
-        ProductionLog log = new ProductionLog();
-        log.setManagerId(productionLogDTO.getManagerId());
-        log.setStage(productionLogDTO.getStage()!= null ? productionLogDTO.getStage() : ProductionStage.MOLDED);
-        log.setQuantity(productionLogDTO.getQuantity());
-        log.setCreatedAt(productionLogDTO.getCreatedAt() != null ? productionLogDTO.getCreatedAt() : java.time.LocalDateTime.now());
+        ProductionLog productionLog = new ProductionLog();
+        productionLog.setManagerId(productionLogDTO.getManagerId());
+        productionLog.setStage(productionLogDTO.getStage()!= null ? productionLogDTO.getStage() : ProductionStage.MOLDED);
+        productionLog.setQuantity(productionLogDTO.getQuantity());
+        productionLog.setCreatedAt(productionLogDTO.getCreatedAt() != null ? productionLogDTO.getCreatedAt() : java.time.LocalDateTime.now());
 
         if (productionLogDTO.getProductId() != null) {
             Product product = productRepository.findById(productionLogDTO.getProductId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product not found"));
-            log.setProduct(product);
+            productionLog.setProduct(product);
 
         /*
          IMPORTANT CHANGE:
@@ -66,9 +69,11 @@ public class ProductionLogServiceImpl implements ProductionLogService {
             }
         } catch (Exception ignored) {
         }
-        log.setManagerName(managerName != null ? managerName :
+        productionLog.setManagerName(managerName != null ? managerName :
                 (productionLogDTO.getManagerName() != null ? productionLogDTO.getManagerName() : productionLogDTO.getManagerId()));
-        ProductionLog savedLog = logRepository.save(log);
+        ProductionLog savedLog = logRepository.save(productionLog);
+        log.info("Created production log: id={}, productId={}, quantity={}, stage={}",
+                savedLog.getId(), productionLogDTO.getProductId(), savedLog.getQuantity(), savedLog.getStage());
         // NOTE: Raw material inventory is managed independently via the
         // /api/raw-materials endpoints (add/update). Production logs are
         // intentionally decoupled from automatic raw-material deduction so
@@ -94,21 +99,22 @@ public class ProductionLogServiceImpl implements ProductionLogService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each item must have a productId and positive quantity");
             }
 
-            ProductionLog log = new ProductionLog();
-            log.setManagerId("internal-service");
-            log.setManagerName("Order System");
-            log.setStage(ProductionStage.MOLDED);
-            log.setQuantity(item.getQuantity());
-            log.setCreatedAt(LocalDateTime.now());
-            log.setOrderId(request.getOrderId());
+            ProductionLog productionLog = new ProductionLog();
+            productionLog.setManagerId("internal-service");
+            productionLog.setManagerName("Order System");
+            productionLog.setStage(ProductionStage.MOLDED);
+            productionLog.setQuantity(item.getQuantity());
+            productionLog.setCreatedAt(LocalDateTime.now());
+            productionLog.setOrderId(request.getOrderId());
 
             Product product = productRepository.findById(item.getProductId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product not found: " + item.getProductId()));
-            log.setProduct(product);
+            productionLog.setProduct(product);
 
-            createdLogs.add(mapToDTO(logRepository.save(log)));
+            createdLogs.add(mapToDTO(logRepository.save(productionLog)));
         }
 
+        log.info("Created {} production logs from order: orderId={}", createdLogs.size(), request.getOrderId());
         return createdLogs;
     }
 
@@ -120,10 +126,10 @@ public class ProductionLogServiceImpl implements ProductionLogService {
     @Override
     @Transactional
     public ProductionLogDTO updateStage(String productionLogId, ProductionStage newStage) {
-        ProductionLog log = logRepository.findById(productionLogId)
-                .orElseThrow(() -> new RuntimeException("Production log not found"));
+        ProductionLog productionLog = logRepository.findById(productionLogId)
+                .orElseThrow(() -> new NotFoundException("Production log not found"));
 
-        ProductionStage currentStage = log.getStage();
+        ProductionStage currentStage = productionLog.getStage();
 
         boolean validTransition = (currentStage == ProductionStage.MOLDED && newStage == ProductionStage.IN_KILN) || (currentStage == ProductionStage.IN_KILN && newStage == ProductionStage.BAKED);
 
@@ -131,32 +137,35 @@ public class ProductionLogServiceImpl implements ProductionLogService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid production stage transition");
         }
 
-        log.setStage(newStage);
+        productionLog.setStage(newStage);
 
     //  INVENTORY UPDATE ONLY WHEN PRODUCT IS FULLY BAKED
         if (newStage == ProductionStage.BAKED) {
 
-            Product product = log.getProduct();
+            Product product = productionLog.getProduct();
             if (product != null) {
-                product.setStockQuantity(product.getStockQuantity() + log.getQuantity());
+                product.setStockQuantity(product.getStockQuantity() + productionLog.getQuantity());
                 productRepository.save(product);
+                log.info("Updated inventory after baking: productId={}, quantityAdded={}",
+                        product.getProductId(), productionLog.getQuantity());
             }
         }
 
-        return mapToDTO(logRepository.save(log));
+        log.info("Updated production log stage: id={}, {} -> {}", productionLogId, currentStage, newStage);
+        return mapToDTO(logRepository.save(productionLog));
     }
 
 
-    private ProductionLogDTO mapToDTO(ProductionLog log) {
+    private ProductionLogDTO mapToDTO(ProductionLog productionLog) {
         return new ProductionLogDTO(
-                log.getId(),
-                log.getManagerId(),
-                log.getManagerName(),
-                log.getProduct() != null ? log.getProduct().getProductId() : null,
-                log.getProduct() != null ? log.getProduct().getName() : null,
-                log.getStage(),
-                log.getQuantity(),
-                log.getCreatedAt(),
-                log.getOrderId());
+                productionLog.getId(),
+                productionLog.getManagerId(),
+                productionLog.getManagerName(),
+                productionLog.getProduct() != null ? productionLog.getProduct().getProductId() : null,
+                productionLog.getProduct() != null ? productionLog.getProduct().getName() : null,
+                productionLog.getStage(),
+                productionLog.getQuantity(),
+                productionLog.getCreatedAt(),
+                productionLog.getOrderId());
     }
 }

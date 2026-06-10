@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,6 +19,7 @@ import java.util.List;
  * Authenticates trusted service-to-service calls via a shared internal API key.
  * Sets ROLE_INTERNAL_SERVICE when {@value #HEADER_NAME} matches {@code internal.service.key}.
  */
+@Slf4j
 @Component
 public class InternalServiceAuthFilter extends OncePerRequestFilter {
 

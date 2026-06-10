@@ -2,12 +2,13 @@ package com.brickwork.finance.invoice.service.impl;
 
 import com.brickwork.finance.client.OrderFeignClient;
 import com.brickwork.finance.invoice.entity.InvoiceRecord;
-import com.brickwork.finance.invoice.exception.InvoiceNotFoundException;
+import com.brickwork.exception.ForbiddenException;
+import com.brickwork.exception.NotFoundException;
+import com.brickwork.exception.UnauthorizedException;
 import com.brickwork.finance.invoice.repository.InvoiceRecordRepository;
 import com.brickwork.finance.invoice.service.InvoiceService;
 import com.brickwork.security.util.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,10 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class InvoiceServiceImpl implements InvoiceService {
-
-    private static final Logger log = LoggerFactory.getLogger(InvoiceServiceImpl.class);
 
     @Autowired
     private InvoiceRecordRepository invoiceRepo;
@@ -49,6 +49,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         enrichOrderDataForTemplate(orderData, invoice);
         pdfInvoiceService.generatePdfFromHtml("invoice", orderData);
+        log.info("Invoice generated: orderId={}, invoiceNumber={}", orderId, invoice.getInvoiceNumber());
         return invoice.getInvoiceNumber();
     }
 
@@ -56,12 +57,14 @@ public class InvoiceServiceImpl implements InvoiceService {
     public byte[] getInvoicePdfBytes(String orderId) {
         validateOrderAccess(orderId);
         InvoiceRecord invoice = invoiceRepo.findByOrderId(orderId).orElseThrow(
-                () -> new InvoiceNotFoundException("Invoice not generated yet")
+                () -> new NotFoundException("Invoice not generated yet")
         );
 
         Map<String, Object> orderData = loadOrderDataForInvoice(orderId);
         enrichOrderDataForTemplate(orderData, invoice);
-        return pdfInvoiceService.generatePdfFromHtml("invoice", orderData);
+        byte[] pdfBytes = pdfInvoiceService.generatePdfFromHtml("invoice", orderData);
+        log.info("Invoice PDF downloaded: orderId={}, invoiceNumber={}", orderId, invoice.getInvoiceNumber());
+        return pdfBytes;
     }
 
     private Map<String, Object> loadOrderDataForInvoice(String orderId) {
@@ -70,7 +73,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             return normalizeOrderData(orderFeignClient.getOrderById(orderId));
         } catch (Exception ex) {
             log.error("Failed to load order {} for invoice", orderId, ex);
-            throw new RuntimeException("Unable to load order details for invoice: " + ex.getMessage(), ex);
+            throw new NotFoundException("Unable to load order details for invoice: " + ex.getMessage());
         }
     }
 
@@ -81,16 +84,16 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         if (SecurityUtils.hasRole("CUSTOMER")) {
             String userId = SecurityUtils.getUserId()
-                    .orElseThrow(() -> new RuntimeException("Unauthorized: user identity not available"));
+                    .orElseThrow(() -> new UnauthorizedException("Unauthorized: user identity not available"));
             Map<String, Object> order = orderFeignClient.getOrderById(orderId);
             Object ownerId = order.get("customerId");
             if (ownerId == null || !userId.equals(ownerId.toString())) {
-                throw new RuntimeException("Access denied: you can only access your own orders");
+                throw new ForbiddenException("Access denied: you can only access your own orders");
             }
             return;
         }
 
-        throw new RuntimeException("Unauthorized to access invoice for this order");
+        throw new ForbiddenException("Unauthorized to access invoice for this order");
     }
 
     Map<String, Object> normalizeOrderData(Map<String, Object> raw) {

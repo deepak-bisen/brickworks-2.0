@@ -7,6 +7,7 @@ import com.brickwork.orders.analytics.dto.SalesAnalyticsProjection;
 import com.brickwork.orders.analytics.dto.TopProductProjection;
 import com.brickwork.orders.analytics.dto.TopProductResponseDTO;
 import com.brickwork.orders.analytics.service.AnalyticsService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class AnalyticsServiceImpl implements AnalyticsService {
@@ -26,6 +28,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     @Override
     public List<SalesAnalyticsProjection> getSalesData(String timeframe) {
+        log.debug("Querying sales analytics: timeframe={}", timeframe);
         return switch (timeframe.toLowerCase()) {
             case "yearly" -> analyticsRepository.getYearlySalesAnalytics();
             case "monthly" -> analyticsRepository.getMonthlySalesAnalytics();
@@ -36,6 +39,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     @Override
     public List<TopProductResponseDTO> getTopProducts(String timeframe) {
+        log.debug("Querying top products analytics: timeframe={}", timeframe);
 
         // 1. Get raw database grouped data (Projections)
         List<TopProductProjection> projections = switch (timeframe.toLowerCase()) {
@@ -62,7 +66,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                     dto.setProductName("Unknown Product");
                 }
             } catch (Exception e) {
-                // Fallback just in case the Products Service is down or product was deleted
+                log.warn("Failed to fetch product name for productId={}: {}", proj.getProductId(), e.getMessage());
                 dto.setProductName("Unknown (Service Unavailable)");
             }
             return dto;
