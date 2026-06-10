@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit, Output, EventEmitter } from '@angula
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminDashboardService } from '../service/admin-dashboard.service';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 export interface UtrModalData {
   orderId: string | number;
@@ -109,6 +110,7 @@ export interface UtrModalData {
 export class UtrVerificationModalComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
   private dashboardService = inject(AdminDashboardService);
+  private confirmDialog = inject(ConfirmDialogService);
 
   modalData = signal<UtrModalData>({ orderId: '', orderAmount: 0, isOpen: false, customerUtr: '', isLoadingUtr: false });
   isVerifying = signal(false);
@@ -153,10 +155,14 @@ export class UtrVerificationModalComponent implements OnInit {
     this.processUtrApproval(true);
   }
 
-  rejectUtr() {
-    if(confirm('Are you sure you want to REJECT this payment? The order will be cancelled.')) {
-      this.processUtrApproval(false);
-    }
+  async rejectUtr() {
+    const ok = await this.confirmDialog.confirm({
+      title: 'Reject UTR Payment',
+      message: 'Are you sure you want to REJECT this payment? The order will be cancelled.',
+      confirmLabel: 'Reject Payment',
+      destructive: true,
+    });
+    if (ok) this.processUtrApproval(false);
   }
 
   // Common method for both Approve and Reject

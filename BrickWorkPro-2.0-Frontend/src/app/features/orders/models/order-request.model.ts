@@ -18,13 +18,28 @@ export interface OrderRequest {
   items: OrderItemRequest[];
 }
 
-// Matches backend OrderResponseDTO exactly
+export interface OrderItemResponse {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+// Matches backend OrderResponseDTO
 export interface OrderResponse {
   orderId: string;
   customerId: string | null;
   status: string;
   createdAt: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  deliveryAddress?: string;
   totalAmount: number | null;
+  grossAmount?: number | null;
   discountApplied: number | null;
   netProfit: number | null;
+  items?: OrderItemResponse[];
+  requestType?: string;
+  totalCost?: number;
 }

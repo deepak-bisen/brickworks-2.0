@@ -1,41 +1,44 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CartService } from '../services/cart.service';
 import { OrderService } from '../services/order.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { OrderRequest } from '../models/order-request.model';
+import { ConfirmationPaymentMethod } from '../order-confirmation/order-confirmation.component';
+import { environment } from '../../../../environments/environment';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
 declare var Razorpay: any;
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LoadingSpinnerComponent],
   templateUrl: './checkout.component.html',
 })
-export class CheckoutComponent {
+export class CheckoutComponent implements OnInit {
   cartService = inject(CartService);
   private orderService = inject(OrderService);
   authService = inject(AuthService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private notification = inject(NotificationService);
 
   checkoutError = signal<string>('');
   isSubmitting = signal<boolean>(false);
   orderCreated = signal<boolean>(false);
   createdOrderId = signal<string>('');
   paymentMethod = signal<'COD' | 'UTR' | 'UPI' | null>(null);
+  profileLoading = signal(false);
 
-  // NAYE GETTERS HTML TEMPLATE KE LIYE:
   get totalPrice() { return this.cartService.cartTotal(); }
   get grossTotal() { return this.cartService.grossTotal(); }
   get totalDiscount() { return this.cartService.totalDiscount(); }
 
   utrForm = this.fb.group({
-    // FIX: Backend UtrSubmissionDTO only has utrNumber (not bankName).
-    // Removed 'bankName' field to match the DTO exactly.
     utrNumber: ['', Validators.required],
   });
 
@@ -45,6 +48,38 @@ export class CheckoutComponent {
     customerPhone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
     deliveryAddress: ['', Validators.required],
   });
+
+  ngOnInit() {
+    this.prefillFromProfile();
+  }
+
+  private prefillFromProfile() {
+    if (!this.authService.isAuthenticated() || !this.authService.isCustomer()) return;
+
+    const user = this.authService.getCurrentUser();
+    const username = user?.username;
+    if (!username) return;
+
+    this.profileLoading.set(true);
+    this.authService.getProfile(username).subscribe({
+      next: (profile) => {
+        const phone = this.normalizePhone(profile.phoneNumber ?? '');
+        this.checkoutForm.patchValue({
+          customerName: profile.fullName ?? '',
+          customerEmail: profile.email ?? '',
+          customerPhone: phone,
+          deliveryAddress: profile.address ?? '',
+        });
+        this.profileLoading.set(false);
+      },
+      error: () => this.profileLoading.set(false),
+    });
+  }
+
+  private normalizePhone(phone: string): string {
+    const digits = phone.replace(/\D/g, '');
+    return digits.length >= 10 ? digits.slice(-10) : digits;
+  }
 
   removeItem(productId: string) {
     this.cartService.removeFromCart(productId);
@@ -58,15 +93,13 @@ export class CheckoutComponent {
     this.cartService.decreaseQuantity(productId);
   }
 
-  // NAYA METHOD: HTML Input se aane wali value ko handle karne ke liye
   onQuantityChange(productId: string, event: Event) {
     const inputElement = event.target as HTMLInputElement;
     let newQuantity = parseInt(inputElement.value, 10);
 
-    // Agar user ne galat input diya ya 500 se kam type kiya
     if (isNaN(newQuantity) || newQuantity < 500) {
-      newQuantity = 500; // Default minimum quantity
-      inputElement.value = '500'; // UI ko wapas minimum par set kar do
+      newQuantity = 500;
+      inputElement.value = '500';
     }
 
     this.cartService.updateQuantity(productId, newQuantity);
@@ -102,8 +135,6 @@ export class CheckoutComponent {
       })),
     };
 
-    // FIX: Attach customerId when the customer is logged in so the order
-    // appears under their account in the customer dashboard.
     const customerId = this.authService.getUserId();
     if (customerId) {
       requestData.customerId = customerId;
@@ -136,8 +167,7 @@ export class CheckoutComponent {
 
     if (this.paymentMethod() === 'COD') {
       this.orderService.selectCashOnDelivery(orderId, totalAmount).subscribe({
-        next: () =>
-          this.finalizeCheckout('Order placed successfully via Cash on Delivery!'),
+        next: () => this.finalizeCheckout('COD'),
         error: () => this.checkoutError.set('Failed to register COD payment.'),
       });
     } else if (this.paymentMethod() === 'UTR') {
@@ -146,14 +176,10 @@ export class CheckoutComponent {
         return;
       }
       const { utrNumber } = this.utrForm.value;
-      // FIX: submitUtrPayment no longer sends bankName (removed from backend DTO)
       this.orderService
         .submitUtrPayment(orderId, totalAmount, utrNumber!)
         .subscribe({
-          next: () =>
-            this.finalizeCheckout(
-              'Bank Transfer recorded! Waiting for Admin verification.'
-            ),
+          next: () => this.finalizeCheckout('UTR'),
           error: () => this.checkoutError.set('Failed to submit UTR details.'),
         });
     } else if (this.paymentMethod() === 'UPI') {
@@ -162,10 +188,18 @@ export class CheckoutComponent {
   }
 
   private processRazorpayPayment(orderId: string, amount: number) {
+    const razorpayKeyId = environment.razorpayKeyId;
+    if (!razorpayKeyId) {
+      this.checkoutError.set(
+        'Payment gateway is not configured. Please contact support or choose another payment method.',
+      );
+      return;
+    }
+
     this.orderService.createRazorpayOrder(orderId, amount).subscribe({
       next: (razorpayOrder) => {
         const options = {
-          key: 'rzp_test_SlCAfQpHujynkq',
+          key: razorpayKeyId,
           amount: razorpayOrder.amount,
           currency: razorpayOrder.currency || 'INR',
           name: 'BrickWorks Pro',
@@ -179,10 +213,7 @@ export class CheckoutComponent {
               orderId: orderId,
             };
             this.orderService.verifyRazorpayPayment(verificationPayload).subscribe({
-              next: () =>
-                this.finalizeCheckout(
-                  'Payment Successful! Your order is now officially confirmed.'
-                ),
+              next: () => this.finalizeCheckout('UPI'),
               error: () =>
                 this.checkoutError.set(
                   'Payment verification failed. Please contact support.'
@@ -207,13 +238,22 @@ export class CheckoutComponent {
     });
   }
 
-  private finalizeCheckout(message: string) {
-    alert(message);
+  private finalizeCheckout(method: ConfirmationPaymentMethod) {
+    const orderId = this.createdOrderId();
+    const phone = this.checkoutForm.value.customerPhone ?? '';
+    const amount = this.cartService.cartTotal();
+    const utrPending = method === 'UTR';
+
     this.cartService.clearCart();
-    if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/customer/orders']);
-    } else {
-      this.router.navigate(['/home']);
-    }
+
+    this.router.navigate(['/order-confirmation'], {
+      queryParams: {
+        orderId,
+        phone,
+        amount,
+        payment: method,
+        utrPending: utrPending ? 'true' : 'false',
+      },
+    });
   }
 }

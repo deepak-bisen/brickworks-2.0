@@ -1,10 +1,11 @@
 <header class="bg-white shadow-md sticky top-0 z-50">
   <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-    <a routerLink="/home"
+    <a routerLink="/home" (click)="closeMobileMenu()"
       class="text-2xl font-black text-red-700 flex items-center gap-2 hover:opacity-80 transition-opacity">
       🧱 <span class="tracking-tight">BrickWorks Pro</span>
     </a>
 
+    <!-- Desktop nav -->
     <div class="hidden md:flex items-center space-x-6">
       <a routerLink="/home" routerLinkActive="text-red-700"
         class="text-sm font-bold text-gray-600 hover:text-red-700 transition-colors uppercase tracking-wider">Home</a>
@@ -12,7 +13,6 @@
         class="text-sm font-bold text-gray-600 hover:text-red-700 transition-colors uppercase tracking-wider">Products</a>
       <a routerLink="/contact" routerLinkActive="text-red-700"
         class="text-sm font-bold text-gray-600 hover:text-red-700 transition-colors uppercase tracking-wider">Contact</a>
-
       <a routerLink="/track-order" routerLinkActive="text-red-700"
         class="text-sm font-bold text-gray-600 hover:text-red-700 transition-colors uppercase tracking-wider flex items-center gap-1">
         🚚 Track Order</a>
@@ -20,7 +20,7 @@
         class="bg-red-700 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-red-800 shadow-md transition-all uppercase tracking-wider">
         Get a Quote</a>
 
-      <a routerLink="/checkout"
+      <a routerLink="/cart"
         class="relative text-gray-600 hover:text-red-700 transition-colors p-2 flex items-center group">
         <svg class="w-6 h-6 transform group-hover:scale-110 transition-transform duration-200" fill="none"
           stroke="currentColor" viewBox="0 0 24 24">
@@ -28,10 +28,9 @@
             d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
           </path>
         </svg>
-
         @if (cartService.totalItems() > 0) {
         <span
-          class="absolute top-0 right-0 flex justify-center items-center bg-red-600 text-white text-[10px] font-black w-5 h-5 rounded-full border-2 border-white shadow-sm animate-bounce-short">
+          class="absolute top-0 right-0 flex justify-center items-center bg-red-600 text-white text-[10px] font-black w-5 h-5 rounded-full border-2 border-white shadow-sm">
           {{ cartService.totalItems() }}
         </span>
         }
@@ -41,25 +40,40 @@
 
       @if (authService.isAdmin()) {
       <a routerLink="/admin-dashboard"
-        class="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors uppercase tracking-wider">Admin
-        Dashboard</a>
+        class="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors uppercase tracking-wider">Admin Dashboard</a>
       }
 
-     @if (authService.isCustomer()) {
+      @if (authService.isCustomer()) {
       <a routerLink="/customer/dashboard"
-        class="text-sm font-bold text-blue-700 hover:text-blue-900 transition-colors uppercase tracking-wider">My
-        Dashboard</a>
-
-      <!-- <a routerLink="/customer/profile" routerLinkActive="text-red-700"
-        class="text-sm font-bold text-gray-600 hover:text-red-700 transition-colors uppercase tracking-wider flex items-center gap-1" title="Profile Settings">
-        👤 Profile
-      </a> -->
+        class="text-sm font-bold text-blue-700 hover:text-blue-900 transition-colors uppercase tracking-wider">My Dashboard</a>
+      <a routerLink="/customer/orders" routerLinkActive="text-red-700"
+        class="text-sm font-bold text-gray-600 hover:text-red-700 transition-colors uppercase tracking-wider">My Orders</a>
+      <a routerLink="/customer/profile" routerLinkActive="text-red-700"
+        class="text-sm font-bold text-gray-600 hover:text-red-700 transition-colors uppercase tracking-wider">Profile</a>
       }
 
       @if (authService.isStaff()) {
-      <a routerLink="/staff/dashboard"
-        class="text-sm font-bold text-green-700 hover:text-green-900 transition-colors uppercase tracking-wider">Staff
-        Portal</a>
+      <div class="relative">
+        <button type="button" (click)="toggleStaffMenu()"
+          class="text-sm font-bold text-green-700 hover:text-green-900 transition-colors uppercase tracking-wider flex items-center gap-1">
+          Staff Portal
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        @if (isStaffMenuOpen()) {
+        <div class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+          <a routerLink="/staff/dashboard" (click)="closeMobileMenu()"
+            class="block px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-green-50 hover:text-green-800">Dashboard</a>
+          <a routerLink="/staff/production" (click)="closeMobileMenu()"
+            class="block px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-green-50 hover:text-green-800">Production Log</a>
+          <a routerLink="/staff/production-stage-management" (click)="closeMobileMenu()"
+            class="block px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-green-50 hover:text-green-800">Stage Management</a>
+          <a routerLink="/staff/raw-materials" (click)="closeMobileMenu()"
+            class="block px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-green-50 hover:text-green-800">Raw Materials</a>
+        </div>
+        }
+      </div>
       }
 
       @if (authService.isAuthenticated()) {
@@ -78,5 +92,83 @@
       </a>
       }
     </div>
+
+    <!-- Mobile: cart + hamburger -->
+    <div class="flex items-center gap-3 md:hidden">
+      <a routerLink="/cart" (click)="closeMobileMenu()" class="relative text-gray-600 p-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+        </svg>
+        @if (cartService.totalItems() > 0) {
+        <span class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
+          {{ cartService.totalItems() }}
+        </span>
+        }
+      </a>
+      <button type="button" (click)="toggleMobileMenu()" class="p-2 text-gray-700 hover:text-red-700" aria-label="Toggle menu">
+        @if (isMobileMenuOpen()) {
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+        } @else {
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+        }
+      </button>
+    </div>
   </nav>
+
+  <!-- Mobile menu overlay -->
+  @if (isMobileMenuOpen()) {
+  <div class="md:hidden border-t border-gray-100 bg-white shadow-lg">
+    <div class="container mx-auto px-6 py-4 flex flex-col gap-1">
+      <a routerLink="/home" routerLinkActive="text-red-700" (click)="closeMobileMenu()"
+        class="py-3 text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-50">Home</a>
+      <a routerLink="/products" routerLinkActive="text-red-700" (click)="closeMobileMenu()"
+        class="py-3 text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-50">Products</a>
+      <a routerLink="/contact" routerLinkActive="text-red-700" (click)="closeMobileMenu()"
+        class="py-3 text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-50">Contact</a>
+      <a routerLink="/track-order" routerLinkActive="text-red-700" (click)="closeMobileMenu()"
+        class="py-3 text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-50">🚚 Track Order</a>
+      <a routerLink="/get-quote" (click)="closeMobileMenu()"
+        class="py-3 text-sm font-bold text-red-700 uppercase tracking-wider border-b border-gray-50">Get a Quote</a>
+
+      @if (authService.isAdmin()) {
+      <a routerLink="/admin-dashboard" (click)="closeMobileMenu()"
+        class="py-3 text-sm font-bold text-blue-600 uppercase tracking-wider border-b border-gray-50">Admin Dashboard</a>
+      }
+      @if (authService.isCustomer()) {
+      <a routerLink="/customer/dashboard" (click)="closeMobileMenu()"
+        class="py-3 text-sm font-bold text-blue-700 uppercase tracking-wider border-b border-gray-50">My Dashboard</a>
+      <a routerLink="/customer/orders" (click)="closeMobileMenu()"
+        class="py-3 text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-50">My Orders</a>
+      <a routerLink="/customer/profile" (click)="closeMobileMenu()"
+        class="py-3 text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-50">Profile</a>
+      }
+      @if (authService.isStaff()) {
+      <p class="py-2 text-xs font-black text-green-700 uppercase tracking-widest border-b border-gray-50">Staff Portal</p>
+      <a routerLink="/staff/dashboard" (click)="closeMobileMenu()"
+        class="py-3 pl-3 text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-50">Dashboard</a>
+      <a routerLink="/staff/production" (click)="closeMobileMenu()"
+        class="py-3 pl-3 text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-50">Production Log</a>
+      <a routerLink="/staff/production-stage-management" (click)="closeMobileMenu()"
+        class="py-3 pl-3 text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-50">Stage Management</a>
+      <a routerLink="/staff/raw-materials" (click)="closeMobileMenu()"
+        class="py-3 pl-3 text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-50">Raw Materials</a>
+      }
+
+      <div class="pt-3">
+        @if (authService.isAuthenticated()) {
+        <button (click)="logout()"
+          class="w-full py-3 text-sm font-bold text-red-700 uppercase tracking-wider text-left">Logout</button>
+        } @else {
+        <a routerLink="/login" (click)="closeMobileMenu()"
+          class="block py-3 text-sm font-bold text-gray-700 uppercase tracking-wider">Login</a>
+        }
+      </div>
+    </div>
+  </div>
+  }
 </header>

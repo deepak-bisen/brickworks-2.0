@@ -1,4 +1,4 @@
-<div class="p-8 bg-gray-50 min-h-screen">
+<div class="p-4 md:p-8 bg-gray-50 min-h-screen">
   <div class="max-w-7xl mx-auto">
 
     @if (loadError()) {
@@ -8,14 +8,14 @@
     </div>
     }
 
-    <header class="mb-8 flex justify-between items-end">
+    <header class="mb-6 md:mb-8 flex flex-col gap-4 md:flex-row md:justify-between md:items-end">
       <div>
-        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Admin Control Center</h1>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">Admin Control Center</h1>
         <p class="text-gray-500 text-sm mt-1">Manage operations, inventory, and customer communications.</p>
       </div>
 
       @if (activeTab() === 'overview') {
-      <div class="flex bg-gray-200 p-1 rounded-xl border border-gray-300 shadow-inner">
+      <div class="flex bg-gray-200 p-1 rounded-xl border border-gray-300 shadow-inner self-start md:self-auto shrink-0">
         @for (tf of ['weekly', 'monthly', 'yearly']; track tf) {
         <button (click)="changeTimeframe(tf)" [class.bg-white]="currentTimeframe() === tf"
           [class.text-red-700]="currentTimeframe() === tf" [class.shadow-sm]="currentTimeframe() === tf"
@@ -27,72 +27,87 @@
       }
     </header>
 
-    <div class="flex space-x-1 bg-gray-200/50 p-1 rounded-xl mb-8 w-fit border border-gray-200">
-      <button (click)="switchTab('overview')" [class.bg-white]="activeTab() === 'overview'"
-        [class.shadow-sm]="activeTab() === 'overview'" [class.text-red-700]="activeTab() === 'overview'"
-        class="px-6 py-2.5 rounded-lg text-sm font-bold text-gray-600 transition-all uppercase tracking-wider">
-        Telemetry Overview
-      </button>
-      <button (click)="switchTab('orders')" [class.bg-white]="activeTab() === 'orders'"
-        [class.shadow-sm]="activeTab() === 'orders'" [class.text-red-700]="activeTab() === 'orders'"
-        class="px-6 py-2.5 rounded-lg text-sm font-bold text-gray-600 transition-all uppercase tracking-wider flex items-center gap-2">
-        Orders & Quotes
-      </button>
-      <button (click)="switchTab('messages')" [class.bg-white]="activeTab() === 'messages'"
-        [class.shadow-sm]="activeTab() === 'messages'" [class.text-red-700]="activeTab() === 'messages'"
-        class="px-6 py-2.5 rounded-lg text-sm font-bold text-gray-600 transition-all uppercase tracking-wider flex items-center gap-2">
-        Inbox
-        @if (messages().length > 0) { <span class="w-2 h-2 rounded-full bg-red-600"></span> }
-      </button>
-      <button (click)="switchTab('inventory')"
-        [ngClass]="activeTab() === 'inventory' ? 'bg-red-700 text-white shadow-md' : 'text-gray-600 hover:bg-red-50 hover:text-red-700'"
-        class="px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide transition-all flex items-center gap-2">
-        <span>📦</span> Inventory & Catalog
-      </button>
+    <div class="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 mb-6 md:mb-8 scrollbar-thin">
+      <div class="flex flex-nowrap gap-1 bg-gray-200/50 p-1 rounded-xl w-max md:w-fit min-w-full md:min-w-0 border border-gray-200">
+        <button (click)="switchTab('overview')" [class.bg-white]="activeTab() === 'overview'"
+          [class.shadow-sm]="activeTab() === 'overview'" [class.text-red-700]="activeTab() === 'overview'"
+          class="px-4 md:px-6 py-2.5 rounded-lg text-xs md:text-sm font-bold text-gray-600 transition-all uppercase tracking-wider whitespace-nowrap shrink-0">
+          Overview
+        </button>
+        <button (click)="switchTab('orders')" [class.bg-white]="activeTab() === 'orders'"
+          [class.shadow-sm]="activeTab() === 'orders'" [class.text-red-700]="activeTab() === 'orders'"
+          class="px-4 md:px-6 py-2.5 rounded-lg text-xs md:text-sm font-bold text-gray-600 transition-all uppercase tracking-wider flex items-center gap-2 whitespace-nowrap shrink-0">
+          Orders
+          @if (utrQueueList().length > 0) {
+            <span class="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded-full">{{ utrQueueList().length }}</span>
+          }
+        </button>
+        <button (click)="switchTab('finance')" [class.bg-white]="activeTab() === 'finance'"
+          [class.shadow-sm]="activeTab() === 'finance'" [class.text-red-700]="activeTab() === 'finance'"
+          class="px-4 md:px-6 py-2.5 rounded-lg text-xs md:text-sm font-bold text-gray-600 transition-all uppercase tracking-wider flex items-center gap-2 whitespace-nowrap shrink-0">
+          Finance
+        </button>
+        <button (click)="switchTab('messages')" [class.bg-white]="activeTab() === 'messages'"
+          [class.shadow-sm]="activeTab() === 'messages'" [class.text-red-700]="activeTab() === 'messages'"
+          class="px-4 md:px-6 py-2.5 rounded-lg text-xs md:text-sm font-bold text-gray-600 transition-all uppercase tracking-wider flex items-center gap-2 whitespace-nowrap shrink-0">
+          Inbox
+          @if (messages().length > 0) { <span class="w-2 h-2 rounded-full bg-red-600"></span> }
+        </button>
+        <button (click)="switchTab('inventory')"
+          [ngClass]="activeTab() === 'inventory' ? 'bg-red-700 text-white shadow-md' : 'text-gray-600 hover:bg-red-50 hover:text-red-700'"
+          class="px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm tracking-wide transition-all flex items-center gap-2 whitespace-nowrap shrink-0">
+          <span>📦</span> Inventory
+        </button>
+      </div>
     </div>
 
     @if (activeTab() === 'overview') {
     <div class="space-y-8 animate-fade-in-up">
-      <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-red-700">
-          <h3 class="text-gray-400 font-bold uppercase text-xs">Total Output</h3>
-          <p class="text-4xl font-black mt-2">{{ isLoading() ? '...' : (totalBricksProduced() | number) }}</p>
+      <section class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border-t-8 border-red-700">
+          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Total Output</h3>
+          @if (isLoading()) {
+            <div class="mt-3"><app-skeleton-block height="lg" /></div>
+          } @else {
+            <p class="text-2xl md:text-4xl font-black mt-2">{{ totalBricksProduced() | number }}</p>
+          }
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-blue-700">
-          <h3 class="text-gray-400 font-bold uppercase text-xs">System Orders</h3>
-          <p class="text-4xl font-black mt-2">{{ isLoading() ? '...' : totalOrdersCount() }}</p>
+        <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border-t-8 border-blue-700">
+          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">System Orders</h3>
+          @if (isLoading()) {
+            <div class="mt-3"><app-skeleton-block height="lg" /></div>
+          } @else {
+            <p class="text-2xl md:text-4xl font-black mt-2">{{ totalOrdersCount() }}</p>
+          }
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-green-700">
-          <h3 class="text-gray-400 font-bold uppercase text-xs">Gross Income</h3>
-          <p class="text-4xl font-black mt-2">₹{{ isLoading() ? '...' : (totalRevenue() | number:'1.0-2') }}</p>
+        <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border-t-8 border-green-700">
+          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Gross Income</h3>
+          @if (isLoading()) {
+            <div class="mt-3"><app-skeleton-block height="lg" /></div>
+          } @else {
+            <p class="text-2xl md:text-4xl font-black mt-2">₹{{ totalRevenue() | number:'1.0-2' }}</p>
+          }
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-amber-700">
-          <h3 class="text-gray-400 font-bold uppercase text-xs">Total Profit</h3>
-          <p class="text-4xl font-black mt-2">₹{{ isLoading() ? '...' : (totalProfit() | number:'1.0-2') }}</p>
+        <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border-t-8 border-amber-700">
+          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Total Profit</h3>
+          @if (isLoading()) {
+            <div class="mt-3"><app-skeleton-block height="lg" /></div>
+          } @else {
+            <p class="text-2xl md:text-4xl font-black mt-2">₹{{ totalProfit() | number:'1.0-2' }}</p>
+          }
         </div>
       </section>
 
       <section class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 mb-8">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-lg font-bold text-gray-900">Revenue Analytics</h2>
-
-          <div class="flex space-x-2">
-            <button (click)="changeTimeframe('WEEKLY')" [class.bg-red-700]="currentTimeframe() === 'WEEKLY'"
-              [class.text-white]="currentTimeframe() === 'WEEKLY'"
-              class="px-3 py-1 text-xs font-bold rounded-lg border border-gray-200 text-gray-600 hover:bg-red-50">Weekly</button>
-            <button (click)="changeTimeframe('MONTHLY')" [class.bg-red-700]="currentTimeframe() === 'MONTHLY'"
-              [class.text-white]="currentTimeframe() === 'MONTHLY'"
-              class="px-3 py-1 text-xs font-bold rounded-lg border border-gray-200 text-gray-600 hover:bg-red-50">Monthly</button>
-            <button (click)="changeTimeframe('YEARLY')" [class.bg-red-700]="currentTimeframe() === 'YEARLY'"
-              [class.text-white]="currentTimeframe() === 'YEARLY'"
-              class="px-3 py-1 text-xs font-bold rounded-lg border border-gray-200 text-gray-600 hover:bg-red-50">Yearly</button>
-          </div>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Timeframe: {{ currentTimeframe() }}</p>
         </div>
 
         <div class="h-72 w-full relative">
           @if (isLoading()) {
-          <div class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
-            <p class="text-gray-400 font-bold animate-pulse">Loading telemetry...</p>
+          <div class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+            <app-loading-spinner label="Loading analytics..." />
           </div>
           }
 
@@ -192,20 +207,110 @@
     @if (activeTab() === 'orders') {
     <app-utr-verification-modal #utrModal (close)="onUtrModalClose()"></app-utr-verification-modal>
 
-    <div class="flex gap-4 mb-4 border-b border-gray-200">
-      <button (click)="orderSubTab.set('orders')"
+    @if (isLoadingOrders()) {
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 md:p-16 flex justify-center">
+        <app-loading-spinner label="Loading orders..." />
+      </div>
+    } @else {
+
+    <div class="flex flex-wrap gap-4 mb-4 border-b border-gray-200 overflow-x-auto">
+      <button (click)="switchOrderSubTab('orders')"
         [ngClass]="orderSubTab() === 'orders' ? 'border-red-700 text-red-700 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'"
         class="pb-2 px-2 border-b-2 text-sm transition-all">
         Live Orders ({{ activeOrdersList().length }})
       </button>
-      <button (click)="orderSubTab.set('quotes')"
+      <button (click)="switchOrderSubTab('utr')"
+        [ngClass]="orderSubTab() === 'utr' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'"
+        class="pb-2 px-2 border-b-2 text-sm transition-all flex items-center gap-2">
+        Pending UTR
+        @if (utrQueueList().length > 0) {
+          <span class="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded-full">{{ utrQueueList().length }}</span>
+        }
+      </button>
+      <button (click)="switchOrderSubTab('quotes')"
         [ngClass]="orderSubTab() === 'quotes' ? 'border-red-700 text-red-700 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'"
         class="pb-2 px-2 border-b-2 text-sm transition-all">
         Quote Requests ({{ quoteRequestsList().length }})
       </button>
     </div>
 
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-fade-in-up">
+    @if (orderSubTab() === 'quotes') {
+      <div class="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-xl text-sm text-purple-900">
+        <p class="font-bold">Quote pipeline</p>
+        <p class="mt-1 text-purple-800">
+          <strong>1. Contact</strong> the customer via email →
+          <strong>2. Approve Quote</strong> to convert into a live order (Awaiting Payment) →
+          <strong>3. Reject</strong> if the lead is not viable.
+        </p>
+      </div>
+    }
+
+    @if (orderSubTab() === 'utr' && utrQueueList().length === 0) {
+      <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800 font-medium">
+        No bank transfers awaiting verification right now.
+      </div>
+    }
+
+    <!-- Mobile card layout -->
+    <div class="md:hidden space-y-4 mb-6">
+      @for (order of displayedOrdersList(); track order.orderId) {
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
+          [class.ring-2]="processingOrderId() === order.orderId"
+          [class.ring-blue-200]="processingOrderId() === order.orderId">
+          <div class="flex justify-between items-start gap-3 mb-3">
+            <div>
+              <p class="font-bold text-gray-900">{{ order.customerName || 'No Name' }}</p>
+              <p class="text-xs text-gray-500 font-mono mt-1">#{{ order.orderId.toString().substring(0, 12) }}...</p>
+            </div>
+            <app-status-badge [status]="order.status" />
+          </div>
+          <div class="text-sm text-gray-600 space-y-1 mb-3">
+            <p>{{ order.createdAt | date:'dd MMM yyyy, shortTime' }}</p>
+            <p class="font-black text-gray-900">₹{{ order.totalAmount || order.totalCost | number:'1.0-0' }}</p>
+            @if (paymentForOrder(order.orderId)?.utrNumber) {
+              <p class="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-1 rounded inline-block">
+                UTR: {{ paymentForOrder(order.orderId).utrNumber }}
+              </p>
+            }
+          </div>
+          <div class="relative">
+            <button type="button" (click)="toggleActionMenu(order.orderId)"
+              class="w-full py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50">
+              Actions
+            </button>
+            @if (openActionMenuId() === order.orderId) {
+              <div class="mt-2 p-2 bg-gray-50 rounded-xl border border-gray-200 space-y-1">
+                @if (orderSubTab() === 'quotes' && order.status === 'QUOTE_REQUEST') {
+                  @if (order.customerEmail) {
+                    <a [href]="quoteMailtoLink(order)" (click)="closeActionMenu()" class="block w-full text-left px-3 py-2 text-sm font-bold text-blue-700 hover:bg-white rounded-lg">Email Customer</a>
+                  }
+                  <button (click)="convertToOrder(order); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-indigo-700 hover:bg-white rounded-lg">Approve Quote</button>
+                  <button (click)="rejectOrder(order); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-red-700 hover:bg-white rounded-lg">Reject</button>
+                } @else if (order.status === 'PENDING_PAYMENT') {
+                  <button (click)="requestUtrVerification(order)" class="w-full text-left px-3 py-2 text-sm font-bold text-green-700 hover:bg-white rounded-lg">Verify UTR</button>
+                  <button (click)="approveAsCOD(order); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-blue-700 hover:bg-white rounded-lg">Confirm COD</button>
+                  <button (click)="rejectOrder(order); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-red-700 hover:bg-white rounded-lg">Cancel</button>
+                } @else if (order.status === 'CONFIRMED_COD' || order.status === 'PAYMENT_RECEIVED') {
+                  <button (click)="updateOrderStatus(order.orderId, 'IN_PRODUCTION'); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-green-700 hover:bg-white rounded-lg">Start Production</button>
+                } @else if (order.status === 'IN_PRODUCTION') {
+                  <button (click)="updateOrderStatus(order.orderId, 'DISPATCHED'); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-blue-700 hover:bg-white rounded-lg">Dispatch</button>
+                } @else if (order.status === 'DISPATCHED') {
+                  <button (click)="updateOrderStatus(order.orderId, 'DELIVERED'); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-indigo-700 hover:bg-white rounded-lg">Mark Delivered</button>
+                } @else if (order.status === 'CANCELLED') {
+                  <button (click)="processRefund(order); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-orange-700 hover:bg-white rounded-lg">Refund</button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      } @empty {
+        <div class="bg-white rounded-2xl border border-gray-100 p-10 text-center text-gray-500 font-bold text-sm">
+          No items found in this section.
+        </div>
+      }
+    </div>
+
+    <div class="hidden md:block bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-fade-in-up">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm whitespace-nowrap">
           <thead class="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold border-b border-gray-300">
@@ -220,7 +325,7 @@
           </thead>
           <tbody class="divide-y divide-gray-200">
 
-            @for (order of (orderSubTab() === 'orders' ? activeOrdersList() : quoteRequestsList()); track order.orderId)
+            @for (order of displayedOrdersList(); track order.orderId)
             {
             <tr class="hover:bg-gray-50/80 transition-colors"
               [class.bg-blue-50]="processingOrderId() === order.orderId">
@@ -282,19 +387,25 @@
                   </td>
 
               <td class="p-5 text-center">
-                <span class="px-3 py-1.5 rounded-md text-[10px] font-black tracking-widest uppercase border" [ngClass]="{
-                        'bg-yellow-50 text-yellow-800 border-yellow-200': order.status === 'QUOTE_REQUEST' || order.status === 'PENDING_PAYMENT',
-                        'bg-blue-50 text-blue-800 border-blue-200': order.status === 'CONFIRMED_COD' || order.status === 'PAYMENT_RECEIVED' || order.status === 'IN_PRODUCTION',
-                        'bg-indigo-50 text-indigo-800 border-indigo-200': order.status === 'DISPATCHED',
-                        'bg-green-50 text-green-800 border-green-200': order.status === 'DELIVERED',
-                        'bg-red-50 text-red-800 border-red-200': order.status === 'CANCELLED'}">
-                  {{ order.status.replace('_', ' ') }}
-                </span>
+                <div class="flex flex-col items-center gap-2">
+                  <app-status-badge [status]="order.status" />
+                  @if (paymentForOrder(order.orderId)?.utrNumber) {
+                    <span class="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                      UTR: {{ paymentForOrder(order.orderId).utrNumber }}
+                    </span>
+                  }
+                </div>
               </td>
 
               <td class="p-5 text-right space-x-2">
 
                 @if (orderSubTab() === 'quotes' && order.status === 'QUOTE_REQUEST') {
+                @if (order.customerEmail) {
+                  <a [href]="quoteMailtoLink(order)"
+                    class="text-blue-700 hover:bg-blue-600 hover:text-white font-bold text-[10px] uppercase tracking-wider bg-blue-50 px-3 py-2 rounded-lg border border-blue-200 transition-all shadow-sm inline-block">
+                    ✉ Contact
+                  </a>
+                }
                 <button (click)="convertToOrder(order)"
                   class="text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold text-[10px] uppercase tracking-wider bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-200 transition-all shadow-sm">
                   Approve Quote
@@ -322,8 +433,14 @@
                 </div>
                 }
 
-                @else if (orderSubTab() === 'orders' && (order.status === 'CONFIRMED_COD' || order.status ===
-                'PAYMENT_RECEIVED' || order.status === 'IN_PRODUCTION')) {
+                @else if (orderSubTab() === 'orders' && (order.status === 'CONFIRMED_COD' || order.status === 'PAYMENT_RECEIVED')) {
+                <button (click)="updateOrderStatus(order.orderId, 'IN_PRODUCTION')"
+                  class="text-green-700 hover:bg-green-600 hover:text-white font-bold text-[10px] uppercase tracking-wider bg-green-50 px-4 py-2 rounded-lg border border-green-200 transition-all shadow-sm">
+                  🏭 Start Production
+                </button>
+                }
+
+                @else if (orderSubTab() === 'orders' && order.status === 'IN_PRODUCTION') {
                 <button (click)="updateOrderStatus(order.orderId, 'DISPATCHED')"
                   class="text-blue-700 hover:bg-blue-600 hover:text-white font-bold text-[10px] uppercase tracking-wider bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 transition-all shadow-sm">
                   🚚 Dispatch
@@ -363,12 +480,18 @@
       </div>
     </div>
     }
+    }
 
     @if (activeTab() === 'messages') {
+    @if (isLoadingMessages()) {
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 md:p-16 flex justify-center">
+        <app-loading-spinner label="Loading inbox..." />
+      </div>
+    } @else {
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div class="divide-y divide-gray-100">
 
-        @for (msg of messages(); track msg.messageId) {
+        @for (msg of messages(); track msg.id) {
         @if (msg.status !== 'RESOLVED') {
 
         <div class="p-5 transition-colors hover:bg-gray-50 cursor-pointer"
@@ -427,11 +550,68 @@
       </div>
     </div>
     }
+    }
+
+    @if (activeTab() === 'finance') {
+    @if (isLoadingOrders()) {
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 md:p-16 flex justify-center">
+        <app-loading-spinner label="Loading finance data..." />
+      </div>
+    } @else {
+    <div class="space-y-8 animate-fade-in-up">
+      <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-900">
+        <p class="font-bold">Finance snapshot</p>
+        <p class="mt-1 text-blue-800">Aggregated from sales analytics and live order payment data. Timeframe for revenue: <strong>{{ currentTimeframe() }}</strong>.</p>
+      </div>
+
+      <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-green-700">
+          <h3 class="text-gray-400 font-bold uppercase text-xs">Gross Revenue</h3>
+          <p class="text-3xl font-black mt-2">₹{{ totalRevenue() | number:'1.0-0' }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-amber-700">
+          <h3 class="text-gray-400 font-bold uppercase text-xs">Total Profit</h3>
+          <p class="text-3xl font-black mt-2">₹{{ totalProfit() | number:'1.0-0' }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-blue-700">
+          <h3 class="text-gray-400 font-bold uppercase text-xs">Open Order Value</h3>
+          <p class="text-3xl font-black mt-2">₹{{ financeOrderValue() | number:'1.0-0' }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-t-8 border-red-700">
+          <h3 class="text-gray-400 font-bold uppercase text-xs">Pending UTR</h3>
+          <p class="text-3xl font-black mt-2">{{ utrQueueList().length }}</p>
+          <p class="text-xs text-gray-500 mt-1">{{ financePendingPaymentCount() }} orders awaiting payment</p>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Payment Method Breakdown</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          @for (entry of financePaymentEntries(); track entry[0]) {
+            <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ paymentMethodLabel(entry[0]) }}</p>
+              <p class="text-2xl font-black text-gray-900 mt-1">{{ entry[1] }}</p>
+              <p class="text-xs text-gray-500 mt-1">orders</p>
+            </div>
+          } @empty {
+            <p class="text-sm text-gray-500 col-span-full">No payment data loaded yet. Open this tab after orders are loaded.</p>
+          }
+        </div>
+        @if (utrQueueList().length > 0) {
+          <button type="button" (click)="switchTab('orders'); switchOrderSubTab('utr')"
+            class="mt-6 text-sm font-bold text-amber-800 bg-amber-50 border border-amber-200 px-4 py-2 rounded-xl hover:bg-amber-100">
+            Review {{ utrQueueList().length }} pending UTR verification{{ utrQueueList().length === 1 ? '' : 's' }} →
+          </button>
+        }
+      </section>
+    </div>
+    }
+    }
 
    @if (activeTab() === 'inventory') {
     <div class="space-y-6 animate-fade-in-up">
 
-      <div class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
           <h3 class="text-xl font-black text-gray-900">Product Inventory Manager</h3>
           <p class="text-sm text-gray-500 mt-1">Manage catalog, track stock, and control pricing.</p>
@@ -442,6 +622,11 @@
       </div>
 
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        @if (isLoadingProducts()) {
+          <div class="p-8 md:p-12 flex justify-center">
+            <app-loading-spinner label="Loading catalog..." />
+          </div>
+        } @else {
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
             <thead class="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold border-b border-gray-200">
@@ -511,6 +696,7 @@
             </tbody>
           </table>
         </div>
+        }
       </div>
     </div>
     }

@@ -1,0 +1,4 @@
+CREATE DATABASE IF NOT EXISTS brickworks2users;
+CREATE DATABASE IF NOT EXISTS brickworks2products;
+CREATE DATABASE IF NOT EXISTS brickworks2orders;
+CREATE DATABASE IF NOT EXISTS brickworks2finance;

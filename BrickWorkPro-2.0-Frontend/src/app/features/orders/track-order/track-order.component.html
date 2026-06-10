@@ -11,7 +11,7 @@
         <input type="text" [(ngModel)]="orderId" placeholder="Enter Order ID (e.g. ORD-123...)"
                class="flex-1 px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-transparent outline-none">
 
-        <input type="text" [(ngModel)]="phone" placeholder="Registered Phone Number"
+        <input type="text" [(ngModel)]="phone" placeholder="Phone (10-digit or 91XXXXXXXXXX)"
                class="flex-1 px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-transparent outline-none">
 
         <button (click)="track()" [disabled]="isLoading()"
@@ -57,7 +57,7 @@
           </div>
           <div>
              <h4 class="text-xs font-bold uppercase tracking-widest opacity-80 mb-0.5">Current Status</h4>
-             <p class="text-2xl font-black">{{ orderData().status.replace('_', ' ') }}</p>
+             <p class="text-2xl font-black">{{ formatStatus(orderData().status) }}</p>
           </div>
         </div>
 
@@ -67,7 +67,14 @@
           </div>
         } @else {
 
-          <!-- 🚀 NAYA: Progress Bar Timeline -->
+          @if (isAwaitingPayment(orderData().status)) {
+            <div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-900">
+              <p class="font-bold">Payment not yet confirmed</p>
+              <p class="text-xs mt-1 text-amber-800">If you paid via bank transfer, verification may take 24–48 hours. Online payments update automatically once confirmed.</p>
+            </div>
+          }
+
+          <!-- Progress Bar Timeline -->
           <div class="relative max-w-3xl mx-auto px-2 sm:px-0 mb-8">
 
             <!-- Connecting Line Background -->
@@ -84,14 +91,15 @@
                  <div class="w-12 h-12 rounded-full flex items-center justify-center font-black border-4 transition-all duration-500 bg-white"
                       [ngClass]="{
                         'border-green-500 text-green-600 shadow-md': getStepStatus(1, orderData().status) === 'completed',
-                        'border-blue-600 text-blue-600 ring-4 ring-blue-100 shadow-md': getStepStatus(1, orderData().status) === 'active',
+                        'border-amber-500 text-amber-600 ring-4 ring-amber-100 shadow-md': getStepStatus(1, orderData().status) === 'active' && isAwaitingPayment(orderData().status),
+                        'border-blue-600 text-blue-600 ring-4 ring-blue-100 shadow-md': getStepStatus(1, orderData().status) === 'active' && !isAwaitingPayment(orderData().status),
                         'border-gray-200 text-gray-400': getStepStatus(1, orderData().status) === 'pending'
                       }">
                    @if(getStepStatus(1, orderData().status) === 'completed') {
                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                    } @else { 1 }
                  </div>
-                 <h4 class="text-[11px] sm:text-xs uppercase tracking-wider font-bold mt-3 text-center" [ngClass]="getStepStatus(1, orderData().status) === 'pending' ? 'text-gray-400' : 'text-gray-900'">Placed</h4>
+                 <h4 class="text-[11px] sm:text-xs uppercase tracking-wider font-bold mt-3 text-center" [ngClass]="getStepStatus(1, orderData().status) === 'pending' ? 'text-gray-400' : (isAwaitingPayment(orderData().status) ? 'text-amber-700' : 'text-gray-900')">{{ getStepLabel(1, orderData().status) }}</h4>
                </div>
 
                <!-- Step 2: Processing -->
@@ -106,7 +114,7 @@
                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                    } @else { 2 }
                  </div>
-                 <h4 class="text-[11px] sm:text-xs uppercase tracking-wider font-bold mt-3 text-center" [ngClass]="getStepStatus(2, orderData().status) === 'pending' ? 'text-gray-400' : 'text-gray-900'">Processing</h4>
+                 <h4 class="text-[11px] sm:text-xs uppercase tracking-wider font-bold mt-3 text-center" [ngClass]="getStepStatus(2, orderData().status) === 'pending' ? 'text-gray-400' : 'text-gray-900'">{{ getStepLabel(2, orderData().status) }}</h4>
                </div>
 
                <!-- Step 3: Dispatched -->
@@ -121,7 +129,7 @@
                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                    } @else { 3 }
                  </div>
-                 <h4 class="text-[11px] sm:text-xs uppercase tracking-wider font-bold mt-3 text-center" [ngClass]="getStepStatus(3, orderData().status) === 'pending' ? 'text-gray-400' : 'text-gray-900'">Dispatched</h4>
+                 <h4 class="text-[11px] sm:text-xs uppercase tracking-wider font-bold mt-3 text-center" [ngClass]="getStepStatus(3, orderData().status) === 'pending' ? 'text-gray-400' : 'text-gray-900'">{{ getStepLabel(3, orderData().status) }}</h4>
                </div>
 
                <!-- Step 4: Delivered -->
@@ -136,7 +144,7 @@
                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                    } @else { 4 }
                  </div>
-                 <h4 class="text-[11px] sm:text-xs uppercase tracking-wider font-bold mt-3 text-center" [ngClass]="getStepStatus(4, orderData().status) === 'pending' ? 'text-gray-400' : 'text-gray-900'">Delivered</h4>
+                 <h4 class="text-[11px] sm:text-xs uppercase tracking-wider font-bold mt-3 text-center" [ngClass]="getStepStatus(4, orderData().status) === 'pending' ? 'text-gray-400' : 'text-gray-900'">{{ getStepLabel(4, orderData().status) }}</h4>
                </div>
 
             </div>

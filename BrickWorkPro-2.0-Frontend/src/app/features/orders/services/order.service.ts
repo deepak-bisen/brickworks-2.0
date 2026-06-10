@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Observable } from 'rxjs';
+import { PaymentDetails } from '../../../shared/utils/order-status.util';
 import { OrderRequest, OrderResponse } from '../models/order-request.model';
 
 @Injectable({ providedIn: 'root' })
@@ -9,8 +10,6 @@ export class OrderService {
   private http = inject(HttpClient);
   private orderApiUrl = `${environment.apiUrl}/api/orders`;
   private paymentApiUrl = `${environment.apiUrl}/api/finance/payments`;
-  private invoiceUrl = `${environment.apiUrl}/api/finance/invoice`;
-
   // --- QUOTES ---
   requestPublicQuote(data: OrderRequest): Observable<OrderResponse> {
     return this.http.post<OrderResponse>(`${this.orderApiUrl}/public-quote`, data);
@@ -98,23 +97,12 @@ export class OrderService {
     });
   }
 
-  // --- INVOICE ---
-  downloadInvoice(orderId: string): Observable<Blob> {
-    return this.http.get(`${this.invoiceUrl}/download/${orderId}`, {
-      responseType: 'blob',
-    });
-  }
-
-  generateInvoice(orderId: string): Observable<string> {
-    return this.http.post(
-      `${this.invoiceUrl}/generate/${orderId}`,
-      {},
-      { responseType: 'text' }
-    );
-  }
-
-  // 🚀 NAYA: Guest Order Tracking API
+  // Guest Order Tracking API
   trackOrder(orderId: string, phone: string): Observable<any> {
     return this.http.get(`${this.orderApiUrl}/track`, { params: { orderId, phone } });
+  }
+
+  getPaymentByOrderId(orderId: string): Observable<PaymentDetails> {
+    return this.http.get<PaymentDetails>(`${this.paymentApiUrl}/order/${orderId}`);
   }
 }

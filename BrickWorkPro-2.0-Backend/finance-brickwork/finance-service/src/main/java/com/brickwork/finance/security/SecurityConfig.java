@@ -1,5 +1,6 @@
 package com.brickwork.finance.security;
 
+import com.brickwork.security.filter.InternalServiceAuthFilter;
 import com.brickwork.security.filter.JwtRequestFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -15,33 +16,39 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // Allows @PreAuthorize tags
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
+
+    @Autowired
+    private InternalServiceAuthFilter internalServiceAuthFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // Webhooks must be public so Razorpay can reach them
                         .requestMatchers("/api/finance/webhooks/**").permitAll()
 
-                        // FIX: Public routes for Guest Payment Selection
                         .requestMatchers(HttpMethod.POST, "/api/finance/payments/create-order").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/finance/payments/verify").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/finance/payments/cod/select").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/finance/payments/utr/submit").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/finance/invoice/generate/**").permitAll()
 
+                        .requestMatchers(HttpMethod.POST, "/api/finance/payments/utr/verify/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/finance/payments/order/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/finance/payments/refund/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/finance/payments/cod/collect/**").hasRole("ADMIN")
+
                         .requestMatchers("/error").permitAll()
-                        // Everything else (Admin verifications, Invoices) requires authentication
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
+        http.addFilterBefore(internalServiceAuthFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

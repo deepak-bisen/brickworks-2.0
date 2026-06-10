@@ -2,8 +2,8 @@ package com.brickwork.security.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
+import java.util.Arrays;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,7 +18,7 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:5f4dcc3b5aa765d61d8327deb882cf99b8e14ab75f4dcc3b5aa765d61d8327de}")
+    @Value("${jwt.secret:change-me}")
     private String secret;
 
     @Value("${jwt.expiration:36000000}") // Default to 10 hours if not set in properties
@@ -56,7 +56,7 @@ public class JwtUtil {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .signWith(getSignKey())
                 .compact();
     }
 
@@ -96,6 +96,9 @@ public class JwtUtil {
             // Support raw secret strings for backward compatibility when the value
             // is not base64-encoded.
             keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        }
+        if (keyBytes.length < 32) {
+            keyBytes = Arrays.copyOf(keyBytes, 32);
         }
         return Keys.hmacShaKeyFor(keyBytes);
     }

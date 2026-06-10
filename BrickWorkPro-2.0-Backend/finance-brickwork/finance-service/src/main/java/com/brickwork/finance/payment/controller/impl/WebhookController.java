@@ -1,7 +1,9 @@
 package com.brickwork.finance.payment.controller.impl;
 
+import com.brickwork.finance.payment.service.PaymentService;
 import com.razorpay.Utils;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +16,8 @@ public class WebhookController {
     @Value("${razorpay.webhook.secret}")
     private String webhookSecret;
 
-    // We inject your PaymentService to actually update the DB once verified
-    // @Autowired
-    // private PaymentService paymentService;
+    @Autowired
+    private PaymentService paymentService;
 
     @PostMapping("/razorpay")
     public ResponseEntity<String> handleRazorpayWebhook(
@@ -24,45 +25,49 @@ public class WebhookController {
             @RequestHeader("X-Razorpay-Signature") String signature) {
 
         try {
-            // 1. Verify the signature using the Razorpay SDK
             boolean isValid = Utils.verifyWebhookSignature(payload, signature, webhookSecret);
 
             if (!isValid) {
-                System.err.println("Webhook signature verification failed!");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Signature");
             }
 
-            // 2. Parse the payload to figure out what happened
             JSONObject event = new JSONObject(payload);
             String eventType = event.getString("event");
 
-            System.out.println("Received verified Razorpay Webhook Event: " + eventType);
+            if ("order.paid".equals(eventType) || "payment.captured".equals(eventType)) {
+                JSONObject payloadObj = event.getJSONObject("payload");
+                String rzpOrderId = extractRazorpayOrderId(payloadObj, eventType);
+                String rzpPaymentId = extractRazorpayPaymentId(payloadObj, eventType);
 
-            // 3. Handle the specific event
-            if ("order.paid".equals(eventType)) {
-                JSONObject orderEntity = event.getJSONObject("payload").getJSONObject("order").getJSONObject("entity");
-                String rzpOrderId = orderEntity.getString("id");
-
-                // Extract receipt (which usually contains your internal orderId if you passed it during creation)
-                String internalOrderId = orderEntity.getString("receipt");
-
-                System.out.println("Order Paid! Razorpay Order ID: " + rzpOrderId);
-
-                // TODO: Call your paymentService here to update the transaction status to SUCCESS
-                // paymentService.processSuccessfulWebhookPayment(rzpOrderId, internalOrderId);
-            }
-            else if ("payment.failed".equals(eventType)) {
-                System.out.println("Payment Failed Event Received.");
-                // TODO: Handle failure logic
+                if (rzpOrderId != null && rzpPaymentId != null) {
+                    paymentService.handleWebhookPaymentCaptured(rzpOrderId, rzpPaymentId);
+                }
             }
 
-            // 4. ALWAYS return a 200 OK to Razorpay so they know you received it.
-            // If you don't return 200, Razorpay will keep retrying the webhook!
             return ResponseEntity.ok("Webhook Received");
 
         } catch (Exception e) {
-            System.err.println("Error processing webhook: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing webhook");
         }
+    }
+
+    private String extractRazorpayOrderId(JSONObject payloadObj, String eventType) {
+        if ("order.paid".equals(eventType) && payloadObj.has("order")) {
+            return payloadObj.getJSONObject("order").getJSONObject("entity").getString("id");
+        }
+        if ("payment.captured".equals(eventType) && payloadObj.has("payment")) {
+            return payloadObj.getJSONObject("payment").getJSONObject("entity").getString("order_id");
+        }
+        return null;
+    }
+
+    private String extractRazorpayPaymentId(JSONObject payloadObj, String eventType) {
+        if ("order.paid".equals(eventType) && payloadObj.has("payment")) {
+            return payloadObj.getJSONObject("payment").getJSONObject("entity").getString("id");
+        }
+        if ("payment.captured".equals(eventType) && payloadObj.has("payment")) {
+            return payloadObj.getJSONObject("payment").getJSONObject("entity").getString("id");
+        }
+        return null;
     }
 }

@@ -22,10 +22,10 @@ public class User {
     private String id;
 
     // Authentication Info
-    @Column(name = "USERNAME",columnDefinition = "VARCHAR(15)", unique = true, nullable = false)
+    @Column(name = "USERNAME", columnDefinition = "VARCHAR(50)", unique = true, nullable = false)
     private String username;
 
-    @Column(name = "EMAIL", columnDefinition = "VARCHAR(25)", unique = true, nullable = false)
+    @Column(name = "EMAIL", columnDefinition = "VARCHAR(100)", unique = true, nullable = false)
     private String email;
 
     @Column(name = "PASSWORD", columnDefinition = "VARCHAR(200)", nullable = false)
@@ -36,7 +36,7 @@ public class User {
     private Role role;
 
     // Common Profile Info
-    @Column(name = "FULL_NAME", columnDefinition = "VARCHAR(25)", nullable = false)
+    @Column(name = "FULL_NAME", columnDefinition = "VARCHAR(100)", nullable = false)
     private String fullName;
 
     @Column(name = "PHONE_NUMBER", columnDefinition = "VARCHAR(15)", nullable = false)

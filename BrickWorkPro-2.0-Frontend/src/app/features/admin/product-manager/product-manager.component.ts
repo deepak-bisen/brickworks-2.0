@@ -2,7 +2,8 @@ import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@ang
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ProductService } from '../../products/services/product.service';
-import { ActivatedRoute, Router } from '@angular/router'; // NEW IMPORTS
+import { ActivatedRoute, Router } from '@angular/router';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-product-manager',
@@ -15,6 +16,7 @@ export class ProductManagerComponent implements OnInit {
   productService = inject(ProductService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private notification = inject(NotificationService);
 
   isEditMode = signal<boolean>(false);
   editingProductId = signal<string | null>(null);
@@ -62,13 +64,13 @@ export class ProductManagerComponent implements OnInit {
   onSubmit() {
     // Block if it's a NEW product and missing an image
     if (!this.isEditMode() && !this.selectedFile()) {
-      alert('Please upload an image file for the new product.');
+      this.notification.warning('Please upload an image file for the new product.');
       return;
     }
 
     // Block if required text fields are completely cleared out
     if (this.productForm.invalid) {
-      alert('Form is incomplete! Please check the fields.');
+      this.notification.warning('Form is incomplete! Please check the fields.');
       this.productForm.markAllAsTouched();
       return;
     }
@@ -79,19 +81,16 @@ export class ProductManagerComponent implements OnInit {
       // Send the PATCH request
       this.productService.updateProduct(this.editingProductId()!, productData, this.selectedFile()).subscribe({
         next: () => {
-          alert('Product updated successfully!');
+          this.notification.success('Product updated successfully!');
           this.router.navigate(['/products']);
         },
-        error: (err) => {
-          console.error('Update failed', err);
-          alert('Failed to update product. Check console.');
-        }
+        error: () => {}
       });
     } else {
       // Send the POST request
       this.productService.addProduct(productData, this.selectedFile()!).subscribe({
         next: () => {
-          alert('Product added successfully!');
+          this.notification.success('Product added successfully!');
           this.productForm.reset({
             unitPrice: 0, estimatedCost: 0, stockQuantity: 0, bulkDiscountThreshold: 0
           });

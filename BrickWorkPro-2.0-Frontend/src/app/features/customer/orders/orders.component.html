@@ -1,17 +1,31 @@
 <div class="max-w-6xl mx-auto p-4 md:p-8">
-  <div class="mb-8">
-    <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">My Order History</h2>
-    <p class="text-gray-500 mt-1">Track your orders, delivery status, and download invoices.</p>
+  <div class="mb-6 md:mb-8">
+    <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">My Order History</h2>
+    <p class="text-gray-500 mt-1 text-sm md:text-base">Track your orders, delivery status, and download invoices.</p>
   </div>
 
+  @if (loadError) {
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-sm font-bold">
+      {{ loadError }}
+    </div>
+  }
+
   @if (loading) {
-    <div class="flex justify-center items-center py-20 flex-col gap-3">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-red-700"></div>
-      <p class="text-gray-500 font-bold text-sm">Loading your orders...</p>
+    <div class="md:hidden space-y-4">
+      @for (i of [1,2,3]; track i) {
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
+          <app-skeleton-block height="sm" width="60%" />
+          <app-skeleton-block height="sm" width="40%" />
+          <app-skeleton-block height="lg" width="35%" />
+        </div>
+      }
+    </div>
+    <div class="hidden md:flex justify-center items-center py-20">
+      <app-loading-spinner label="Loading your orders..." />
     </div>
   } @else {
     @if (orders.length === 0) {
-      <div class="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
+      <div class="text-center py-12 md:py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
         <div class="text-5xl mb-4">📦</div>
         <h3 class="text-xl font-bold text-gray-800">No orders found</h3>
         <p class="text-gray-500 mt-2 mb-6">You haven't placed any orders with us yet.</p>
@@ -20,7 +34,43 @@
         </a>
       </div>
     } @else {
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <!-- Mobile cards -->
+      <div class="md:hidden space-y-4">
+        @for (order of orders; track order.orderId) {
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div class="flex justify-between items-start gap-3 mb-3">
+              <a [routerLink]="['/customer/orders', order.orderId]" class="font-mono text-xs font-bold text-red-700 hover:underline break-all">
+                #{{ order.orderId.toUpperCase() }}
+              </a>
+              <app-status-badge [status]="order.status" />
+            </div>
+            <p class="text-sm text-gray-600">{{ order.createdAt | date:'dd MMM yyyy, shortTime' }}</p>
+            <p class="text-xl font-black text-gray-900 mt-2">₹{{ order.totalAmount | number:'1.0-0' }}</p>
+            <div class="mt-3">
+              <span [class]="paymentBadge(order.orderId, order.status).classes">
+                {{ paymentBadge(order.orderId, order.status).label }}
+              </span>
+            </div>
+            @if (isUtrPending(order.orderId)) {
+              <p class="text-xs text-amber-700 font-bold mt-2">UTR verification in 24–48 hrs</p>
+            }
+            <div class="flex flex-wrap gap-2 mt-4">
+              <a [routerLink]="['/customer/orders', order.orderId]"
+                class="text-xs font-bold text-gray-700 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">View Details</a>
+              @if (['DISPATCHED', 'DELIVERED', 'IN_PRODUCTION', 'CONFIRMED_COD', 'PAYMENT_RECEIVED'].includes(order.status || '')) {
+                <a [routerLink]="['/track-order']" [queryParams]="{ orderId: order.orderId, phone: trackPhone(order) }"
+                   class="text-xs font-bold text-red-700 bg-red-50 px-3 py-2 rounded-lg border border-red-100">Track</a>
+              }
+              @if (['CONFIRMED_COD', 'PAYMENT_RECEIVED', 'IN_PRODUCTION', 'DISPATCHED', 'DELIVERED'].includes(order.status || '')) {
+                <button (click)="downloadInvoice(order.orderId)"
+                  class="text-xs font-bold text-green-700 bg-green-50 px-3 py-2 rounded-lg border border-green-100">Invoice</button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="hidden md:block bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm whitespace-nowrap">
             <thead class="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold border-b border-gray-200">
@@ -37,16 +87,22 @@
                 <tr class="hover:bg-gray-50/80 transition-colors">
 
                   <td class="p-5 align-top">
-                    <div class="font-mono text-[11px] leading-tight font-bold text-gray-900 break-all max-w-[180px]">
+                    <a [routerLink]="['/customer/orders', order.orderId]"
+                      class="font-mono text-[11px] leading-tight font-bold text-red-700 hover:underline break-all max-w-[180px] inline-block">
                       #{{ order.orderId ? order.orderId.toString().toUpperCase() : 'N/A' }}
-                    </div>
+                    </a>
 
                     <div class="mt-2">
-                      <span class="text-[10px] font-extrabold px-2 py-1 rounded-md border shadow-sm inline-block"
-                            [ngClass]="order.status === 'CONFIRMED_COD' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-blue-50 text-blue-700 border-blue-200'">
-                        💳 {{ order.status === 'CONFIRMED_COD' ? 'CASH ON DELIVERY' : 'PREPAID / ONLINE' }}
+                      <span [class]="paymentBadge(order.orderId, order.status).classes">
+                        {{ paymentBadge(order.orderId, order.status).label }}
                       </span>
                     </div>
+
+                    @if (isUtrPending(order.orderId)) {
+                      <p class="text-[10px] text-amber-700 font-bold mt-2 max-w-[180px] whitespace-normal">
+                        UTR submitted — verification in 24–48 hrs
+                      </p>
+                    }
                   </td>
 
                   <td class="p-5">
@@ -57,36 +113,38 @@
                   <td class="p-5 text-center">
                     @if (order.discountApplied > 0) {
                       <div class="text-[11px] text-gray-400 line-through font-bold mb-0.5">
-                        M.R.P: ₹{{ order.grossAmount  }}
+                        M.R.P: ₹{{ order.grossAmount | number:'1.0-0' }}
                       </div>
                     }
 
                     <div class="font-black text-gray-900 text-lg">
-                      ₹{{ order.totalAmount  }}
+                      ₹{{ order.totalAmount | number:'1.0-0' }}
                     </div>
 
                     @if (order.discountApplied > 0) {
                       <div class="mt-1 inline-flex items-center gap-1 bg-green-50 text-green-700 px-2 py-0.5 rounded text-[10px] font-black tracking-wide border border-green-200">
-                        <span>🏷️</span> Saved ₹{{ order.discountApplied  }}
+                        <span>🏷️</span> Saved ₹{{ order.discountApplied | number:'1.0-0' }}
                       </div>
                     }
                   </td>
 
                   <td class="p-5 text-center">
-                    <span class="px-3 py-1.5 rounded-md text-[10px] font-black tracking-widest uppercase border"
-                      [ngClass]="{
-                        'bg-yellow-50 text-yellow-800 border-yellow-200': order.status === 'PENDING_PAYMENT',
-                        'bg-blue-50 text-blue-800 border-blue-200': order.status === 'CONFIRMED_COD' || order.status === 'PAYMENT_RECEIVED' || order.status === 'IN_PRODUCTION',
-                        'bg-indigo-50 text-indigo-800 border-indigo-200': order.status === 'DISPATCHED',
-                        'bg-green-50 text-green-800 border-green-200': order.status === 'DELIVERED',
-                        'bg-red-50 text-red-800 border-red-200': order.status === 'CANCELLED'}">
-                      {{ order.status ? order.status.replace('_', ' ') : 'UNKNOWN' }}
-                    </span>
+                    <app-status-badge [status]="order.status" />
                   </td>
 
                   <td class="p-5 text-right">
-                    @if (['CONFIRMED_COD', 'PAYMENT_RECEIVED', 'IN_PRODUCTION', 'DISPATCHED', 'DELIVERED'].includes(order.status || '')) {
-                      <div class="flex flex-col items-end justify-center">
+                    <div class="flex flex-col items-end gap-2">
+                      <a [routerLink]="['/customer/orders', order.orderId]"
+                        class="text-xs font-bold text-gray-600 hover:text-red-700 hover:underline">View Details</a>
+                      @if (['DISPATCHED', 'DELIVERED', 'IN_PRODUCTION', 'CONFIRMED_COD', 'PAYMENT_RECEIVED'].includes(order.status || '')) {
+                        <a [routerLink]="['/track-order']"
+                           [queryParams]="{ orderId: order.orderId, phone: trackPhone(order) }"
+                           class="text-xs font-bold text-red-700 hover:underline">
+                          Track Order
+                        </a>
+                      }
+
+                      @if (['CONFIRMED_COD', 'PAYMENT_RECEIVED', 'IN_PRODUCTION', 'DISPATCHED', 'DELIVERED'].includes(order.status || '')) {
                         @if (invoiceErrors[order.orderId]) {
                           <p class="text-[10px] text-red-600 font-bold mb-1 max-w-[150px] whitespace-normal">
                             {{ invoiceErrors[order.orderId] }}
@@ -94,9 +152,10 @@
                           <button
                             (click)="generateInvoice(order.orderId)"
                             [disabled]="generatingInvoice[order.orderId]"
-                            class="text-blue-700 hover:bg-blue-50 bg-white border border-blue-200 text-xs font-bold px-3 py-1.5 rounded disabled:opacity-50 transition-colors shadow-sm mt-1">
+                            class="text-blue-700 hover:bg-blue-50 bg-white border border-blue-200 text-xs font-bold px-3 py-1.5 rounded disabled:opacity-50 transition-colors shadow-sm flex items-center gap-2">
                             @if (generatingInvoice[order.orderId]) {
-                              <span class="animate-spin inline-block mr-1">⟳</span> Generating...
+                              <app-loading-spinner size="sm" [centered]="false" />
+                              Generating...
                             } @else {
                               ⟳ Retry Generation
                             }
@@ -105,15 +164,19 @@
                           <button
                             (click)="downloadInvoice(order.orderId)"
                             class="text-green-700 hover:bg-green-600 hover:text-white font-bold text-xs uppercase tracking-wider bg-green-50 px-4 py-2 rounded-lg border border-green-200 transition-all shadow-sm flex items-center gap-1">
-                            📄 Download Invoice
+                            Download Invoice
                           </button>
                         }
-                      </div>
-                    } @else if (order.status === 'PENDING_PAYMENT') {
-                      <span class="text-xs text-gray-400 font-bold italic">Awaiting Payment</span>
-                    } @else {
-                      <span class="text-xs text-gray-400 font-bold italic">-</span>
-                    }
+                      } @else if (order.status === 'PENDING_PAYMENT') {
+                        @if (isUtrPending(order.orderId)) {
+                          <span class="text-xs text-amber-700 font-bold">Awaiting UTR verification</span>
+                        } @else {
+                          <span class="text-xs text-gray-400 font-bold italic">Awaiting Payment</span>
+                        }
+                      } @else {
+                        <span class="text-xs text-gray-400 font-bold italic">—</span>
+                      }
+                    </div>
                   </td>
 
                 </tr>

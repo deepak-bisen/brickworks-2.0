@@ -13,11 +13,11 @@ import java.util.List;
 @RequestMapping("/api/products")
 public interface ProductController {
 
+    @GetMapping({"/", "/all"})
+    ResponseEntity<List<ProductDTO>> getAllProducts();
+
     @GetMapping("/{productId}")
     ResponseEntity<ProductDTO> getProductById(@PathVariable("productId") String productId);
-
-    @GetMapping("/all")
-    ResponseEntity<List<ProductDTO>> getAllProducts();
 
     @GetMapping("/category/{category}")
     ResponseEntity<List<ProductDTO>> getProductsByCategory(@PathVariable("category") String category);

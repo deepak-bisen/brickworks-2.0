@@ -1,5 +1,6 @@
 <div class="max-w-2xl mx-auto my-12 p-8 bg-white shadow-xl rounded-xl border-t-4 border-red-600">
-  <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Get a Bulk Quote</h2>
+  <h2 class="text-3xl font-bold text-gray-800 mb-2 text-center">Get a Bulk Quote</h2>
+  <p class="text-sm text-gray-500 text-center mb-6">Request pricing for bulk orders from <strong>500 units</strong>. Ready to buy now? <a routerLink="/products" class="text-red-700 font-bold hover:underline">Order directly</a> (minimum 500 units).</p>
 
   <form [formGroup]="quoteForm" (ngSubmit)="submitQuote()" class="space-y-5">
 
@@ -55,14 +56,14 @@
     </div>
 
     <div class="w-full">
-      <input type="number" formControlName="quantity" placeholder="Quantity (Min 200)"
+      <input type="number" formControlName="quantity" placeholder="Quantity (Min 500)"
              class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none transition-colors"
              [ngClass]="{'border-red-500 bg-red-50': f.quantity.invalid && f.quantity.touched}">
       @if (f.quantity.errors?.['required'] && f.quantity.touched) {
         <p class="text-red-500 text-xs mt-1 font-medium">Quantity is required.</p>
       }
       @if (f.quantity.errors?.['min'] && f.quantity.touched) {
-        <p class="text-red-500 text-xs mt-1 font-medium">Minimum quantity must be at least 200.</p>
+        <p class="text-red-500 text-xs mt-1 font-medium">Minimum quantity must be at least 500.</p>
       }
     </div>
 

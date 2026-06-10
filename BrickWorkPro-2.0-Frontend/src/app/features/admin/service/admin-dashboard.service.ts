@@ -128,32 +128,23 @@ export class AdminDashboardService {
       .get<any[]>(`${this.baseUrl}/api/orders/all/orders`)
       .pipe(catchError(() => of([])));
 
-    // FIX: typo 'public-qoute' must match the backend route exactly
     const quotes$ = this.http
-      .get<any[]>(`${this.baseUrl}/api/orders/all/get/public-quo  te`)
+      .get<any[]>(`${this.baseUrl}/api/orders/all/get/public-quote`)
       .pipe(catchError(() => of([])));
 
     return forkJoin({ actual: actualOrders$, quotes: quotes$ }).pipe(
       map((results) => {
-        console.log('DEBUG: Raw API Response', { actual: results.actual, quotes: results.quotes });
+        const actual = (results.actual || []).map((o) =>
+          this.normalizeOrder({ ...o, requestType: 'DIRECT ORDER' }),
+        );
 
-        const actual = (results.actual || []).map((o) => {
-          const normalized = this.normalizeOrder({ ...o, requestType: 'DIRECT ORDER' });
-          console.log('DEBUG: Normalized Direct Order', { original: o, normalized });
-          return normalized;
-        });
+        const quotes = (results.quotes || []).map((o) =>
+          this.normalizeOrder({ ...o, requestType: 'QUOTE LEAD' }),
+        );
 
-        const quotes = (results.quotes || []).map((o) => {
-          const normalized = this.normalizeOrder({ ...o, requestType: 'QUOTE LEAD' });
-          console.log('DEBUG: Normalized Quote', { original: o, normalized });
-          return normalized;
-        });
-
-        const combined = [...actual, ...quotes].sort(
+        return [...actual, ...quotes].sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         );
-        console.log('DEBUG: Final Combined Orders', combined);
-        return combined;
       }),
     );
   }

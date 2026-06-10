@@ -104,7 +104,7 @@ export class CartService {
     this.items.update(currentItems =>
       currentItems.map(item =>
         item.product.productId === productId
-          ? { ...item, quantity: Math.max(100, item.quantity - amount) }
+          ? { ...item, quantity: Math.max(500, item.quantity - amount) }
           : item
       )
     );
@@ -114,7 +114,7 @@ export class CartService {
     this.items.update(currentItems =>
       currentItems.map(item =>
         item.product.productId === productId
-          ? { ...item, quantity: Math.max(100, newQuantity) }
+          ? { ...item, quantity: Math.max(500, newQuantity) }
           : item
       )
     );

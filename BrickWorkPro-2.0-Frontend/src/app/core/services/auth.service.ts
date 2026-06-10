@@ -79,6 +79,7 @@ export class AuthService {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem('token');
     localStorage.removeItem('adminToken');
+    localStorage.removeItem('user');
     this.isAuthenticated.set(false);
     this.isAdmin.set(false);
     this.isCustomer.set(false);
@@ -156,7 +157,7 @@ export class AuthService {
   }
 
   updateProfile(username: string, data: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/auth/profile/update?username=${username}`, data);
+    return this.http.put(`${this.apiUrl}/profile/update?username=${username}`, data);
   }
 
   getProfile(username: string) {

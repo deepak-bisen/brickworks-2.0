@@ -1,16 +1,18 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { OrderService } from '../services/order.service';
-
+import { formatOrderStatus } from '../../../shared/utils/order-status.util';
 @Component({
   selector: 'app-track-order',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './track-order.component.html'
 })
-export class TrackOrderComponent {
+export class TrackOrderComponent implements OnInit {
   private orderService = inject(OrderService);
+  private route = inject(ActivatedRoute);
 
   orderId = signal('');
   phone = signal('');
@@ -18,6 +20,15 @@ export class TrackOrderComponent {
   isLoading = signal(false);
   errorMsg = signal('');
   orderData = signal<any>(null);
+
+  ngOnInit() {
+    const q = this.route.snapshot.queryParamMap;
+    const orderId = q.get('orderId');
+    const phone = q.get('phone');
+    if (orderId) this.orderId.set(orderId);
+    if (phone) this.phone.set(phone);
+    if (orderId && phone) this.track();
+  }
 
   track() {
     if (!this.orderId() || !this.phone()) {
@@ -33,21 +44,36 @@ export class TrackOrderComponent {
       next: (res) => {
         this.orderData.set(res);
         this.isLoading.set(false);
-        console.log("TRACKING DATA FROM BACKEND: ", res);
       },
       error: (err) => {
-        this.errorMsg.set(err.error || 'Could not find tracking details. Please verify your inputs.');
+        const msg = typeof err.error === 'string' ? err.error : null;
+        this.errorMsg.set(msg || 'Could not find tracking details. Please verify your inputs.');
         this.isLoading.set(false);
       }
     });
   }
 
-  // Timeline UI ke liye helper
-  // NAYA: Status ki calculation ekdum clear karne ke liye
+  formatStatus(status: string) {
+    return formatOrderStatus(status);
+  }
+
+  getStepLabel(step: number, currentStatus: string): string {
+    if (step === 1 && currentStatus === 'PENDING_PAYMENT') return 'Awaiting Payment';
+    if (step === 1) return 'Order Placed';
+    if (step === 2) return 'Processing';
+    if (step === 3) return 'Dispatched';
+    return 'Delivered';
+  }
+
   getStepStatus(step: number, currentStatus: string): 'completed' | 'active' | 'pending' {
     if (currentStatus === 'CANCELLED') return 'pending';
 
-    let currentStep = 1;
+    if (currentStatus === 'PENDING_PAYMENT') {
+      if (step === 1) return 'active';
+      return 'pending';
+    }
+
+    let currentStep = 2;
     if (currentStatus === 'CONFIRMED_COD' || currentStatus === 'PAYMENT_RECEIVED' || currentStatus === 'IN_PRODUCTION') {
       currentStep = 2;
     } else if (currentStatus === 'DISPATCHED') {
@@ -58,17 +84,20 @@ export class TrackOrderComponent {
 
     if (step < currentStep) return 'completed';
     if (step === currentStep) {
-      // Agar Delivered hai toh aakhiri step bhi 'completed' dikhayega (Checkmark ke sath)
       return step === 4 ? 'completed' : 'active';
     }
     return 'pending';
   }
 
-  // NAYA: Line ko kitna fill karna hai (CSS width percentage)
   getProgressBarWidth(status: string): string {
     if (status === 'DELIVERED') return '100%';
     if (status === 'DISPATCHED') return '66.66%';
     if (status === 'CONFIRMED_COD' || status === 'PAYMENT_RECEIVED' || status === 'IN_PRODUCTION') return '33.33%';
+    if (status === 'PENDING_PAYMENT') return '0%';
     return '0%';
+  }
+
+  isAwaitingPayment(status: string): boolean {
+    return status === 'PENDING_PAYMENT';
   }
 }

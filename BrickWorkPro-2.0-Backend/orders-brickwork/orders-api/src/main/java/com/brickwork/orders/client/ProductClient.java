@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 // This links directly to the products-brickwork service we built yesterday!
-@FeignClient(name = "PRODUCTS-BRICKWORK")
+@FeignClient(name = "PRODUCTS-BRICKWORK", contextId = "productClient")
 public interface ProductClient {
 
     @GetMapping("/api/products/{id}")

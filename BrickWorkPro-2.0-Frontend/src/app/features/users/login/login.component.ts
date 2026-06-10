@@ -39,7 +39,7 @@ export class LoginComponent {
           this.router.navigate(['/admin-dashboard']);
         } else if (role === 'CUSTOMER') {
           this.router.navigate(['/customer/dashboard']);
-        } else if (role === 'STAFF' || role === 'MANAGER') {
+        } else if (role === 'STAFF') {
           this.router.navigate(['/staff/dashboard']);
         } else {
           console.warn('Unknown role after login:', role);
@@ -48,12 +48,8 @@ export class LoginComponent {
 
         
       },
-      error: (err) => {
-        console.error('Login failed:', err);
-        const message =
-          err?.error?.message ||
-          'Invalid username or password. Please try again.';
-        alert(message);
+      error: () => {
+        // Error toast handled by error interceptor (login 401 is excluded from auto-logout)
       },
     });
   }

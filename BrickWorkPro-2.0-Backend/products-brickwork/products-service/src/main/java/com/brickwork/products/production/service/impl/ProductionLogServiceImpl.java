@@ -2,6 +2,7 @@ package com.brickwork.products.production.service.impl;
 
 import com.brickwork.products.product.entity.Product;
 import com.brickwork.products.production.dto.ProductionLogDTO;
+import com.brickwork.products.production.dto.ProductionLogFromOrderRequest;
 import com.brickwork.products.production.entity.ProductionLog;
 import com.brickwork.products.product.repository.ProductRepository;
 import com.brickwork.products.production.enums.ProductionStage;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -76,6 +79,40 @@ public class ProductionLogServiceImpl implements ProductionLogService {
 
 
     @Override
+    @Transactional
+    public List<ProductionLogDTO> createFromOrder(ProductionLogFromOrderRequest request) {
+        if (request.getOrderId() == null || request.getOrderId().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order ID is required");
+        }
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one order item is required");
+        }
+
+        List<ProductionLogDTO> createdLogs = new ArrayList<>();
+        for (ProductionLogFromOrderRequest.ProductionLogFromOrderItem item : request.getItems()) {
+            if (item.getProductId() == null || item.getQuantity() == null || item.getQuantity() <= 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each item must have a productId and positive quantity");
+            }
+
+            ProductionLog log = new ProductionLog();
+            log.setManagerId("internal-service");
+            log.setManagerName("Order System");
+            log.setStage(ProductionStage.MOLDED);
+            log.setQuantity(item.getQuantity());
+            log.setCreatedAt(LocalDateTime.now());
+            log.setOrderId(request.getOrderId());
+
+            Product product = productRepository.findById(item.getProductId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product not found: " + item.getProductId()));
+            log.setProduct(product);
+
+            createdLogs.add(mapToDTO(logRepository.save(log)));
+        }
+
+        return createdLogs;
+    }
+
+    @Override
     public List<ProductionLogDTO> getAllLogs() {
         return logRepository.findAll().stream().map(this::mapToDTO).collect(Collectors.toList());
     }
@@ -119,6 +156,7 @@ public class ProductionLogServiceImpl implements ProductionLogService {
                 log.getProduct() != null ? log.getProduct().getName() : null,
                 log.getStage(),
                 log.getQuantity(),
-                log.getCreatedAt());
+                log.getCreatedAt(),
+                log.getOrderId());
     }
 }

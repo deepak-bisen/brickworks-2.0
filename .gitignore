@@ -52,6 +52,15 @@ build/
 .DS_Store
 Thumbs.db
 
+# Environment secrets
+.env
+!.env.example
+
+# Local dev tooling
+agent-tools/
+terminals/
+scripts/logs/
+
 
 # Ensure critical config is NOT ignored
 !**/BrickWorkPro-2.0-Frontend/.postcssrc.json

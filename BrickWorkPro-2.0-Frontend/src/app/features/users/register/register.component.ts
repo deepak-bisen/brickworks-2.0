@@ -2,6 +2,7 @@ import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { Router, RouterLink } from '@angular/router';
 
 @Component({
@@ -15,6 +16,7 @@ export class RegisterComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private notification = inject(NotificationService);
 
   isEmployeeMode = signal(false);
 
@@ -69,7 +71,11 @@ export class RegisterComponent {
       };
       // FIX: Only send BUSINESS-specific fields when they have values
       if (customerType === 'BUSINESS') {
-        customerPayload.companyName = formValue.companyName || '';
+        if (!formValue.companyName?.trim()) {
+          this.notification.warning('Business customers must provide a Company Name.');
+          return;
+        }
+        customerPayload.companyName = formValue.companyName.trim();
         customerPayload.gstNumber = formValue.gstNumber || '';
       }
       request$ = this.authService.registerCustomer(customerPayload);
@@ -77,15 +83,10 @@ export class RegisterComponent {
 
     request$.subscribe({
       next: () => {
-        alert('Registration successful! Please login.');
+        this.notification.success('Registration successful! Please log in.');
         this.router.navigate(['/login']);
       },
-      error: (err) => {
-        console.error('Registration failed', err);
-        const message =
-          err?.error || 'Registration failed. Please check your details and try again.';
-        alert(typeof message === 'string' ? message : JSON.stringify(message));
-      },
+      error: () => {},
     });
   }
 }

@@ -2,18 +2,19 @@
 <div class="max-w-xl mx-auto my-12 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
 
   <div class="text-center mb-16">
-            <h2 class="text-3xl md:text-4xl font-black text-gray-900 uppercase tracking-tight">🧱 Brick <span class="text-red-700">Calculator</span></h2>
+            <h2 class="text-3xl md:text-4xl font-black text-gray-900 uppercase tracking-tight">Brick <span class="text-red-700">Calculator</span></h2>
             <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Estimate the number of bricks required for your wall.</p>
         </div>
 
   <div class="space-y-4">
     <div>
       <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Wall Area (Square Feet)</label>
-      <input type="number" [(ngModel)]="area"
+      <input type="number" [ngModel]="area()" (ngModelChange)="onAreaChange($event)"
              class="w-full p-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-700 outline-none transition-all"
              placeholder="Enter area in sq. ft">
     </div>
     <p class="text-sm text-gray-500 italic">*Assumes standard brick size and 10% allowance for wastage.<br/>*7 bricks per sq ft is industry standard for 9-inch wall</p>
+    <p class="text-xs text-gray-500">Orders require a minimum of <strong>500 units</strong> per product. Use <a routerLink="/get-quote" class="text-red-700 font-bold hover:underline">Get a Quote</a> for smaller bulk inquiries (200+ units).</p>
 
     <button (click)="compute()"
             class="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-black transition-all uppercase tracking-widest text-sm">
@@ -26,6 +27,10 @@
       <p class="text-sm text-red-800 font-bold uppercase">Estimated Bricks Required</p>
       <p class="text-5xl font-black text-red-900 mt-2">{{ bricksNeeded() | number }}</p>
       <p class="text-xs text-red-600 mt-2 italic">*Includes 10% allowance for wastage.</p>
+      <a routerLink="/products"
+         class="inline-block mt-6 bg-red-700 text-white font-bold px-6 py-3 rounded-xl hover:bg-red-800 transition-colors uppercase tracking-wider text-sm">
+        Browse Products to Order
+      </a>
     </div>
   }
 </div>

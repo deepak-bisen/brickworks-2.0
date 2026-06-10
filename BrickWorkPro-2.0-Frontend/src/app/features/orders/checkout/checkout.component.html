@@ -1,5 +1,6 @@
 <div class="max-w-7xl mx-auto px-4 py-12">
-  <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-8 tracking-tight border-b pb-4">Secure Checkout</h1>
+  <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">Secure Checkout</h1>
+  <p class="text-sm text-gray-500 mb-8 border-b pb-4">Bulk orders require a <strong>minimum of 500 units</strong> per product. Quotes can be requested from 200 units on the <a routerLink="/get-quote" class="text-red-700 font-bold hover:underline">Get a Quote</a> page.</p>
 
   @if (cartService.items().length === 0) {
   <div class="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
@@ -38,6 +39,9 @@
           <span class="bg-gray-900 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
           Shipping Information
         </h2>
+        @if (profileLoading()) {
+          <p class="text-sm text-gray-500 mb-4 animate-pulse">Loading your profile details...</p>
+        }
         <form [formGroup]="checkoutForm" class="space-y-5">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
@@ -155,8 +159,13 @@
         </div>
 
         <button (click)="confirmOrder()" [disabled]="isSubmitting()"
-          class="w-full bg-gray-900 text-white py-4 rounded-xl font-black shadow-lg hover:bg-red-700 transition-all uppercase tracking-widest text-lg disabled:opacity-50">
-          {{ isSubmitting() ? 'Processing...' : 'Proceed to Payment' }}
+          class="w-full bg-gray-900 text-white py-4 rounded-xl font-black shadow-lg hover:bg-red-700 transition-all uppercase tracking-widest text-lg disabled:opacity-50 flex items-center justify-center gap-3">
+          @if (isSubmitting()) {
+            <app-loading-spinner size="sm" [centered]="false" />
+            <span>Processing order...</span>
+          } @else {
+            Proceed to Payment
+          }
         </button>
         }
 
@@ -206,7 +215,10 @@
         </div>
 
         @if (paymentMethod() === 'UTR') {
-        <!-- FIX: Removed bankName field — backend UtrSubmissionDTO does not have it -->
+        <div class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-900">
+          <p class="font-bold">After submitting your UTR</p>
+          <p class="mt-1 text-xs text-amber-800">Your order will show as <strong>Awaiting Verification</strong> until our team confirms the transfer (typically 24–48 hours).</p>
+        </div>
         <form [formGroup]="utrForm" class="space-y-4 mb-6 p-4 bg-white border border-gray-200 rounded-xl">
           <div>
             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">12-Digit UTR Number</label>

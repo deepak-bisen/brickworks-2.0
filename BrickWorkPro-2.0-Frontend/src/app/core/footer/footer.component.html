@@ -1,0 +1,95 @@
+<footer class="bg-gray-900 text-gray-300 border-t border-gray-800">
+  <div class="container mx-auto px-6 py-12 md:py-14">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
+
+      <!-- Brand -->
+      <div class="sm:col-span-2 lg:col-span-1">
+        <a routerLink="/home" class="inline-flex items-center gap-2 text-white font-black text-xl hover:opacity-90 transition-opacity">
+          <span aria-hidden="true">🧱</span>
+          <span>BrickWorks Pro</span>
+        </a>
+        <p class="mt-4 text-sm leading-relaxed text-gray-400 max-w-xs">
+          Precision-engineered bricks for industrial projects and residential builds. Quality you can build on.
+        </p>
+        <p class="mt-4 text-xs font-bold uppercase tracking-widest text-gray-500">
+          Bulk orders from 500 units
+        </p>
+      </div>
+
+      <!-- Shop & order -->
+      <div>
+        <h3 class="text-xs font-black uppercase tracking-widest text-white mb-4">Shop &amp; Order</h3>
+        <ul class="space-y-2.5 text-sm">
+          <li><a routerLink="/products" class="hover:text-white transition-colors">Product Catalog</a></li>
+          <li><a routerLink="/cart" class="hover:text-white transition-colors">View Cart</a></li>
+          <li><a routerLink="/get-quote" class="hover:text-white transition-colors">Get a Quote</a></li>
+          <li><a routerLink="/calculator" class="hover:text-white transition-colors">Brick Calculator</a></li>
+          <li><a routerLink="/track-order" class="hover:text-white transition-colors">Track Order</a></li>
+        </ul>
+      </div>
+
+      <!-- Support -->
+      <div>
+        <h3 class="text-xs font-black uppercase tracking-widest text-white mb-4">Support</h3>
+        <ul class="space-y-2.5 text-sm">
+          <li><a routerLink="/contact" class="hover:text-white transition-colors">Contact Us</a></li>
+          <li><a routerLink="/home" class="hover:text-white transition-colors">About BrickWorks</a></li>
+          @if (authService.isAuthenticated()) {
+            @if (authService.isCustomer()) {
+              <li><a routerLink="/customer/orders" class="hover:text-white transition-colors">My Orders</a></li>
+              <li><a routerLink="/customer/profile" class="hover:text-white transition-colors">My Profile</a></li>
+            }
+            @if (authService.isAdmin()) {
+              <li><a routerLink="/admin-dashboard" class="hover:text-white transition-colors">Admin Dashboard</a></li>
+            }
+            @if (authService.isStaff()) {
+              <li><a routerLink="/staff/dashboard" class="hover:text-white transition-colors">Staff Portal</a></li>
+            }
+          } @else {
+            <li><a routerLink="/login" class="hover:text-white transition-colors">Login</a></li>
+            <li><a routerLink="/register" class="hover:text-white transition-colors">Register</a></li>
+          }
+          <li>
+            <a routerLink="/contact" fragment="privacy" class="hover:text-white transition-colors">Privacy</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <h3 class="text-xs font-black uppercase tracking-widest text-white mb-4">Factory</h3>
+        <ul class="space-y-3 text-sm">
+          <li>
+            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Phone</p>
+            <a href="tel:+919770016640" class="hover:text-white transition-colors">+91-9770016640</a>
+            <p class="text-xs text-gray-500 mt-0.5">Mon–Sat, 8am–6pm</p>
+          </li>
+          <li>
+            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Email</p>
+            <a href="mailto:info@brickworkspro.com" class="hover:text-white transition-colors break-all">info&#64;brickworkspro.com</a>
+          </li>
+          <li>
+            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Plant</p>
+            <p class="leading-relaxed text-gray-400">
+              Village Khairi, District Balaghat,<br>
+              Madhya Pradesh, India — 481337
+            </p>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="border-t border-gray-800">
+    <div class="container mx-auto px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-gray-500">
+      <p>&copy; {{ currentYear }} BrickWorks Pro. All rights reserved.</p>
+      <div class="flex flex-wrap gap-x-5 gap-y-2">
+        <a routerLink="/products" class="hover:text-gray-300 transition-colors">Products</a>
+        <a routerLink="/contact" class="hover:text-gray-300 transition-colors">Contact</a>
+        <a routerLink="/track-order" class="hover:text-gray-300 transition-colors">Track</a>
+        <a routerLink="/contact" fragment="privacy" class="hover:text-gray-300 transition-colors">Privacy</a>
+      </div>
+    </div>
+  </div>
+</footer>

@@ -55,7 +55,7 @@ public class PaymentControllerImpl implements PaymentController {
 
     // Admin Approves/Rejects
     @Override
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> verifyUtr(@PathVariable String orderId, @RequestParam boolean approved) {
         return ResponseEntity.ok(paymentService.verifyUtrPayment(orderId, approved));
     }
@@ -78,6 +78,7 @@ public class PaymentControllerImpl implements PaymentController {
 
     // NAYA ENDPOINT: Admin UTR modal ke liye data fetch karne ke liye
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getPaymentDetailsByOrderId(@PathVariable("orderId") String orderId) {
         try {
             return ResponseEntity.ok(paymentService.getPaymentDetailsByOrderId(orderId));
@@ -86,6 +87,8 @@ public class PaymentControllerImpl implements PaymentController {
         }
     }
 
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> initiateRefund(@PathVariable("orderId") String orderId) {
         try {
             return ResponseEntity.ok(paymentService.initiateRefund(orderId));

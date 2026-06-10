@@ -1,15 +1,16 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { OrderService } from '../services/order.service';
 import { ProductService } from '../../products/services/product.service';
 import { OrderRequest } from '../models/order-request.model';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-quote-request',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './quote-request.component.html'
   // Removed ChangeDetectionStrategy to allow native form updates
 })
@@ -19,6 +20,7 @@ export class QuoteRequestComponent implements OnInit {
   private router = inject(Router);
   private orderService = inject(OrderService);
   productService = inject(ProductService);
+  private notification = inject(NotificationService);
 
   quoteForm = this.fb.group({
     customerName: ['', Validators.required],
@@ -26,7 +28,7 @@ export class QuoteRequestComponent implements OnInit {
     customerPhone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
     deliveryAddress: ['', Validators.required],
     productId: ['', Validators.required],
-    quantity: ['', [Validators.required, Validators.min(200)]]
+    quantity: ['', [Validators.required, Validators.min(500)]]
   });
 
   // Helper method for easy access to form fields in HTML
@@ -64,7 +66,7 @@ ngOnInit(): void {
 
     // Explicitly check for 'undefined' to prevent backend crash
     if (!formValue.productId || formValue.productId === 'undefined') {
-      alert('Please select a valid brick type from the list.');
+      this.notification.warning('Please select a valid brick type from the list.');
       return;
     }
 
@@ -83,16 +85,13 @@ ngOnInit(): void {
 
     this.orderService.requestPublicQuote(requestData).subscribe({
       next: () => {
-        alert('Quote requested successfully! Our team will contact you shortly.');
+        this.notification.success('Quote requested successfully! Our team will contact you shortly.');
         this.quoteForm.reset();
 
         // 2. Redirect back to the catalog
         this.router.navigate(['/products']);
       },
-      error: (err) => {
-        console.error('Quote failed', err);
-        alert('Server Error: Failed to submit the quote. Please try again.');
-      }
+      error: () => {}
     });
   }
 }

@@ -35,4 +35,7 @@ public class ProductionLog {
 
     @Column(name = "CREATED_AT", columnDefinition = "DATETIME", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "ORDER_ID", columnDefinition = "VARCHAR(40)")
+    private String orderId;
 }

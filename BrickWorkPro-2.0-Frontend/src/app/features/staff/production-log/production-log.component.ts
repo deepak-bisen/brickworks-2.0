@@ -4,27 +4,29 @@ import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angu
 import { RouterLink } from '@angular/router';
 import { ProductService } from '../../products/services/product.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
+import { SkeletonBlockComponent } from '../../../shared/components/skeleton-block/skeleton-block.component';
 
 @Component({
   selector: 'app-production-log',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, LoadingSpinnerComponent, SkeletonBlockComponent],
   templateUrl: './production-log.component.html',
 })
 export class ProductionLogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private productService = inject(ProductService);
   private authService = inject(AuthService);
+  private notification = inject(NotificationService);
 
   products: any[] = [];
-  productionLogs: any[] = [];
   isLoadingProducts = false;
   productLoadError = '';
-  // Raw materials for manual adjustment
   rawMaterials: any[] = [];
   manualAdjust = false;
   selectedMaterialId: string | null = null;
-  manualAmount = 0; // positive to add, negative to deduct
+  manualAmount = 0;
   isAdjustingMaterial = false;
   adjustMessage = '';
   stageOptions = [
@@ -33,8 +35,6 @@ export class ProductionLogComponent implements OnInit {
     { value: 'BAKED', label: 'Baked / Finished' },
   ];
 
-  successMessage = '';
-  errorMessage = '';
   isSubmitting = false;
 
   productionForm = this.fb.group({
@@ -45,7 +45,6 @@ export class ProductionLogComponent implements OnInit {
 
   ngOnInit() {
     this.loadProductOptions();
-    this.loadProductionLogs();
   }
 
   private loadProductOptions() {
@@ -62,20 +61,18 @@ export class ProductionLogComponent implements OnInit {
         this.products = Array.isArray(products) ? products : [];
         this.isLoadingProducts = false;
       },
-      error: (err) => {
-        console.error('Failed to load products for production log', err);
+      error: () => {
         this.productLoadError = 'Unable to load product options. Please refresh the page.';
         this.isLoadingProducts = false;
       },
     });
   }
 
-  // Load raw materials when user wants to adjust inventory manually
   loadRawMaterials() {
     this.rawMaterials = [];
     this.productService.getRawMaterials().subscribe({
       next: (m) => (this.rawMaterials = Array.isArray(m) ? m : []),
-      error: (err) => console.error('Failed to load raw materials', err),
+      error: () => this.notification.error('Failed to load raw materials.'),
     });
   }
 
@@ -83,12 +80,10 @@ export class ProductionLogComponent implements OnInit {
     if (this.productionForm.invalid) return;
 
     this.isSubmitting = true;
-    this.successMessage = '';
-    this.errorMessage = '';
 
     const managerId = this.authService.getUserId();
     if (!managerId) {
-      this.errorMessage = 'User not authenticated. Please log in again.';
+      this.notification.error('User not authenticated. Please log in again.');
       this.isSubmitting = false;
       return;
     }
@@ -100,17 +95,16 @@ export class ProductionLogComponent implements OnInit {
 
     this.productService.submitProductionLog(logData).subscribe({
       next: () => {
-        this.successMessage =
-          'Production log saved! Raw materials are managed separately and must be adjusted manually if needed.';
+        this.notification.success(
+          'Production log saved! Adjust raw materials manually if needed.',
+        );
         this.productionForm.reset({ stage: 'MOLDED' });
-        // Open manual adjustment panel so staff can immediately adjust inventory
         this.manualAdjust = true;
         this.loadRawMaterials();
         this.isSubmitting = false;
       },
       error: (err) => {
-        console.error(err);
-        this.errorMessage = this.formatProductionLogError(err);
+        this.notification.error(this.formatProductionLogError(err));
         this.isSubmitting = false;
       },
     });
@@ -134,17 +128,17 @@ export class ProductionLogComponent implements OnInit {
     this.isAdjustingMaterial = true;
     this.productService.updateRawMaterialStock(this.selectedMaterialId, this.manualAmount).subscribe({
       next: (updated) => {
-        this.adjustMessage = `Material ${updated.materialName} updated.`;
+        this.notification.success(`Material ${updated.materialName} updated.`);
+        this.adjustMessage = '';
         this.isAdjustingMaterial = false;
-        // refresh local list
         this.loadRawMaterials();
         this.manualAmount = 0;
       },
       error: (err) => {
-        console.error('Material update failed', err);
         this.adjustMessage = err?.error?.message || 'Failed to update material.';
+        this.notification.error(this.adjustMessage);
         this.isAdjustingMaterial = false;
-      }
+      },
     });
   }
 
@@ -159,7 +153,9 @@ export class ProductionLogComponent implements OnInit {
       if (typeof error.error === 'string') {
         try {
           const parsed = JSON.parse(error.error);
-          return parsed.message ? `Failed to save log${statusPart}: ${parsed.message}` : `Failed to save log${statusPart}: ${error.error}`;
+          return parsed.message
+            ? `Failed to save log${statusPart}: ${parsed.message}`
+            : `Failed to save log${statusPart}: ${error.error}`;
         } catch {
           return `Failed to save log${statusPart}: ${error.error}`;
         }
@@ -179,45 +175,4 @@ export class ProductionLogComponent implements OnInit {
 
     return 'Failed to save log. Please ensure sufficient raw materials exist in inventory.';
   }
-
-
-  loadProductionLogs() {
-  this.productService.getProductionLogs().subscribe({
-
-    next: (logs: any) => {
-      this.productionLogs = logs;
-    },
-    error: (err) => {
-      console.error(err);
-    }
-
-  });
-}
-
-moveToNextStage(log: any) {
-
-  let nextStage = '';
-
-  if (log.stage === 'MOLDED') {
-    nextStage = 'IN_KILN';
-  }
-  else if (log.stage === 'IN_KILN') {
-    nextStage = 'BAKED';
-  }
-
-  if (!nextStage) return;
-
-  this.productService
-    .updateProductionStage(log.productionLogId, nextStage)
-    .subscribe({
-      next: () => {
-        this.loadProductionLogs();
-      },
-      error: (err) => {
-        console.error(err);
-      }
-    });
-
-}
-
 }

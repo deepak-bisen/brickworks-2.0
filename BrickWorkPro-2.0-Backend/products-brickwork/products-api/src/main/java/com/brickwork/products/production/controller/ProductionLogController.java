@@ -1,6 +1,7 @@
 package com.brickwork.products.production.controller;
 
 import com.brickwork.products.production.dto.ProductionLogDTO;
+import com.brickwork.products.production.dto.ProductionLogFromOrderRequest;
 import com.brickwork.products.production.dto.UpdateStageRequestDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,4 +18,7 @@ public interface ProductionLogController {
 
     @PutMapping("/{productionLogId}/stage")
     ResponseEntity<ProductionLogDTO> updateStage(@PathVariable String productionLogId, @RequestBody UpdateStageRequestDTO request);
+
+    @PostMapping("/from-order")
+    ResponseEntity<List<ProductionLogDTO>> createFromOrder(@RequestBody ProductionLogFromOrderRequest request);
 }

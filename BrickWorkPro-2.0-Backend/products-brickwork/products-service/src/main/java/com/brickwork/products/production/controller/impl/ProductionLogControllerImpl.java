@@ -2,6 +2,7 @@ package com.brickwork.products.production.controller.impl;
 
 import com.brickwork.products.production.controller.ProductionLogController;
 import com.brickwork.products.production.dto.ProductionLogDTO;
+import com.brickwork.products.production.dto.ProductionLogFromOrderRequest;
 import com.brickwork.products.production.dto.UpdateStageRequestDTO;
 import com.brickwork.products.production.service.ProductionLogService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,5 +29,10 @@ public class ProductionLogControllerImpl implements ProductionLogController {
     @Override
     public ResponseEntity<ProductionLogDTO> updateStage(String productionLogId, UpdateStageRequestDTO request) {
         return ResponseEntity.ok(productionLogService.updateStage(productionLogId, request.getStage()));
+    }
+
+    @Override
+    public ResponseEntity<List<ProductionLogDTO>> createFromOrder(ProductionLogFromOrderRequest request) {
+        return ResponseEntity.ok(productionLogService.createFromOrder(request));
     }
 }

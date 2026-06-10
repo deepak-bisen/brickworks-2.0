@@ -19,7 +19,7 @@ public class ProductionAnalyticsControllerImpl implements ProductionAnalyticsCon
 
     // Example URL: GET /api/products/analytics/production?timeframe=weekly
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER','STAFF')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<List<ProductionAnalyticsProjection>> getProductionAnalytics(
             @RequestParam(defaultValue = "monthly") String timeframe) {
         return ResponseEntity.ok(analyticsService.getProductionData(timeframe));

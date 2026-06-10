@@ -28,7 +28,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductDTO> getAllProducts() {
-        return productRepository.findAll().stream().map(this::mapToDTO).collect(Collectors.toList());
+        return productRepository.findAll().stream().map(this::mapToSummaryDTO).collect(Collectors.toList());
     }
 
     @Override
@@ -84,7 +84,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void deductStock(String productId, int quantity) {
-        Product product = productRepository.findById(productId)
+        Product product = productRepository.findByIdForUpdate(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         if (product.getStockQuantity() < quantity) {
@@ -146,8 +146,32 @@ public class ProductServiceImpl implements ProductService {
         return mapToDTO(productRepository.save(existingProduct));
     }
 
+    private ProductDTO mapToSummaryDTO(Product product) {
+        String imageName = null;
+        String imageType = null;
+        if (product.getAttachments() != null && !product.getAttachments().isEmpty()) {
+            ProductAttachment firstAttachment = product.getAttachments().getFirst();
+            imageName = firstAttachment.getName();
+            imageType = firstAttachment.getExtension();
+        }
+        return new ProductDTO(
+                product.getProductId(),
+                product.getName(),
+                product.getDescription(),
+                product.getCategory(),
+                product.getUnitPrice(),
+                product.getStockQuantity(),
+                product.getBrickType(),
+                product.getDimensions(),
+                product.getEstimatedCost(),
+                product.getBulkDiscountThreshold(),
+                imageName,
+                imageType,
+                null
+        );
+    }
+
     private ProductDTO mapToDTO(Product product) {
-        // Safely extract image data if attachments exist
         String imageName = null;
         String imageType = null;
         byte[] imageData = null;

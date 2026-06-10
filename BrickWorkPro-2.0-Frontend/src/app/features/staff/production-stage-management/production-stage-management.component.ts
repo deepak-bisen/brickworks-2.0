@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProductService } from '../../products/services/product.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-production-stage-management',
@@ -14,7 +15,10 @@ export class ProductionStageManagementComponent implements OnInit {
   isLoading = false;
   activeTab: 'active' | 'completed' = 'active'; // Tab toggle karne ke liye
 
-  constructor(private productService: ProductService) {}
+  constructor(
+    private productService: ProductService,
+    private notification: NotificationService,
+  ) {}
 
   ngOnInit(): void {
     this.loadProductionLogs();
@@ -53,8 +57,8 @@ loadProductionLogs() {
 
         this.isLoading = false;
       },
-      error: (err) => {
-        console.error('Data load error:', err);
+      error: () => {
+        this.notification.error('Failed to load production logs.');
         this.isLoading = false;
       },
     });
@@ -87,6 +91,7 @@ loadProductionLogs() {
       next: () => {
         log.stage = nextStage;
         log.isUpdating = false;
+        this.notification.success(`Stage updated to ${nextStage.replace('_', ' ')}.`);
 
         // Instant shift logic (agar tabbed UI banaya hai)
         if (nextStage === 'BAKED') {
@@ -94,8 +99,8 @@ loadProductionLogs() {
           this.completedLogs.unshift(log);
         }
       },
-      error: (err) => {
-        console.error('Stage update error:', err);
+      error: () => {
+        this.notification.error('Failed to update production stage.');
         log.isUpdating = false;
       },
     });

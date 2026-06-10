@@ -18,5 +18,6 @@ public class ProductionLogDTO {
     private ProductionStage stage;
     private Integer quantity;
     private LocalDateTime createdAt;
+    private String orderId;
 
 }

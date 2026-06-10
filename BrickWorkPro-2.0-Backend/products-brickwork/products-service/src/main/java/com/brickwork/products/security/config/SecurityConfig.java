@@ -1,10 +1,12 @@
 package com.brickwork.products.security.config;
 
+import com.brickwork.security.filter.InternalServiceAuthFilter;
 import com.brickwork.security.filter.JwtRequestFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -13,34 +15,33 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
+
+    @Autowired
+    private InternalServiceAuthFilter internalServiceAuthFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // Public Routes (No token needed to view catalog)
+                        .requestMatchers(HttpMethod.GET, "/api/products/analytics/**").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
-
-                        // NEW: Explicitly allow the internal stock deduction endpoint (or secure it for any authenticated user)
-                        .requestMatchers(HttpMethod.PUT, "/api/products/*/deduct-stock").permitAll() // Use permitAll if it's strictly internal or authenticated() if passing tokens
-
-                        // Admin Only: Creating or updating products
+                        .requestMatchers(HttpMethod.PUT, "/api/products/*/deduct-stock").hasRole("INTERNAL_SERVICE")
                         .requestMatchers(HttpMethod.POST, "/api/products").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/production-logs/from-order").hasRole("INTERNAL_SERVICE")
                         .requestMatchers("/error").permitAll()
-
-                        // Managers & Admins: Handling factory lifecycle
-                        .requestMatchers("/api/raw-materials/**", "/api/production-logs/**").hasAnyRole("ADMIN", "MANAGER","STAFF")
-
+                        .requestMatchers("/api/raw-materials/**", "/api/production-logs/**").hasAnyRole("ADMIN", "STAFF")
                         .anyRequest().authenticated()
                 )
+                .addFilterBefore(internalServiceAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

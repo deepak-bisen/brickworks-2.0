@@ -25,7 +25,6 @@ export class ProductService {
     if (!this.cachedProducts$) {
       this.cachedProducts$ = this.http.get<any>(`${this.apiUrl}/all`).pipe(
         map((response) => {
-          console.log('🔹 Service: Raw HTTP Response:', response);
           let products: Product[] = [];
           if (Array.isArray(response)) {
             products = response;
@@ -34,12 +33,9 @@ export class ProductService {
           } else if (response?.content && Array.isArray(response.content)) {
             products = response.content;
           }
-          console.log('🔹 Service: Mapped Products Array:', products);
-          console.log('🔹 Service: Product Count:', products.length);
           return products;
         }),
         tap((data: Product[]) => {
-          console.log('🔹 Service: Setting products signal:', data);
           this.products.set(data);
         }),
         shareReplay(1)
