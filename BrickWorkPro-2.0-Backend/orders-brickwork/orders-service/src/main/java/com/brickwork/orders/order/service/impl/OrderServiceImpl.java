@@ -49,7 +49,12 @@ public class OrderServiceImpl implements OrderService {
         String customerId = requestDTO.getCustomerId();
 
         if (customerId == null || customerId.trim().isEmpty()) {
-            customerId = "GUEST-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+            if (SecurityUtils.hasRole("CUSTOMER")) {
+                customerId = SecurityUtils.getUserId()
+                        .orElseThrow(() -> new IllegalArgumentException("Customer identity not available"));
+            } else {
+                customerId = "GUEST-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+            }
             requestDTO.setCustomerId(customerId);
         }
 

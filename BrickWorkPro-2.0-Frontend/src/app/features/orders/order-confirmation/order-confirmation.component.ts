@@ -2,13 +2,15 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { formatOrderStatus } from '../../../shared/utils/order-status.util';
+import { CheckoutStepsComponent } from '../../../shared/components/checkout-steps/checkout-steps.component';
+import { BwButtonComponent } from '../../../shared/components/ui/bw-button.component';
 
 export type ConfirmationPaymentMethod = 'UPI' | 'COD' | 'UTR' | 'NONE';
 
 @Component({
   selector: 'app-order-confirmation',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, CheckoutStepsComponent, BwButtonComponent],
   templateUrl: './order-confirmation.component.html',
 })
 export class OrderConfirmationComponent implements OnInit {

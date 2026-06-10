@@ -1,0 +1,18 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="5. Finance" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="finance-app" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.brickwork.finance.FinanceBrickworkApplication" />
+    <envs>
+      <env name="JWT_SECRET" value="brickwork-dev-jwt-secret-key-32chars-min" />
+      <env name="INTERNAL_SERVICE_KEY" value="brickworks-internal-dev-key" />
+      <env name="DB_USERNAME" value="root" />
+      <env name="DB_PASSWORD" value="root" />
+      <env name="RAZORPAY_KEY_ID" value="rzp_test_SlCAfQpHujynkq" />
+      <env name="RAZORPAY_KEY_SECRET" value="pASdjNg7LttbV2vikmK92oFU" />
+      <env name="RAZORPAY_WEBHOOK_SECRET" value="dummy_webhook_secret" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

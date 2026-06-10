@@ -46,6 +46,8 @@ build/
 # --- General IDEs & OS ---
 .idea/
 .vscode/
+!BrickWorkPro-2.0-Frontend/.vscode/
+!BrickWorkPro-2.0-Frontend/.vscode/**
 *.iml
 *.iws
 *.ipr

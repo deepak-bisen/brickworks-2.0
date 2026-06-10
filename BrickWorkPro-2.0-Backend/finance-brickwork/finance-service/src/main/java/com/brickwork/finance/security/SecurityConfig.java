@@ -36,10 +36,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/finance/payments/verify").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/finance/payments/cod/select").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/finance/payments/utr/submit").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/finance/invoice/generate/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/finance/invoice/generate/**")
+                            .hasAnyRole("ADMIN", "CUSTOMER")
+                        .requestMatchers(HttpMethod.GET, "/api/finance/invoice/download/**")
+                            .hasAnyRole("ADMIN", "CUSTOMER")
 
                         .requestMatchers(HttpMethod.POST, "/api/finance/payments/utr/verify/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/finance/payments/order/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/finance/payments/order/**")
+                            .hasAnyRole("ADMIN", "CUSTOMER")
                         .requestMatchers(HttpMethod.POST, "/api/finance/payments/refund/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/finance/payments/cod/collect/**").hasRole("ADMIN")
 

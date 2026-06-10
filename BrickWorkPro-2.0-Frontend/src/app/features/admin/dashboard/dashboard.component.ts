@@ -117,7 +117,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadDashboardMetrics();
     this.loadMessages();
-    this.loadProducts();
   }
 
   switchTab(tab: string) {
@@ -406,21 +405,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   getImageSrc(product: Product): string {
-    if (!product.imageData) return 'assets/images/placeholder.jpg';
+    if (this.productService.hasProductImage(product) && product.productId) {
+      return this.productService.getProductImageUrl(product.productId);
+    }
+
+    if (!product.imageData) return '';
 
     let base64String = '';
     if (typeof product.imageData === 'string') {
-      if (product.imageData === 'null' || product.imageData.trim() === '') return 'assets/images/placeholder.jpg';
+      if (product.imageData === 'null' || product.imageData.trim() === '') return '';
       base64String = product.imageData;
     } else if (Array.isArray(product.imageData) && isPlatformBrowser(this.platformId)) {
       try {
         base64String = btoa(String.fromCharCode(...(product.imageData as number[])));
       } catch {
-        return 'assets/images/placeholder.jpg';
+        return '';
       }
     }
 
-    if (!base64String) return 'assets/images/placeholder.jpg';
+    if (!base64String) return '';
     return base64String.startsWith('data:image') ? base64String : `data:${product.imageType || 'image/jpeg'};base64,${base64String}`;
   }
 
@@ -471,6 +474,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
       `Hi ${order.customerName || 'there'},\n\nThank you for your quote request (Order ${order.orderId}).\n\nWe would like to discuss your requirements and pricing.\n\nBest regards,\nBrickWorks Pro Team`
     );
     return `mailto:${email}?subject=${subject}&body=${body}`;
+  }
+
+  inboxQuickReplyLink(msg: any): string {
+    const email = (msg?.email || '').trim();
+    if (!email) return '';
+
+    const subject = encodeURIComponent('Re: Your Inquiry at BrickWorks Pro');
+    const body = encodeURIComponent(
+      `Hi ${msg.name || 'there'},\n\nThank you for contacting BrickWorks Pro.\n\nRegarding your message:\n"${msg.message || ''}"\n\n\nBest regards,\nBrickWorks Pro Team`
+    );
+    return `mailto:${email}?subject=${subject}&body=${body}`;
+  }
+
+  quickReply(msg: any, event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+
+    const link = this.inboxQuickReplyLink(msg);
+    if (!link) {
+      this.notification.error('No email address on this message.');
+      return;
+    }
+
+    this.markMessageAsRead(msg);
+
+    if (isPlatformBrowser(this.platformId)) {
+      window.location.href = link;
+    }
   }
 
   paymentMethodLabel(method: string): string {

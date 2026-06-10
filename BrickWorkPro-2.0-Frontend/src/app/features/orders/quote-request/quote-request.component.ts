@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -6,21 +6,25 @@ import { OrderService } from '../services/order.service';
 import { ProductService } from '../../products/services/product.service';
 import { OrderRequest } from '../models/order-request.model';
 import { NotificationService } from '../../../core/services/notification.service';
+import { ORDER_POLICY } from '../../../shared/constants/order-policy';
 
 @Component({
   selector: 'app-quote-request',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
-  templateUrl: './quote-request.component.html'
-  // Removed ChangeDetectionStrategy to allow native form updates
+  templateUrl: './quote-request.component.html',
+  styleUrl: './quote-request.css',
 })
 export class QuoteRequestComponent implements OnInit {
+  readonly ORDER_POLICY = ORDER_POLICY;
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private orderService = inject(OrderService);
   productService = inject(ProductService);
   private notification = inject(NotificationService);
+
+  isSubmitting = signal(false);
 
   quoteForm = this.fb.group({
     customerName: ['', Validators.required],
@@ -31,8 +35,15 @@ export class QuoteRequestComponent implements OnInit {
     quantity: ['', [Validators.required, Validators.min(500)]]
   });
 
-  // Helper method for easy access to form fields in HTML
-  get f() { return this.quoteForm.controls; }
+  get f() {
+    return this.quoteForm.controls;
+  }
+
+  get selectedProduct() {
+    const productId = this.quoteForm.get('productId')?.value;
+    if (!productId) return null;
+    return this.productService.products().find((p) => p.productId === productId) ?? null;
+  }
 
 ngOnInit(): void {
     // 1. Fetch the products from the database
@@ -81,17 +92,18 @@ ngOnInit(): void {
       }]
     };
 
-    console.log('Sending Quote Request:', requestData);
+    this.isSubmitting.set(true);
 
     this.orderService.requestPublicQuote(requestData).subscribe({
       next: () => {
         this.notification.success('Quote requested successfully! Our team will contact you shortly.');
         this.quoteForm.reset();
-
-        // 2. Redirect back to the catalog
+        this.isSubmitting.set(false);
         this.router.navigate(['/products']);
       },
-      error: () => {}
+      error: () => {
+        this.isSubmitting.set(false);
+      },
     });
   }
 }

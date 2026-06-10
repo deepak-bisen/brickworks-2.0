@@ -25,7 +25,7 @@ export class LoginComponent {
     if (this.loginForm.invalid) return;
 
     const credentials = {
-      username: this.loginForm.value.username!,
+      username: this.loginForm.value.username!.trim(),
       password: this.loginForm.value.password!,
     };
 

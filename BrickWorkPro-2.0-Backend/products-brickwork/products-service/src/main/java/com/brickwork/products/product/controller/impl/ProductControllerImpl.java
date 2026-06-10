@@ -4,7 +4,9 @@ import com.brickwork.products.product.controller.ProductController;
 import com.brickwork.products.product.dto.ProductDTO;
 import com.brickwork.products.product.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,6 +18,19 @@ public class ProductControllerImpl implements ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Override
+    public ResponseEntity<byte[]> getProductImage(String productId) {
+        try {
+            var image = productService.getProductImage(productId);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                    .contentType(MediaType.parseMediaType(image.getContentType()))
+                    .body(image.getData());
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
     @Override
     public ResponseEntity<ProductDTO> getProductById(String productId) {

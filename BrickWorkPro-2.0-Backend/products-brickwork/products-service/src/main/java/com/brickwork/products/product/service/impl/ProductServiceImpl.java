@@ -1,6 +1,7 @@
 package com.brickwork.products.product.service.impl;
 
 import com.brickwork.products.product.dto.ProductDTO;
+import com.brickwork.products.product.dto.ProductImageData;
 import com.brickwork.products.product.entity.Product;
 import com.brickwork.products.product.entity.ProductAttachment;
 import com.brickwork.products.product.repository.ProductRepository;
@@ -37,6 +38,24 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
         return  mapToDTO(product);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductImageData getProductImage(String productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+
+        if (product.getAttachments() == null || product.getAttachments().isEmpty()) {
+            throw new RuntimeException("No image found for product: " + productId);
+        }
+
+        ProductAttachment attachment = product.getAttachments().getFirst();
+        String contentType = attachment.getExtension();
+        if (contentType == null || contentType.isBlank()) {
+            contentType = "image/jpeg";
+        }
+        return new ProductImageData(attachment.getImageData(), contentType);
     }
 
     @Override

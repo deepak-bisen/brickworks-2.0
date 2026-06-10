@@ -1,0 +1,7 @@
+{
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "editor.formatOnSave": true,
+  "files.exclude": {
+    "**/.angular": true
+  }
+}

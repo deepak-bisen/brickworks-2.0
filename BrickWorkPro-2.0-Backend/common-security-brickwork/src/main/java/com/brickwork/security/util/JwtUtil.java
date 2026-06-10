@@ -92,9 +92,9 @@ public class JwtUtil {
         byte[] keyBytes;
         try {
             keyBytes = Decoders.BASE64.decode(secret);
-        } catch (IllegalArgumentException e) {
-            // Support raw secret strings for backward compatibility when the value
-            // is not base64-encoded.
+        } catch (Exception e) {
+            // Support raw secret strings when the value is not valid base64
+            // (e.g. dev JWT_SECRET with hyphens).
             keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         }
         if (keyBytes.length < 32) {

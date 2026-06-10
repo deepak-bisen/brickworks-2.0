@@ -74,14 +74,16 @@ public class AuthControllerImpl implements AuthController {
     @Override
     public ResponseEntity<?> authenticateUser(LoginRequestDTO loginRequest) {
         try {
+            String username = loginRequest.getUsername() == null
+                    ? null
+                    : loginRequest.getUsername().trim();
+            String password = loginRequest.getPassword();
+
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
-                            loginRequest.getPassword()
-                    )
+                    new UsernamePasswordAuthenticationToken(username, password)
             );
 
-            User user = userService.findByUsername(loginRequest.getUsername())
+            User user = userService.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             // Call the new overloaded method from the common library!

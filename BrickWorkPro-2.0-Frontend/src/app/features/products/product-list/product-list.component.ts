@@ -10,17 +10,23 @@ import { Router, RouterLink } from '@angular/router';
 import { CartService } from '../../orders/services/cart.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
+import { ORDER_POLICY } from '../../../shared/constants/order-policy';
+
 
 type SortOption = 'name' | 'price-asc' | 'price-desc' | 'stock';
+
+const FILTER_STORAGE_KEY = 'brickworks_catalog_filters';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
   imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './product-list.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './product-list.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductListComponent implements OnInit, OnDestroy {
+  readonly ORDER_POLICY = ORDER_POLICY;
   productService = inject(ProductService);
   authService = inject(AuthService);
   cartService = inject(CartService);
@@ -85,11 +91,19 @@ export class ProductListComponent implements OnInit, OnDestroy {
     return list;
   });
 
-  inStockCount = computed(() =>
-    this.products().filter((p) => p.stockQuantity >= 500).length
+  /** Bricks in cart toward calculator target */
+  cartBricksTowardEstimate = computed(() =>
+    this.cartService.items().reduce((sum, item) => sum + item.quantity, 0)
   );
 
+  estimateProgressPercent = computed(() => {
+    const target = this.brickEstimate();
+    if (!target || target <= 0) return 0;
+    return Math.min(100, Math.round((this.cartBricksTowardEstimate() / target) * 100));
+  });
+
   ngOnInit(): void {
+    this.restoreFilters();
     this.loadProducts();
     if (isPlatformBrowser(this.platformId)) {
       const estimate = sessionStorage.getItem('brickEstimate');
@@ -100,6 +114,54 @@ export class ProductListComponent implements OnInit, OnDestroy {
         }
       }
     }
+  }
+
+  private restoreFilters(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
+      const raw = sessionStorage.getItem(FILTER_STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (typeof saved.searchQuery === 'string') this.searchQuery.set(saved.searchQuery);
+      if (typeof saved.selectedCategory === 'string') this.selectedCategory.set(saved.selectedCategory);
+      if (saved.sortBy) this.sortBy.set(saved.sortBy);
+      if (typeof saved.inStockOnly === 'boolean') this.inStockOnly.set(saved.inStockOnly);
+    } catch {
+      /* ignore corrupt storage */
+    }
+  }
+
+  private persistFilters(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    sessionStorage.setItem(
+      FILTER_STORAGE_KEY,
+      JSON.stringify({
+        searchQuery: this.searchQuery(),
+        selectedCategory: this.selectedCategory(),
+        sortBy: this.sortBy(),
+        inStockOnly: this.inStockOnly(),
+      }),
+    );
+  }
+
+  onSearchChange(value: string) {
+    this.searchQuery.set(value);
+    this.persistFilters();
+  }
+
+  onCategoryChange(value: string) {
+    this.selectedCategory.set(value);
+    this.persistFilters();
+  }
+
+  onSortChange(value: SortOption) {
+    this.sortBy.set(value);
+    this.persistFilters();
+  }
+
+  onInStockOnlyChange(value: boolean) {
+    this.inStockOnly.set(value);
+    this.persistFilters();
   }
 
   dismissEstimate() {
@@ -131,6 +193,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.selectedCategory.set('all');
     this.sortBy.set('name');
     this.inStockOnly.set(false);
+    this.persistFilters();
   }
 
   hasActiveFilters(): boolean {
@@ -186,7 +249,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
       this.notification.success(`Updated cart: ${existing.quantity + qty} units of ${product.name}.`);
     } else {
       this.cartService.addToCart(product, qty);
-      this.notification.success(`Added ${qty} units of ${product.name} to your cart!`);
+      this.notification.success(`Added ${qty} units of ${product.name}. Open your cart to checkout.`);
     }
   }
 
@@ -209,6 +272,10 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
   getImageSrc(product: Product): string {
+    if (this.productService.hasProductImage(product) && product.productId) {
+      return this.productService.getProductImageUrl(product.productId);
+    }
+
     if (!product.imageData) return '';
 
     let base64String = '';

@@ -7,7 +7,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
 
-        <div class="bg-white p-6 shadow-xl rounded-2xl border border-gray-100 relative overflow-hidden flex flex-col justify-center">
+        <div id="contact-form" class="bg-white p-6 shadow-xl rounded-2xl border border-gray-100 relative overflow-hidden flex flex-col justify-center scroll-mt-28">
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-600 to-red-800"></div>
 
             <h2 class="text-2xl font-bold mb-5 text-gray-800">Send a Message</h2>
@@ -25,40 +25,32 @@
 
             <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="space-y-4">
                 <div>
-                    <label class="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Full Name</label>
-                    <input type="text" formControlName="name"
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all text-sm"
-                        placeholder="John Doe">
+                    <bw-form-label htmlFor="contact-name">Full Name</bw-form-label>
+                    <input id="contact-name" type="text" formControlName="name" bwInput placeholder="John Doe">
                     @if (contactForm.get('name')?.touched && contactForm.get('name')?.invalid) {
                         <span class="text-red-500 text-xs mt-1 block">Name is required.</span>
                     }
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Email Address</label>
-                    <input type="email" formControlName="email"
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all text-sm"
-                        placeholder="john@example.com">
+                    <bw-form-label htmlFor="contact-email">Email Address</bw-form-label>
+                    <input id="contact-email" type="email" formControlName="email" bwInput placeholder="john@example.com">
                     @if (contactForm.get('email')?.touched && contactForm.get('email')?.invalid) {
                         <span class="text-red-500 text-xs mt-1 block">Valid email is required.</span>
                     }
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Mobile Number</label>
-                    <input type="tel" formControlName="mobileNumber" maxlength="10"
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all text-sm"
-                        placeholder="9876543210">
+                    <bw-form-label htmlFor="contact-phone">Mobile Number</bw-form-label>
+                    <input id="contact-phone" type="tel" formControlName="mobileNumber" maxlength="10" bwInput placeholder="9876543210">
                     @if (contactForm.get('mobileNumber')?.touched && contactForm.get('mobileNumber')?.invalid) {
                         <span class="text-red-500 text-xs mt-1 block">Valid 10-digit number required.</span>
                     }
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">Message</label>
-                    <textarea formControlName="message" rows="4"
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 focus:bg-white outline-none transition-all resize-none text-sm"
-                        placeholder="How can we help you?"></textarea>
+                    <bw-form-label htmlFor="contact-message">Message</bw-form-label>
+                    <textarea id="contact-message" formControlName="message" rows="4" bwInput class="resize-none" placeholder="How can we help you?"></textarea>
                     @if (contactForm.get('message')?.touched && contactForm.get('message')?.invalid) {
                         <span class="text-red-500 text-xs mt-1 block">Message must be at least 10 characters.</span>
                     }
@@ -118,18 +110,38 @@
         </div>
     </div>
 
-    <div id="privacy" class="mt-12 max-w-3xl mx-auto scroll-mt-24">
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
-            <h2 class="text-lg font-black text-gray-900">Privacy</h2>
-            <p class="text-sm text-gray-600 mt-3 leading-relaxed">
-                We use your contact and order details only to process quotes, fulfill orders, and provide support.
-                Payment references (such as UTR numbers) are stored securely for verification. We do not sell your data to third parties.
-            </p>
-            <p class="text-sm text-gray-600 mt-3 leading-relaxed">
-                For data or privacy questions, email
-                <a href="mailto:info@brickworkspro.com" class="text-red-700 font-bold hover:underline">info&#64;brickworkspro.com</a>
-                or use the contact form above.
-            </p>
+    <div id="privacy" class="mt-10 scroll-mt-28 w-full">
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden relative text-center">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-600 to-red-800"></div>
+
+            <div class="px-8 md:px-14 lg:px-16 pt-9 pb-2">
+                <p class="text-[11px] font-bold text-red-700 uppercase tracking-widest">Privacy</p>
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mt-2">How we handle your data</h2>
+                <p class="text-sm md:text-base text-gray-500 mt-3 leading-relaxed">
+                    We collect only what is needed to process quotes, fulfill orders, and support you.
+                </p>
+            </div>
+
+            <div class="px-8 md:px-14 lg:px-16 py-6 space-y-5 text-left">
+                <p class="text-sm md:text-base text-gray-600 leading-relaxed border-l-2 border-red-600 pl-4">
+                    Your name, email, phone, and address are used solely for quotes, orders, and customer support.
+                </p>
+                <p class="text-sm md:text-base text-gray-600 leading-relaxed border-l-2 border-gray-200 pl-4">
+                    Payment references such as UTR numbers are stored securely for verification — never shared publicly.
+                </p>
+                <p class="text-sm md:text-base text-gray-600 leading-relaxed border-l-2 border-gray-200 pl-4">
+                    We do not sell or rent your personal information to third parties.
+                </p>
+            </div>
+
+            <div class="px-8 md:px-14 lg:px-16 py-5 border-t border-gray-100 bg-gray-50/60">
+                <p class="text-xs text-gray-500 leading-relaxed">
+                    Questions about your data?
+                    <a href="mailto:info@brickworkspro.com" class="text-red-700 font-semibold hover:underline">info&#64;brickworkspro.com</a>
+                    or the
+                    <a href="#contact-form" class="text-red-700 font-semibold hover:underline">contact form</a> above.
+                </p>
+            </div>
         </div>
     </div>
 </section>

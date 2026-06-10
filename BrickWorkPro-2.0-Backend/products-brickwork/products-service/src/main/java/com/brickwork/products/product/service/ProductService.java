@@ -1,6 +1,7 @@
 package com.brickwork.products.product.service;
 
 import com.brickwork.products.product.dto.ProductDTO;
+import com.brickwork.products.product.dto.ProductImageData;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.util.List;
 
 public interface ProductService {
     ProductDTO getProductById(String productId);
+    ProductImageData getProductImage(String productId);
     List<ProductDTO> getAllProducts();
     List<ProductDTO> getProductsByCategory(String category);
     ProductDTO createProduct(ProductDTO productDTO, MultipartFile imageFile) throws IOException;

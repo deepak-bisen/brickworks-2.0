@@ -273,10 +273,49 @@
               </p>
             }
           </div>
+          <div class="flex flex-wrap gap-2 mb-2">
+            @if (orderSubTab() === 'quotes' && order.status === 'QUOTE_REQUEST') {
+              <button type="button" (click)="convertToOrder(order)"
+                class="flex-1 min-w-[8rem] py-3 rounded-xl bg-indigo-600 text-white text-xs font-bold uppercase tracking-wide">
+                Approve Quote
+              </button>
+              @if (order.customerEmail) {
+                <a [href]="quoteMailtoLink(order)"
+                  class="flex-1 min-w-[8rem] py-3 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold uppercase tracking-wide text-center">
+                  Email
+                </a>
+              }
+            } @else if (order.status === 'PENDING_PAYMENT') {
+              <button type="button" (click)="requestUtrVerification(order)"
+                class="flex-1 min-w-[8rem] py-3 rounded-xl bg-green-600 text-white text-xs font-bold uppercase tracking-wide">
+                Verify UTR
+              </button>
+              <button type="button" (click)="approveAsCOD(order)"
+                class="flex-1 min-w-[8rem] py-3 rounded-xl bg-blue-600 text-white text-xs font-bold uppercase tracking-wide">
+                Confirm COD
+              </button>
+            } @else if (order.status === 'CONFIRMED_COD' || order.status === 'PAYMENT_RECEIVED') {
+              <button type="button" (click)="updateOrderStatus(order.orderId, 'IN_PRODUCTION')"
+                class="w-full py-3 rounded-xl bg-green-600 text-white text-xs font-bold uppercase tracking-wide">
+                Start Production
+              </button>
+            } @else if (order.status === 'IN_PRODUCTION') {
+              <button type="button" (click)="updateOrderStatus(order.orderId, 'DISPATCHED')"
+                class="w-full py-3 rounded-xl bg-blue-600 text-white text-xs font-bold uppercase tracking-wide">
+                Mark Dispatched
+              </button>
+            } @else if (order.status === 'DISPATCHED') {
+              <button type="button" (click)="updateOrderStatus(order.orderId, 'DELIVERED')"
+                class="w-full py-3 rounded-xl bg-indigo-600 text-white text-xs font-bold uppercase tracking-wide">
+                Mark Delivered
+              </button>
+            }
+          </div>
+
           <div class="relative">
             <button type="button" (click)="toggleActionMenu(order.orderId)"
               class="w-full py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50">
-              Actions
+              More actions
             </button>
             @if (openActionMenuId() === order.orderId) {
               <div class="mt-2 p-2 bg-gray-50 rounded-xl border border-gray-200 space-y-1">
@@ -527,8 +566,8 @@
           </p>
 
           <div class="mt-4 ml-5 flex gap-3">
-            <a [href]="'mailto:' + msg.email + '?subject=Re: Your Inquiry at BrickWorks'"
-              (click)="$event.stopPropagation()"
+            <a [href]="inboxQuickReplyLink(msg)"
+              (click)="quickReply(msg, $event)"
               class="text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-lg text-[10px] uppercase font-bold tracking-wider border border-blue-200 transition-all shadow-sm">
               ↩️ Quick Reply
             </a>
@@ -645,8 +684,13 @@
 
                   <td class="p-4">
                     <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 rounded bg-gray-100 overflow-hidden border border-gray-200 flex-shrink-0">
-                        <img [src]="getImageSrc(product)" alt="img" class="w-full h-full object-cover">
+                      <div class="w-10 h-10 rounded bg-gray-100 overflow-hidden border border-gray-200 flex-shrink-0 flex items-center justify-center">
+                        @let imageSrc = getImageSrc(product);
+                        @if (imageSrc) {
+                          <img [src]="imageSrc" [alt]="product.name" class="w-full h-full object-cover">
+                        } @else {
+                          <span class="text-sm" aria-hidden="true">🧱</span>
+                        }
                       </div>
                       <div>
                         <p class="font-bold text-gray-900 text-sm">{{ product.name }}</p>

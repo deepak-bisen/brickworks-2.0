@@ -14,6 +14,7 @@ import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import com.razorpay.Utils;
 import org.json.JSONObject;
+import com.brickwork.security.util.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static com.brickwork.finance.payment.enums.PaymentMethod.*;
 import static com.brickwork.finance.payment.enums.PaymentStatus.*;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -238,8 +240,24 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional(readOnly = true)
     public PaymentTransaction getPaymentDetailsByOrderId(String orderId) {
+        validateOrderAccess(orderId);
         return paymentTransactionRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new RuntimeException("Payment record not found for Order ID: " + orderId));
+    }
+
+    private void validateOrderAccess(String orderId) {
+        if (SecurityUtils.isAdmin() || SecurityUtils.hasRole("INTERNAL_SERVICE")) {
+            return;
+        }
+        if (SecurityUtils.hasRole("CUSTOMER")) {
+            String userId = SecurityUtils.getUserId()
+                    .orElseThrow(() -> new RuntimeException("Unauthorized: user identity not available"));
+            Map<String, Object> order = orderFeignClient.getOrderById(orderId);
+            Object ownerId = order.get("customerId");
+            if (ownerId == null || !userId.equals(ownerId.toString())) {
+                throw new RuntimeException("Access denied: you can only access your own orders");
+            }
+        }
     }
 
     @Override

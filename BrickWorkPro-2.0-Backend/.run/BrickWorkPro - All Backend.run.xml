@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="BrickWorkPro - All Backend" type="CompoundRunConfigurationType">
+    <toRun name="1. Eureka" type="SpringBootApplicationConfigurationType" />
+    <toRun name="2. Users" type="SpringBootApplicationConfigurationType" />
+    <toRun name="3. Products" type="SpringBootApplicationConfigurationType" />
+    <toRun name="4. Orders" type="SpringBootApplicationConfigurationType" />
+    <toRun name="5. Finance" type="SpringBootApplicationConfigurationType" />
+    <toRun name="6. API Gateway" type="SpringBootApplicationConfigurationType" />
+    <method v="2" />
+  </configuration>
+</component>

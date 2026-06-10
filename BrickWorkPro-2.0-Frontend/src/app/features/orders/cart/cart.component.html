@@ -1,18 +1,22 @@
 <div class="max-w-5xl mx-auto px-4 py-12">
-  <div class="mb-8">
+  <div class="mb-6">
     <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Review Your Cart</h1>
     <p class="text-sm text-gray-500 mt-2">Confirm quantities and totals before proceeding to checkout.</p>
   </div>
 
+  <app-policy-banner class="block mb-6" [showQuoteLink]="true" />
+
   @if (cartService.items().length === 0) {
-    <div class="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
+    <div class="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
       <div class="text-6xl mb-4">🛒</div>
       <h2 class="text-2xl font-bold text-gray-800 mb-2">Your cart is empty</h2>
-      <p class="text-gray-500 mb-6">Add bricks from the catalog to start an order.</p>
-      <a routerLink="/products"
-        class="bg-red-700 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-800 transition-colors uppercase tracking-wider">
-        Browse Catalog
-      </a>
+      <p class="text-gray-500 mb-2 max-w-md mx-auto text-sm">Browse the catalog and add at least 500 units per product to order online.</p>
+      <p class="text-gray-400 text-xs mb-8">Need a custom bulk quote instead? Use the quote form — any volume inquiry.</p>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
+        <bw-button routerLink="/products">Browse Catalog</bw-button>
+        <bw-button variant="secondary" routerLink="/calculator">Brick Calculator</bw-button>
+        <bw-button variant="ghost" routerLink="/get-quote">Get a Bulk Quote</bw-button>
+      </div>
     </div>
   } @else {
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -36,10 +40,10 @@
               <div class="flex flex-col items-end gap-3">
                 <div class="flex items-center gap-2">
                   <button type="button" (click)="cartService.decreaseQuantity(item.product.productId)"
-                    class="w-9 h-9 rounded-lg border border-gray-200 font-bold text-gray-700 hover:bg-gray-50">−</button>
+                    class="w-10 h-10 rounded-lg border border-gray-200 font-bold text-gray-700 hover:bg-gray-50">−</button>
                   <span class="font-mono font-bold text-gray-900 min-w-[4rem] text-center">{{ item.quantity | number }}</span>
                   <button type="button" (click)="cartService.increaseQuantity(item.product.productId)"
-                    class="w-9 h-9 rounded-lg border border-gray-200 font-bold text-gray-700 hover:bg-gray-50">+</button>
+                    class="w-10 h-10 rounded-lg border border-gray-200 font-bold text-gray-700 hover:bg-gray-50">+</button>
                 </div>
                 <button type="button" (click)="cartService.removeFromCart(item.product.productId)"
                   class="text-xs font-bold text-red-700 hover:underline">Remove</button>
@@ -87,19 +91,10 @@
             </div>
           </div>
 
-          <p class="text-xs text-gray-500 mt-4 leading-relaxed">
-            Minimum 500 units per product for direct orders. Need fewer? Use
-            <a routerLink="/get-quote" class="text-red-700 font-bold hover:underline">Get a Quote</a>.
-          </p>
-
-          <a routerLink="/checkout"
-            class="mt-6 w-full flex items-center justify-center bg-red-700 text-white font-bold py-3.5 rounded-xl hover:bg-red-800 transition-colors uppercase tracking-wider text-sm shadow-md">
-            Proceed to Checkout
-          </a>
-          <a routerLink="/products"
-            class="mt-3 w-full flex items-center justify-center text-gray-600 font-bold py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm">
-            Continue Shopping
-          </a>
+          <div class="mt-6 space-y-3">
+            <bw-button [fullWidth]="true" size="lg" routerLink="/checkout">Proceed to Checkout</bw-button>
+            <bw-button [fullWidth]="true" variant="secondary" routerLink="/products">Continue Shopping</bw-button>
+          </div>
         </div>
       </div>
     </div>

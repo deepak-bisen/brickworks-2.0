@@ -48,6 +48,15 @@ export class ProductService {
     return this.http.get<Product>(`${this.apiUrl}/${productId}`);
   }
 
+  /** Public image URL — list API omits imageData; images are served separately. */
+  getProductImageUrl(productId: string): string {
+    return `${this.apiUrl}/${productId}/image`;
+  }
+
+  hasProductImage(product: Product): boolean {
+    return !!(product.imageName || product.imageType || product.imageData);
+  }
+
   addProduct(productData: any, imageFile: File): Observable<Product> {
     const formData = new FormData();
     Object.keys(productData).forEach((key) => {

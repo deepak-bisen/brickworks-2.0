@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -10,13 +10,26 @@ import { OrderRequest } from '../models/order-request.model';
 import { ConfirmationPaymentMethod } from '../order-confirmation/order-confirmation.component';
 import { environment } from '../../../../environments/environment';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
+import { CheckoutStepsComponent, CheckoutStep } from '../../../shared/components/checkout-steps/checkout-steps.component';
+import { PolicyBannerComponent } from '../../../shared/components/policy-banner/policy-banner.component';
+import { BwInputDirective } from '../../../shared/components/ui/bw-input.directive';
+import { BwFormLabelComponent } from '../../../shared/components/ui/bw-form-label.component';
 
 declare var Razorpay: any;
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LoadingSpinnerComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    LoadingSpinnerComponent,
+    CheckoutStepsComponent,
+    PolicyBannerComponent,
+    BwInputDirective,
+    BwFormLabelComponent,
+  ],
   templateUrl: './checkout.component.html',
 })
 export class CheckoutComponent implements OnInit {
@@ -33,6 +46,11 @@ export class CheckoutComponent implements OnInit {
   createdOrderId = signal<string>('');
   paymentMethod = signal<'COD' | 'UTR' | 'UPI' | null>(null);
   profileLoading = signal(false);
+
+  checkoutStep = computed<CheckoutStep>(() => {
+    if (this.orderCreated()) return 'payment';
+    return 'shipping';
+  });
 
   get totalPrice() { return this.cartService.cartTotal(); }
   get grossTotal() { return this.cartService.grossTotal(); }

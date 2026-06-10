@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="6. API Gateway" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="api-gateway" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.brickwork.apigateway.app.ApiGatewayApplication" />
+    <envs>
+      <env name="JWT_SECRET" value="brickwork-dev-jwt-secret-key-32chars-min" />
+      <env name="INTERNAL_SERVICE_KEY" value="brickworks-internal-dev-key" />
+      <env name="DB_USERNAME" value="root" />
+      <env name="DB_PASSWORD" value="root" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

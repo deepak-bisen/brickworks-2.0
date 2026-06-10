@@ -5,11 +5,13 @@
       <div class="bg-white rounded-2xl border border-gray-100 p-10 text-center shadow-sm">
         <h1 class="text-2xl font-black text-gray-900">No order found</h1>
         <p class="text-gray-500 mt-2">This confirmation link is invalid or has expired.</p>
-        <a routerLink="/products" class="inline-block mt-6 bg-red-700 text-white font-bold px-6 py-3 rounded-xl hover:bg-red-800">
-          Browse Products
-        </a>
+        <div class="mt-6">
+          <bw-button routerLink="/products">Browse Products</bw-button>
+        </div>
       </div>
     } @else {
+      <app-checkout-steps current="confirmation" class="block mb-8" />
+
       <div class="bg-white rounded-2xl border border-gray-100 p-8 md:p-10 shadow-sm animate-fade-in-up text-center">
         <div class="w-16 h-16 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-3xl mx-auto mb-4">
           ✓
@@ -37,7 +39,7 @@
           @if (utrPending()) {
             <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl">
               <p class="text-sm font-bold text-amber-900">UTR verification in progress</p>
-              <p class="text-xs text-amber-800 mt-1">Our team will verify your bank transfer within 24–48 business hours. You can track status below.</p>
+              <p class="text-xs text-amber-800 mt-1">Our team will verify your bank transfer within 24–48 business hours.</p>
             </div>
           }
 
@@ -49,15 +51,27 @@
           }
         </div>
 
+        <div class="mt-8 text-left p-5 bg-red-50/50 border border-red-100 rounded-xl">
+          <p class="text-xs font-black uppercase tracking-wider text-red-800 mb-3">What happens next</p>
+          <ol class="space-y-3">
+            <li class="flex gap-3 text-sm text-gray-700">
+              <span class="w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs font-black flex items-center justify-center shrink-0">1</span>
+              <span>We confirm your order and payment (if applicable).</span>
+            </li>
+            <li class="flex gap-3 text-sm text-gray-700">
+              <span class="w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs font-black flex items-center justify-center shrink-0">2</span>
+              <span>Production is scheduled — you'll see status updates when you track your order.</span>
+            </li>
+            <li class="flex gap-3 text-sm text-gray-700">
+              <span class="w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs font-black flex items-center justify-center shrink-0">3</span>
+              <span>Bricks are dispatched and delivered to your site address.</span>
+            </li>
+          </ol>
+        </div>
+
         <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-          <a [routerLink]="['/track-order']" [queryParams]="trackQueryParams()"
-            class="bg-red-700 text-white font-bold px-6 py-3 rounded-xl hover:bg-red-800 transition-colors">
-            Track This Order
-          </a>
-          <a routerLink="/products"
-            class="bg-gray-100 text-gray-800 font-bold px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors">
-            Continue Shopping
-          </a>
+          <bw-button routerLink="/track-order" [queryParams]="trackQueryParams()">Track This Order</bw-button>
+          <bw-button variant="secondary" routerLink="/products">Continue Shopping</bw-button>
         </div>
 
         @if (!phone()) {

@@ -1,24 +1,27 @@
-<div class="bg-gray-50 min-h-screen">
+<div class="catalog-page min-h-screen">
   <!-- Hero -->
   <section class="bg-gradient-to-br from-gray-900 via-red-950 to-gray-900 text-white">
-    <div class="container mx-auto px-6 py-12 md:py-16">
-      <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-5 md:py-7">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div class="max-w-2xl">
-          <p class="text-red-300 text-xs font-black uppercase tracking-widest mb-3">Brick Catalog</p>
-          <h1 class="text-3xl md:text-5xl font-black tracking-tight">Premium Bricks for Every Build</h1>
-          <p class="text-gray-300 mt-4 leading-relaxed">
+          <p class="text-red-300 text-xs font-black uppercase tracking-widest mb-1.5">Brick Catalog</p>
+          <h1 class="text-2xl md:text-4xl font-black tracking-tight leading-tight">Premium Bricks for Every Build</h1>
+          <p class="text-gray-300 mt-2 text-sm leading-snug">
             Browse our live inventory. Direct orders require a <strong class="text-white">minimum of 500 units</strong> per product.
-            Need a smaller bulk quantity? Use <a routerLink="/get-quote" class="text-red-300 font-bold hover:underline">Get a Quote</a>.
+            Need a smaller bulk quantity? Use <a routerLink="/get-quote" class="text-red-300 font-bold hover:underline">{{ ORDER_POLICY.quoteCta }}</a>.
+          </p>
+          <p class="mt-1.5 text-[11px] font-semibold tracking-wide text-red-200/90 leading-none">
+            {{ ORDER_POLICY.bulkDiscountAd }}
           </p>
         </div>
         <div class="flex flex-col sm:flex-row gap-3 shrink-0">
           <a routerLink="/calculator"
-            class="bg-white/10 border border-white/20 text-white font-bold px-6 py-3 rounded-xl hover:bg-white/20 transition-colors text-sm uppercase tracking-wider text-center">
+            class="bg-white/10 border border-white/20 text-white font-bold px-5 py-2 rounded-lg hover:bg-white/20 transition-colors text-xs uppercase tracking-wider text-center">
             🧮 Brick Calculator
           </a>
           @if (cartService.totalItems() > 0) {
             <a routerLink="/cart"
-              class="bg-red-700 text-white font-bold px-6 py-3 rounded-xl hover:bg-red-600 transition-colors text-sm uppercase tracking-wider text-center shadow-lg">
+              class="bg-red-700 text-white font-bold px-5 py-2 rounded-lg hover:bg-red-600 transition-colors text-xs uppercase tracking-wider text-center shadow-lg">
               View Cart ({{ cartService.totalItems() | number }})
             </a>
           }
@@ -27,252 +30,230 @@
     </div>
   </section>
 
-  <div class="container mx-auto px-6 py-10">
-    <!-- Stats row -->
-    <div class="flex flex-wrap gap-3 mb-8">
-      <span class="bg-white text-gray-800 px-4 py-2 rounded-xl text-sm font-bold border border-gray-200 shadow-sm">
-        {{ products().length }} products
-      </span>
-      <span class="bg-green-50 text-green-800 px-4 py-2 rounded-xl text-sm font-bold border border-green-200">
-        {{ inStockCount() }} orderable now
-      </span>
-      @if (brickEstimate()) {
-        <span class="bg-red-50 text-red-800 px-4 py-2 rounded-xl text-sm font-bold border border-red-200">
-          Calculator target: {{ brickEstimate() | number }} bricks
-        </span>
-      }
-    </div>
+  <div class="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-10">
+    <div class="space-y-5">
 
-    @if (brickEstimate()) {
-      <div class="bg-white border border-red-200 rounded-2xl p-5 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
-        <div>
-          <p class="font-bold text-red-900">Your calculator estimate: {{ brickEstimate() | number }} bricks</p>
-          <p class="text-sm text-red-800 mt-1">Pick products below and add enough units to cover your project. Mix types if needed.</p>
-        </div>
-        <button type="button" (click)="dismissEstimate()" class="text-xs font-bold text-red-700 hover:underline shrink-0">Dismiss</button>
-      </div>
-    }
-
-    @if (errorMessage()) {
-      <div class="bg-red-50 text-red-800 p-6 rounded-2xl mb-8 font-bold border border-red-200">
-        {{ errorMessage() }}
-      </div>
-    }
-
-    <!-- Filters -->
-    @if (!isLoading() && products().length > 0) {
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 md:p-5 mb-8">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-          <div class="md:col-span-5">
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Search</label>
-            <input type="search" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)"
-              placeholder="Search by name, type, category..."
-              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 outline-none text-sm">
+        @if (brickEstimate()) {
+          <div class="catalog-estimate-banner">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-gray-900">Calculator target: {{ brickEstimate() | number }} bricks</p>
+              <p class="text-sm text-gray-500 mt-1">
+                In cart: <strong class="text-gray-800">{{ cartBricksTowardEstimate() | number }}</strong> / {{ brickEstimate() | number }}
+                ({{ estimateProgressPercent() }}%)
+              </p>
+              <div class="catalog-estimate-progress mt-2">
+                <div class="catalog-estimate-progress-bar" [style.width.%]="estimateProgressPercent()"></div>
+              </div>
+            </div>
+            <button type="button" (click)="dismissEstimate()" class="catalog-link shrink-0">Dismiss</button>
           </div>
-          <div class="md:col-span-3">
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Category</label>
-            <select [ngModel]="selectedCategory()" (ngModelChange)="selectedCategory.set($event)"
-              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 outline-none text-sm font-medium">
-              @for (cat of categories(); track cat) {
-                <option [value]="cat">{{ cat === 'all' ? 'All Categories' : cat }}</option>
-              }
-            </select>
-          </div>
-          <div class="md:col-span-2">
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Sort</label>
-            <select [ngModel]="sortBy()" (ngModelChange)="sortBy.set($event)"
-              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 outline-none text-sm font-medium">
-              <option value="name">Name (A–Z)</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="stock">Stock: Highest</option>
-            </select>
-          </div>
-          <div class="md:col-span-2 flex flex-col gap-2">
-            <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-gray-700">
-              <input type="checkbox" [ngModel]="inStockOnly()" (ngModelChange)="inStockOnly.set($event)"
-                class="rounded border-gray-300 text-red-700 focus:ring-red-600">
-              In stock only
-            </label>
-            @if (hasActiveFilters()) {
-              <button type="button" (click)="clearFilters()"
-                class="text-xs font-bold text-red-700 hover:underline text-left">Clear filters</button>
-            }
-          </div>
-        </div>
-        <p class="text-xs text-gray-500 mt-3 font-medium">
-          Showing {{ filteredProducts().length }} of {{ products().length }} products
-        </p>
-      </div>
-    }
-
-    @if (isLoading()) {
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-        @for (i of [1,2,3,4,5,6]; track i) {
-          <div class="animate-pulse bg-white h-96 rounded-2xl border border-gray-100"></div>
         }
-      </div>
-    } @else if (products().length === 0) {
-      <div class="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div class="text-5xl mb-4">🧱</div>
-        <h2 class="text-xl font-black text-gray-900">No products in catalog</h2>
-        <p class="text-gray-500 mt-2">Check back soon or contact sales for availability.</p>
-        <a routerLink="/contact" class="inline-block mt-6 bg-red-700 text-white font-bold px-6 py-3 rounded-xl hover:bg-red-800 text-sm uppercase tracking-wider">
-          Contact Sales
-        </a>
-      </div>
-    } @else if (filteredProducts().length === 0) {
-      <div class="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <h2 class="text-lg font-black text-gray-900">No products match your filters</h2>
-        <p class="text-gray-500 mt-2 text-sm">Try adjusting search or category.</p>
-        <button type="button" (click)="clearFilters()"
-          class="mt-6 bg-red-700 text-white font-bold px-6 py-3 rounded-xl hover:bg-red-800 text-sm uppercase tracking-wider">
-          Clear Filters
-        </button>
-      </div>
-    } @else {
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-        @for (product of filteredProducts(); track product.productId) {
-          <article class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden">
 
-            <div class="h-56 w-full bg-gray-50 relative overflow-hidden">
-              @if (getImageSrc(product)) {
-                <img [src]="getImageSrc(product)" [alt]="product.name"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-              } @else {
-                <div class="w-full h-full flex flex-col items-center justify-center text-gray-300 bg-gradient-to-br from-gray-50 to-gray-100">
-                  <span class="text-4xl mb-2">🧱</span>
-                  <span class="text-xs font-bold uppercase tracking-wider">No image</span>
-                </div>
-              }
+        @if (errorMessage()) {
+          <div class="bg-white text-gray-800 p-4 rounded-lg font-medium border border-gray-200 text-sm">
+            {{ errorMessage() }}
+          </div>
+        }
 
-              @if (product.bulkDiscountThreshold) {
-                <div class="absolute top-3 left-3 bg-green-700 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-md">
-                  2% off @ {{ product.bulkDiscountThreshold | number }}+
-                </div>
-              }
-
-              <div class="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
-                <span class="px-2.5 py-1 text-[9px] font-black rounded-lg uppercase tracking-wider shadow-sm"
-                  [ngClass]="product.stockQuantity >= 500 ? 'bg-white text-green-700' : 'bg-red-600 text-white'">
-                  {{ product.stockQuantity >= 500 ? 'In Stock' : 'Low Stock' }}
-                </span>
-                @if (product.category) {
-                  <span class="px-2 py-0.5 text-[9px] font-bold rounded bg-black/50 text-white backdrop-blur-sm">
-                    {{ product.category }}
-                  </span>
+        <!-- Filters -->
+        @if (!isLoading() && products().length > 0) {
+          <div class="catalog-panel p-4 md:p-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
+              <div class="lg:col-span-5">
+                <label class="catalog-label" for="catalog-search">Search</label>
+                <input id="catalog-search" type="search" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)"
+                  placeholder="Name, type, category..."
+                  class="catalog-input">
+              </div>
+              <div class="lg:col-span-3">
+                <label class="catalog-label" for="catalog-category">Category</label>
+                <select id="catalog-category" [ngModel]="selectedCategory()" (ngModelChange)="onCategoryChange($event)"
+                  class="catalog-input catalog-select">
+                  @for (cat of categories(); track cat) {
+                    <option [value]="cat">{{ cat === 'all' ? 'All categories' : cat }}</option>
+                  }
+                </select>
+              </div>
+              <div class="lg:col-span-2">
+                <label class="catalog-label" for="catalog-sort">Sort</label>
+                <select id="catalog-sort" [ngModel]="sortBy()" (ngModelChange)="onSortChange($event)"
+                  class="catalog-input catalog-select">
+                  <option value="name">Name (A–Z)</option>
+                  <option value="price-asc">Price: low → high</option>
+                  <option value="price-desc">Price: high → low</option>
+                  <option value="stock">Most in stock</option>
+                </select>
+              </div>
+              <div class="lg:col-span-2 flex flex-col gap-2">
+                <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-600">
+                  <input type="checkbox" [ngModel]="inStockOnly()" (ngModelChange)="onInStockOnlyChange($event)"
+                    class="rounded border-gray-300 text-gray-900 focus:ring-gray-400 w-4 h-4">
+                  In stock only
+                </label>
+                @if (hasActiveFilters()) {
+                  <button type="button" (click)="clearFilters()" class="catalog-link text-left">Clear filters</button>
                 }
               </div>
-
-              @if (cartQuantity(product.productId) > 0) {
-                <div class="absolute bottom-3 left-3 bg-red-700 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-md">
-                  {{ cartQuantity(product.productId) | number }} in cart
-                </div>
-              }
             </div>
+            <p class="text-xs text-gray-400 mt-3">
+              Showing {{ filteredProducts().length }} of {{ products().length }} products
+            </p>
+          </div>
+        }
 
-            <div class="p-5 flex flex-col grow">
-              <h3 class="text-lg font-black text-gray-900 leading-tight">{{ product.name }}</h3>
-              <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">{{ product.brickType }}</p>
-
-              @if (product.description) {
-                <p class="text-sm text-gray-600 mt-3 line-clamp-2 leading-relaxed">{{ product.description }}</p>
-              }
-
-              @if (product.dimensions) {
-                <p class="text-xs text-gray-500 mt-2">
-                  <span class="font-bold">Dimensions:</span> {{ product.dimensions }}
-                </p>
-              }
-
-              <button type="button" (click)="toggleDetails(product.productId)"
-                class="text-xs font-bold text-red-700 hover:underline mt-2 text-left w-fit">
-                {{ expandedProductId() === product.productId ? 'Hide details' : 'More details' }}
-              </button>
-
-              @if (expandedProductId() === product.productId) {
-                <div class="mt-3 p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-600 space-y-1">
-                  <p><span class="font-bold">Stock:</span> {{ product.stockQuantity | number }} units</p>
-                  @if (product.bulkDiscountThreshold) {
-                    <p><span class="font-bold">Bulk deal:</span> 2% discount at {{ product.bulkDiscountThreshold | number }}+ units</p>
-                  }
-                  <p><span class="font-bold">Min order:</span> 500 units (increments of 100)</p>
-                </div>
-              }
-
-              <div class="mt-auto pt-5">
-                <div class="flex items-baseline justify-between mb-4">
-                  <div>
-                    <span class="text-2xl font-black text-red-700">₹{{ product.unitPrice | number:'1.2-2' }}</span>
-                    <span class="text-xs text-gray-500 font-bold">/unit</span>
-                  </div>
-                  @if (authService.isAdminRole()) {
-                    <div class="flex gap-2">
-                      <a [routerLink]="['/admin/products/edit', product.productId]"
-                        class="text-[10px] font-bold text-blue-600 hover:underline">Edit</a>
-                      <button type="button" (click)="deleteProduct(product.productId, product.name)"
-                        class="text-[10px] font-bold text-red-600 hover:underline">Delete</button>
-                    </div>
-                  }
-                </div>
-
-                <!-- Quantity -->
-                <div class="mb-4">
-                  <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Quantity (units)</label>
-                  <div class="flex items-center gap-2">
-                    <button type="button" (click)="setQuantity(product.productId, getQuantity(product.productId) - 100)"
-                      class="w-9 h-9 rounded-lg border border-gray-200 font-bold text-gray-700 hover:bg-gray-50">−</button>
-                    <input type="number" [ngModel]="getQuantity(product.productId)"
-                      (ngModelChange)="setQuantity(product.productId, $event)"
-                      min="500" step="100"
-                      class="flex-1 text-center font-mono font-bold py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-600 outline-none">
-                    <button type="button" (click)="setQuantity(product.productId, getQuantity(product.productId) + 100)"
-                      class="w-9 h-9 rounded-lg border border-gray-200 font-bold text-gray-700 hover:bg-gray-50">+</button>
-                  </div>
-                  <p class="text-[10px] text-gray-500 mt-1.5">
-                    Est. total:
-                    <span class="font-black text-gray-900">₹{{ lineTotal(product, getQuantity(product.productId)) | number:'1.0-0' }}</span>
-                    @if (hasBulkDiscount(product, getQuantity(product.productId))) {
-                      <span class="text-green-700 font-bold"> (incl. 2% bulk discount)</span>
-                    }
-                  </p>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                  <button type="button" (click)="goToQuote(product.productId)"
-                    class="w-full bg-gray-50 text-gray-700 py-3 rounded-xl text-xs font-black hover:bg-gray-100 transition-all border border-gray-200">
-                    Get Quote
-                  </button>
-                  <button type="button" (click)="addToCart(product)"
-                    [disabled]="product.stockQuantity < getQuantity(product.productId)"
-                    [ngClass]="product.stockQuantity < getQuantity(product.productId) ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-red-700 hover:bg-red-800 text-white shadow-md'"
-                    class="w-full py-3 rounded-xl text-xs font-black transition-all">
-                    {{ product.stockQuantity < getQuantity(product.productId) ? 'Insufficient Stock' : 'Add to Cart' }}
-                  </button>
+        @if (isLoading()) {
+          <div class="catalog-grid">
+            @for (i of [1,2,3,4,5,6,7,8]; track i) {
+              <div class="catalog-card animate-pulse">
+                <div class="catalog-card-media bg-gray-100"></div>
+                <div class="catalog-card-body space-y-2">
+                  <div class="h-3.5 bg-gray-100 rounded w-4/5"></div>
+                  <div class="h-3 bg-gray-100 rounded w-1/2"></div>
+                  <div class="h-8 bg-gray-100 rounded w-full mt-2"></div>
                 </div>
               </div>
-            </div>
-          </article>
-        }
-      </div>
-    }
+            }
+          </div>
+        } @else if (products().length === 0) {
+          <div class="catalog-empty">
+            <h2 class="text-lg font-semibold text-gray-900">No products in catalog</h2>
+            <p class="text-gray-500 mt-2 text-sm">Check back soon or contact our sales team.</p>
+            <a routerLink="/contact" class="catalog-empty-cta">Contact Sales</a>
+          </div>
+        } @else if (filteredProducts().length === 0) {
+          <div class="catalog-empty">
+            <h2 class="text-lg font-semibold text-gray-900">No matches for your filters</h2>
+            <p class="text-gray-500 mt-2 text-sm">Try a different search or category.</p>
+            <button type="button" (click)="clearFilters()" class="catalog-empty-cta catalog-empty-cta--secondary">Clear Filters</button>
+          </div>
+        } @else {
+          <div class="catalog-grid">
+            @for (product of filteredProducts(); track product.productId) {
+              <article class="catalog-card">
 
-    <!-- Bottom CTA -->
-    @if (!isLoading() && products().length > 0) {
-      <div class="mt-12 bg-white rounded-2xl border border-gray-100 p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 shadow-sm">
-        <div>
-          <h2 class="text-lg font-black text-gray-900">Not sure how many bricks you need?</h2>
-          <p class="text-sm text-gray-500 mt-1">Use our calculator to estimate wall requirements, then return here to order.</p>
-        </div>
-        <div class="flex flex-wrap gap-3">
-          <a routerLink="/calculator" class="bg-gray-900 text-white font-bold px-6 py-3 rounded-xl hover:bg-black text-sm uppercase tracking-wider">
-            Open Calculator
-          </a>
-          <a routerLink="/get-quote" class="bg-red-50 text-red-700 border border-red-200 font-bold px-6 py-3 rounded-xl hover:bg-red-100 text-sm uppercase tracking-wider">
-            Request Quote
-          </a>
-        </div>
-      </div>
-    }
+                @let imageSrc = getImageSrc(product);
+                <div class="catalog-card-media">
+                  @if (imageSrc) {
+                    <img [src]="imageSrc" [alt]="product.name" loading="lazy" decoding="async" class="catalog-card-image" />
+                  } @else {
+                    <div class="flex flex-col items-center justify-center text-gray-300">
+                      <span class="text-2xl mb-1">🧱</span>
+                      <span class="text-[10px] font-medium uppercase tracking-wider text-gray-400">No image</span>
+                    </div>
+                  }
+
+                  <div class="catalog-card-badges">
+                    <div class="absolute top-2 left-2 right-2 flex items-start justify-between gap-1">
+                      @if (product.bulkDiscountThreshold) {
+                        <span class="catalog-tag">2% @ {{ product.bulkDiscountThreshold | number }}+</span>
+                      } @else {
+                        <span></span>
+                      }
+                      <span class="catalog-tag" [class.catalog-tag--warn]="product.stockQuantity < 500">
+                        {{ product.stockQuantity >= 500 ? 'In stock' : 'Low stock' }}
+                      </span>
+                    </div>
+                    @if (cartQuantity(product.productId) > 0) {
+                      <div class="absolute bottom-2 left-2 catalog-tag catalog-tag--cart">
+                        {{ cartQuantity(product.productId) | number }} in cart
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <div class="catalog-card-body">
+                  <div>
+                    <h3 class="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{{ product.name }}</h3>
+                    <p class="catalog-card-meta mt-1">
+                      @if (product.category) {
+                        <span>{{ product.category }}</span>
+                        <span class="mx-1">·</span>
+                      }
+                      <span>{{ product.brickType }}</span>
+                    </p>
+                  </div>
+
+                  <div class="flex items-end justify-between gap-2">
+                    <div>
+                      <span class="catalog-card-price">₹{{ product.unitPrice | number:'1.2-2' }}</span>
+                      <span class="catalog-card-meta ml-1">/ unit</span>
+                    </div>
+                    @if (authService.isAdminRole()) {
+                      <div class="flex gap-2 text-[10px] font-semibold text-gray-500">
+                        <a [routerLink]="['/admin/products/edit', product.productId]" class="hover:text-gray-900 hover:underline">Edit</a>
+                        <button type="button" (click)="deleteProduct(product.productId, product.name)" class="hover:text-gray-900 hover:underline">Del</button>
+                      </div>
+                    }
+                  </div>
+
+                  <button type="button" (click)="toggleDetails(product.productId)" class="catalog-card-link">
+                    {{ expandedProductId() === product.productId ? 'Less info' : 'More info' }}
+                  </button>
+
+                  @if (expandedProductId() === product.productId) {
+                    <div class="catalog-card-details space-y-0.5">
+                      @if (product.description) {
+                        <p class="line-clamp-3">{{ product.description }}</p>
+                      }
+                      @if (product.dimensions) {
+                        <p><span class="font-semibold text-gray-700">Size:</span> {{ product.dimensions }}</p>
+                      }
+                      <p><span class="font-semibold text-gray-700">Stock:</span> {{ product.stockQuantity | number }}</p>
+                      <p><span class="font-semibold text-gray-700">Min:</span> 500 units</p>
+                    </div>
+                  }
+
+                  <div class="catalog-card-actions space-y-2">
+                    <div class="catalog-card-qty flex items-center gap-2">
+                      <button type="button" (click)="setQuantity(product.productId, getQuantity(product.productId) - 100)"
+                        class="catalog-card-qty-btn shrink-0 font-semibold">−</button>
+                      <input type="number" [ngModel]="getQuantity(product.productId)"
+                        (ngModelChange)="setQuantity(product.productId, $event)"
+                        min="500" step="100"
+                        class="catalog-card-qty-input flex-1 min-w-0 text-center font-semibold text-gray-800">
+                      <button type="button" (click)="setQuantity(product.productId, getQuantity(product.productId) + 100)"
+                        class="catalog-card-qty-btn shrink-0 font-semibold">+</button>
+                    </div>
+                    <p class="text-[10px] text-gray-500 leading-tight">
+                      Total <span class="font-semibold text-gray-800">₹{{ lineTotal(product, getQuantity(product.productId)) | number:'1.0-0' }}</span>
+                      @if (hasBulkDiscount(product, getQuantity(product.productId))) {
+                        <span class="text-gray-600"> · 2% off</span>
+                      }
+                    </p>
+                    <div class="catalog-card-cta grid grid-cols-2 gap-2">
+                      <button type="button" (click)="goToQuote(product.productId)"
+                        class="catalog-card-cta-btn catalog-card-cta-btn--secondary">
+                        Quote
+                      </button>
+                      <button type="button" (click)="addToCart(product)"
+                        [disabled]="product.stockQuantity < getQuantity(product.productId)"
+                        class="catalog-card-cta-btn"
+                        [class.catalog-card-cta-btn--primary]="product.stockQuantity >= getQuantity(product.productId)"
+                        [class.catalog-card-cta-btn--disabled]="product.stockQuantity < getQuantity(product.productId)">
+                        {{ product.stockQuantity < getQuantity(product.productId) ? 'No stock' : 'Add to cart' }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        }
+
+        <!-- Bottom CTA -->
+        @if (!isLoading() && products().length > 0) {
+          <div class="catalog-bottom-cta flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h2 class="text-base md:text-lg font-semibold text-gray-900">Need help choosing?</h2>
+              <p class="text-sm text-gray-500 mt-1 max-w-lg">Use the calculator to estimate quantity, or request a quote for project pricing.</p>
+            </div>
+            <div class="flex flex-wrap gap-2 shrink-0">
+              <a routerLink="/calculator" class="catalog-hero-btn catalog-hero-btn-ghost">Calculator</a>
+              <a routerLink="/get-quote" class="catalog-hero-btn catalog-hero-btn-primary">Request Quote</a>
+            </div>
+          </div>
+        }
+
+    </div>
   </div>
 </div>

@@ -78,11 +78,14 @@ public class PaymentControllerImpl implements PaymentController {
 
     // NAYA ENDPOINT: Admin UTR modal ke liye data fetch karne ke liye
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ResponseEntity<?> getPaymentDetailsByOrderId(@PathVariable("orderId") String orderId) {
         try {
             return ResponseEntity.ok(paymentService.getPaymentDetailsByOrderId(orderId));
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().contains("Access denied")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+            }
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Payment details not found");
         }
     }

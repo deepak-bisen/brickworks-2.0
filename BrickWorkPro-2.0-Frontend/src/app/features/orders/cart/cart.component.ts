@@ -1,12 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { CartService } from '../services/cart.service';
+import { PolicyBannerComponent } from '../../../shared/components/policy-banner/policy-banner.component';
+import { BwButtonComponent } from '../../../shared/components/ui/bw-button.component';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, PolicyBannerComponent, BwButtonComponent],
   templateUrl: './cart.component.html',
 })
 export class CartComponent {

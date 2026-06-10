@@ -21,7 +21,12 @@
         Get a Quote</a>
 
       <a routerLink="/cart"
-        class="relative text-gray-600 hover:text-red-700 transition-colors p-2 flex items-center group">
+        [title]="cartService.totalItems() > 0 ? 'View cart' : 'Cart (empty)'"
+        class="relative transition-colors p-2 flex items-center group"
+        [class.text-gray-600]="cartService.totalItems() > 0"
+        [class.hover:text-red-700]="cartService.totalItems() > 0"
+        [class.text-gray-400]="cartService.totalItems() === 0"
+        [class.hover:text-gray-600]="cartService.totalItems() === 0">
         <svg class="w-6 h-6 transform group-hover:scale-110 transition-transform duration-200" fill="none"
           stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -134,6 +139,15 @@
         class="py-3 text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-50">🚚 Track Order</a>
       <a routerLink="/get-quote" (click)="closeMobileMenu()"
         class="py-3 text-sm font-bold text-red-700 uppercase tracking-wider border-b border-gray-50">Get a Quote</a>
+      <a routerLink="/cart" (click)="closeMobileMenu()"
+        class="py-3 text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-50 flex items-center justify-between">
+        <span>🛒 Cart</span>
+        @if (cartService.totalItems() > 0) {
+          <span class="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">{{ cartService.totalItems() }}</span>
+        } @else {
+          <span class="text-xs text-gray-400 font-medium normal-case">Empty</span>
+        }
+      </a>
 
       @if (authService.isAdmin()) {
       <a routerLink="/admin-dashboard" (click)="closeMobileMenu()"

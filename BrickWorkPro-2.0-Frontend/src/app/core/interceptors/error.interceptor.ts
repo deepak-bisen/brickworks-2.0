@@ -17,6 +17,16 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.error instanceof ErrorEvent) {
         errorMessage = `Network error: ${error.error.message}`;
       } else {
+        // Handled inline: optional payment prefetch and invoice actions.
+        if (req.url.includes('/api/finance/payments/order/')) {
+          if (error.status === 404 || error.status === 403) {
+            return throwError(() => error);
+          }
+        }
+        if (req.url.includes('/api/finance/invoice/')) {
+          return throwError(() => error);
+        }
+
         switch (error.status) {
           case 401:
             if (req.url.includes('/api/auth/login')) {

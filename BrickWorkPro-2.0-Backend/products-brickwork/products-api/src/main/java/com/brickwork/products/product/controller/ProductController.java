@@ -16,6 +16,9 @@ public interface ProductController {
     @GetMapping({"/", "/all"})
     ResponseEntity<List<ProductDTO>> getAllProducts();
 
+    @GetMapping("/{productId}/image")
+    ResponseEntity<byte[]> getProductImage(@PathVariable("productId") String productId);
+
     @GetMapping("/{productId}")
     ResponseEntity<ProductDTO> getProductById(@PathVariable("productId") String productId);
 

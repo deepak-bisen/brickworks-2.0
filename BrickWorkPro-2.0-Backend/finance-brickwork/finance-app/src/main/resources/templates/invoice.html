@@ -66,8 +66,8 @@
                 <strong style="font-size: 14px; color:#111;" th:text="${customerName}">Customer Name</strong><br/>
                 <span th:text="${deliveryAddress}">Delivery Address</span><br/>
                 <div style="margin-top: 5px;">
-                    <strong>📞 Phone:</strong> <span th:text="${customerPhone}">N/A</span><br/>
-                    <strong>✉️ Email:</strong> <span th:text="${customerEmail}">N/A</span>
+                    <strong>Phone:</strong> <span th:text="${customerPhone}">N/A</span><br/>
+                    <strong>Email:</strong> <span th:text="${customerEmail}">N/A</span>
                 </div>
             </div>
         </td>
@@ -88,8 +88,8 @@
         <th style="width: 5%;">#</th>
         <th style="width: 45%;">Item Description</th>
         <th class="right" style="width: 15%;">Quantity</th>
-        <th class="right" style="width: 15%;">Unit Rate (₹)</th>
-        <th class="right" style="width: 20%;">Total (₹)</th>
+        <th class="right" style="width: 15%;">Unit Rate (Rs.)</th>
+        <th class="right" style="width: 20%;">Total (Rs.)</th>
     </tr>
     </thead>
     <tbody>
@@ -98,7 +98,7 @@
         <td th:text="${item.productName}">Premium Red Brick</td>
         <td class="right" th:text="${item.quantity}">1000</td>
         <td class="right" th:text="${#numbers.formatDecimal(item.unitPrice, 1, 'COMMA', 2, 'POINT')}">8.50</td>
-        <td class="right" th:text="${#numbers.formatDecimal(item.unitPrice * item.quantity, 1, 'COMMA', 2, 'POINT')}">8500.00</td>
+        <td class="right" th:text="${#numbers.formatDecimal(item.lineTotal, 1, 'COMMA', 2, 'POINT')}">8500.00</td>
     </tr>
     </tbody>
 </table>
@@ -116,27 +116,27 @@
         <table>
             <tr th:if="${grossAmount != null}">
                 <td>Subtotal (M.R.P):</td>
-                <td class="right" th:text="'₹ ' + ${#numbers.formatDecimal(grossAmount, 1, 'COMMA', 2, 'POINT')}">₹ 0.00</td>
+                <td class="right" th:text="'Rs. ' + ${#numbers.formatDecimal(grossAmount, 1, 'COMMA', 2, 'POINT')}">Rs. 0.00</td>
             </tr>
             <tr class="discount-row" th:if="${discountApplied != null and discountApplied > 0}">
                 <td>Bulk Discount Applied:</td>
-                <td class="right" th:text="'- ₹ ' + ${#numbers.formatDecimal(discountApplied, 1, 'COMMA', 2, 'POINT')}">- ₹ 0.00</td>
+                <td class="right" th:text="'- Rs. ' + ${#numbers.formatDecimal(discountApplied, 1, 'COMMA', 2, 'POINT')}">- Rs. 0.00</td>
             </tr>
             <tr>
                 <td>Taxable Value:</td>
-                <td class="right" th:text="'₹ ' + ${#numbers.formatDecimal(taxableAmount, 1, 'COMMA', 2, 'POINT')}">₹ 0.00</td>
+                <td class="right" th:text="'Rs. ' + ${#numbers.formatDecimal(taxableAmount, 1, 'COMMA', 2, 'POINT')}">Rs. 0.00</td>
             </tr>
             <tr>
                 <td>CGST (9%):</td>
-                <td class="right" th:text="'₹ ' + ${#numbers.formatDecimal(cgst, 1, 'COMMA', 2, 'POINT')}">₹ 0.00</td>
+                <td class="right" th:text="'Rs. ' + ${#numbers.formatDecimal(cgst, 1, 'COMMA', 2, 'POINT')}">Rs. 0.00</td>
             </tr>
             <tr>
                 <td>SGST (9%):</td>
-                <td class="right" th:text="'₹ ' + ${#numbers.formatDecimal(sgst, 1, 'COMMA', 2, 'POINT')}">₹ 0.00</td>
+                <td class="right" th:text="'Rs. ' + ${#numbers.formatDecimal(sgst, 1, 'COMMA', 2, 'POINT')}">Rs. 0.00</td>
             </tr>
             <tr>
                 <td class="grand-total">Grand Total:</td>
-                <td class="right grand-total" th:text="'₹ ' + ${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 2, 'POINT')}">₹ 0.00</td>
+                <td class="right grand-total" th:text="'Rs. ' + ${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 2, 'POINT')}">Rs. 0.00</td>
             </tr>
         </table>
     </div>

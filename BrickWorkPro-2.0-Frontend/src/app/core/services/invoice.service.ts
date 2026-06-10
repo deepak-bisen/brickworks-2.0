@@ -57,6 +57,13 @@ export class InvoiceService {
       });
     }
 
+    if (httpError?.status === 500) {
+      return Promise.resolve({
+        message: 'Invoice generation failed on the server. Please try again or contact support.',
+        notFound: false,
+      });
+    }
+
     return Promise.resolve({
       message: 'Could not download invoice. Please try again.',
       notFound: httpError?.status === 404,

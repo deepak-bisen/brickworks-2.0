@@ -1,85 +1,250 @@
-<div class="max-w-2xl mx-auto my-12 p-8 bg-white shadow-xl rounded-xl border-t-4 border-red-600">
-  <h2 class="text-3xl font-bold text-gray-800 mb-2 text-center">Get a Bulk Quote</h2>
-  <p class="text-sm text-gray-500 text-center mb-6">Request pricing for bulk orders from <strong>500 units</strong>. Ready to buy now? <a routerLink="/products" class="text-red-700 font-bold hover:underline">Order directly</a> (minimum 500 units).</p>
+<div class="quote-page min-h-screen bg-gray-50">
+  <!-- Hero -->
+  <section class="quote-hero bg-gradient-to-br from-gray-900 via-red-950 to-gray-900 text-white">
+    <div class="max-w-6xl mx-auto px-4 md:px-6 py-5 md:py-7">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="max-w-2xl">
+          <p class="text-red-300 text-[10px] font-black uppercase tracking-[0.2em] mb-1.5">Wholesale &amp; Project Orders</p>
+          <h1 class="text-2xl md:text-3xl font-black tracking-tight leading-tight">Get a Bulk Quote</h1>
+          <p class="text-gray-300 mt-2 text-sm leading-relaxed">
+            Tell us what you need and our team will prepare competitive pricing for bulk brick orders.
+            {{ ORDER_POLICY.full }}
+          </p>
+        </div>
 
-  <form [formGroup]="quoteForm" (ngSubmit)="submitQuote()" class="space-y-5">
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="w-full">
-        <input type="text" formControlName="customerName" placeholder="Full Name"
-               class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none transition-colors"
-               [ngClass]="{'border-red-500 bg-red-50': f.customerName.invalid && f.customerName.touched}">
-        @if (f.customerName.invalid && f.customerName.touched) {
-          <p class="text-red-500 text-xs mt-1 font-medium">Full Name is required.</p>
-        }
-      </div>
-
-      <div class="w-full">
-        <input type="email" formControlName="customerEmail" placeholder="Email Address"
-               class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none transition-colors"
-               [ngClass]="{'border-red-500 bg-red-50': f.customerEmail.invalid && f.customerEmail.touched}">
-        @if (f.customerEmail.errors?.['required'] && f.customerEmail.touched) {
-          <p class="text-red-500 text-xs mt-1 font-medium">Email is required.</p>
-        }
-        @if (f.customerEmail.errors?.['email'] && f.customerEmail.touched) {
-          <p class="text-red-500 text-xs mt-1 font-medium">Please enter a valid email address.</p>
-        }
+        <div class="flex flex-wrap gap-2 shrink-0 lg:justify-end">
+          <span class="quote-badge">✓ Custom pricing</span>
+          <span class="quote-badge">✓ 24–48 hr response</span>
+          <span class="quote-badge">✓ Pan-India delivery</span>
+        </div>
       </div>
     </div>
+  </section>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="w-full">
-        <input type="text" formControlName="customerPhone" placeholder="Phone Number (10 digits)"
-               class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none transition-colors"
-               [ngClass]="{'border-red-500 bg-red-50': f.customerPhone.invalid && f.customerPhone.touched}">
-        @if (f.customerPhone.errors?.['required'] && f.customerPhone.touched) {
-          <p class="text-red-500 text-xs mt-1 font-medium">Phone number is required.</p>
-        }
-        @if (f.customerPhone.errors?.['pattern'] && f.customerPhone.touched) {
-          <p class="text-red-500 text-xs mt-1 font-medium">Please enter exactly 10 digits.</p>
-        }
-      </div>
+  <div class="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-10 -mt-4 md:-mt-5 relative z-10">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
 
-      <div class="w-full">
-        <select formControlName="productId"
-                class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none transition-colors"
-                [ngClass]="{'border-red-500 bg-red-50': f.productId.invalid && f.productId.touched}">
-          <option value="" disabled selected>Select Brick Type</option>
-          @for (product of productService.products(); track product.productId) {
-            <option [value]="product.productId">{{ product.name }}</option>
+      <!-- Form -->
+      <div class="lg:col-span-3 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden quote-form-card">
+        <div class="h-1.5 bg-gradient-to-r from-red-600 via-red-700 to-red-900"></div>
+
+        <div class="p-6 md:p-8">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8 pb-6 border-b border-gray-100">
+            <div>
+              <h2 class="text-xl md:text-2xl font-black text-gray-900">Request Your Quote</h2>
+              <p class="text-sm text-gray-500 mt-1">Fill in the details below — no payment required.</p>
+            </div>
+            <a routerLink="/products"
+              class="text-xs font-bold uppercase tracking-wider text-red-700 bg-red-50 border border-red-100 px-4 py-2 rounded-xl hover:bg-red-100 transition-colors text-center shrink-0">
+              Order directly →
+            </a>
+          </div>
+
+          @if (selectedProduct; as product) {
+            <div class="mb-6 p-4 rounded-xl bg-red-50/80 border border-red-100 flex items-center gap-3">
+              <span class="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center text-lg shrink-0">🧱</span>
+              <div class="min-w-0">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-red-600">Pre-selected from catalog</p>
+                <p class="font-bold text-gray-900 truncate">{{ product.name }}</p>
+                <p class="text-xs text-gray-500">{{ product.category }} · {{ product.brickType }}</p>
+              </div>
+            </div>
           }
-        </select>
-        @if (f.productId.invalid && f.productId.touched) {
-          <p class="text-red-500 text-xs mt-1 font-medium">Please select a product.</p>
-        }
+
+          <form [formGroup]="quoteForm" (ngSubmit)="submitQuote()" class="space-y-8">
+
+            <!-- Contact -->
+            <fieldset class="space-y-4">
+              <legend class="quote-section-title">
+                <span class="quote-section-icon">👤</span>
+                Your Details
+              </legend>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="quote-label" for="customerName">Full Name</label>
+                  <input id="customerName" type="text" formControlName="customerName"
+                    class="quote-input"
+                    [class.quote-input-error]="f.customerName.invalid && f.customerName.touched"
+                    placeholder="e.g. Rajesh Kumar">
+                  @if (f.customerName.invalid && f.customerName.touched) {
+                    <p class="quote-error">Full name is required.</p>
+                  }
+                </div>
+
+                <div>
+                  <label class="quote-label" for="customerEmail">Email Address</label>
+                  <input id="customerEmail" type="email" formControlName="customerEmail"
+                    class="quote-input"
+                    [class.quote-input-error]="f.customerEmail.invalid && f.customerEmail.touched"
+                    placeholder="you@company.com">
+                  @if (f.customerEmail.errors?.['required'] && f.customerEmail.touched) {
+                    <p class="quote-error">Email is required.</p>
+                  }
+                  @if (f.customerEmail.errors?.['email'] && f.customerEmail.touched) {
+                    <p class="quote-error">Please enter a valid email address.</p>
+                  }
+                </div>
+              </div>
+
+              <div class="md:max-w-sm">
+                <label class="quote-label" for="customerPhone">Phone Number</label>
+                <div class="relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">+91</span>
+                  <input id="customerPhone" type="tel" formControlName="customerPhone" maxlength="10"
+                    class="quote-input pl-12"
+                    [class.quote-input-error]="f.customerPhone.invalid && f.customerPhone.touched"
+                    placeholder="10-digit mobile">
+                </div>
+                @if (f.customerPhone.errors?.['required'] && f.customerPhone.touched) {
+                  <p class="quote-error">Phone number is required.</p>
+                }
+                @if (f.customerPhone.errors?.['pattern'] && f.customerPhone.touched) {
+                  <p class="quote-error">Please enter exactly 10 digits.</p>
+                }
+              </div>
+            </fieldset>
+
+            <!-- Product -->
+            <fieldset class="space-y-4">
+              <legend class="quote-section-title">
+                <span class="quote-section-icon">📦</span>
+                Product &amp; Quantity
+              </legend>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="quote-label" for="productId">Brick Type</label>
+                  <select id="productId" formControlName="productId"
+                    class="quote-input quote-select"
+                    [class.quote-input-error]="f.productId.invalid && f.productId.touched">
+                    <option value="" disabled>Select a product</option>
+                    @for (product of productService.products(); track product.productId) {
+                      <option [value]="product.productId">{{ product.name }} — ₹{{ product.unitPrice }}/unit</option>
+                    }
+                  </select>
+                  @if (f.productId.invalid && f.productId.touched) {
+                    <p class="quote-error">Please select a brick type.</p>
+                  }
+                </div>
+
+                <div>
+                  <label class="quote-label" for="quantity">Quantity Required</label>
+                  <input id="quantity" type="number" formControlName="quantity" min="500"
+                    class="quote-input"
+                    [class.quote-input-error]="f.quantity.invalid && f.quantity.touched"
+                    placeholder="Minimum 500">
+                  <p class="text-[11px] text-gray-400 mt-1.5 font-medium">{{ ORDER_POLICY.shortOnline }}</p>
+                  @if (f.quantity.errors?.['required'] && f.quantity.touched) {
+                    <p class="quote-error">Quantity is required.</p>
+                  }
+                  @if (f.quantity.errors?.['min'] && f.quantity.touched) {
+                    <p class="quote-error">Minimum quantity is 500 units.</p>
+                  }
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Delivery -->
+            <fieldset class="space-y-4">
+              <legend class="quote-section-title">
+                <span class="quote-section-icon">📍</span>
+                Delivery Location
+              </legend>
+
+              <div>
+                <label class="quote-label" for="deliveryAddress">Site / Delivery Address</label>
+                <textarea id="deliveryAddress" formControlName="deliveryAddress" rows="4"
+                  class="quote-input resize-none"
+                  [class.quote-input-error]="f.deliveryAddress.invalid && f.deliveryAddress.touched"
+                  placeholder="Project site address, city, district, PIN code, and any access notes for our logistics team..."></textarea>
+                @if (f.deliveryAddress.invalid && f.deliveryAddress.touched) {
+                  <p class="quote-error">Delivery address is required.</p>
+                }
+              </div>
+            </fieldset>
+
+            <button type="submit"
+              [disabled]="isSubmitting()"
+              class="quote-submit w-full disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg">
+              @if (isSubmitting()) {
+                <span class="inline-flex items-center justify-center gap-2">
+                  <span class="quote-spinner"></span>
+                  Submitting request...
+                </span>
+              } @else {
+                Submit Quote Request
+              }
+            </button>
+
+            <p class="text-center text-[11px] text-gray-400 font-medium">
+              By submitting, you agree to be contacted regarding pricing and availability. No obligation to purchase.
+            </p>
+          </form>
+        </div>
       </div>
-    </div>
 
-    <div class="w-full">
-      <input type="number" formControlName="quantity" placeholder="Quantity (Min 500)"
-             class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none transition-colors"
-             [ngClass]="{'border-red-500 bg-red-50': f.quantity.invalid && f.quantity.touched}">
-      @if (f.quantity.errors?.['required'] && f.quantity.touched) {
-        <p class="text-red-500 text-xs mt-1 font-medium">Quantity is required.</p>
-      }
-      @if (f.quantity.errors?.['min'] && f.quantity.touched) {
-        <p class="text-red-500 text-xs mt-1 font-medium">Minimum quantity must be at least 500.</p>
-      }
-    </div>
+      <!-- Sidebar -->
+      <aside class="lg:col-span-2 space-y-6">
 
-    <div class="w-full">
-      <textarea formControlName="deliveryAddress" placeholder="Delivery Address" rows="3"
-                class="w-full p-3 border rounded focus:ring-2 focus:ring-red-600 outline-none transition-colors"
-                [ngClass]="{'border-red-500 bg-red-50': f.deliveryAddress.invalid && f.deliveryAddress.touched}"></textarea>
-      @if (f.deliveryAddress.invalid && f.deliveryAddress.touched) {
-        <p class="text-red-500 text-xs mt-1 font-medium">Delivery Address is required.</p>
-      }
-    </div>
+        <div class="bg-gray-900 text-white rounded-2xl shadow-xl p-6 md:p-8 relative overflow-hidden">
+          <div class="absolute inset-0 opacity-[0.07] quote-dot-pattern"></div>
+          <div class="relative z-10">
+            <h3 class="text-lg font-black mb-5">Why request a quote?</h3>
+            <ul class="space-y-4">
+              <li class="flex gap-3">
+                <span class="w-8 h-8 rounded-lg bg-red-600/20 border border-red-500/30 flex items-center justify-center shrink-0 text-sm">💰</span>
+                <div>
+                  <p class="font-bold text-sm">Volume discounts</p>
+                  <p class="text-gray-400 text-xs mt-0.5 leading-relaxed">Better rates on large project orders and repeat buyers.</p>
+                </div>
+              </li>
+              <li class="flex gap-3">
+                <span class="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0 text-sm">🚚</span>
+                <div>
+                  <p class="font-bold text-sm">Logistics planning</p>
+                  <p class="text-gray-400 text-xs mt-0.5 leading-relaxed">We factor in delivery distance and site access for accurate quotes.</p>
+                </div>
+              </li>
+              <li class="flex gap-3">
+                <span class="w-8 h-8 rounded-lg bg-green-600/20 border border-green-500/30 flex items-center justify-center shrink-0 text-sm">🏗️</span>
+                <div>
+                  <p class="font-bold text-sm">Mixed brick types</p>
+                  <p class="text-gray-400 text-xs mt-0.5 leading-relaxed">Need multiple varieties? Submit one request — we'll bundle pricing.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
 
-    <button type="submit"
-            class="w-full bg-red-600 text-white font-bold py-3 rounded-lg transition-all duration-300 transform hover:bg-red-700 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-red-300"
-            [ngClass]="{'opacity-50 cursor-not-allowed hover:transform-none hover:shadow-none hover:bg-red-600': quoteForm.invalid}">
-      Submit Request
-    </button>
-  </form>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <h3 class="text-sm font-black uppercase tracking-wider text-gray-900 mb-4">What happens next</h3>
+          <ol class="space-y-4">
+            <li class="flex gap-3">
+              <span class="w-7 h-7 rounded-full bg-red-100 text-red-700 text-xs font-black flex items-center justify-center shrink-0">1</span>
+              <p class="text-sm text-gray-600"><strong class="text-gray-900">We review</strong> your product, quantity, and delivery details.</p>
+            </li>
+            <li class="flex gap-3">
+              <span class="w-7 h-7 rounded-full bg-red-100 text-red-700 text-xs font-black flex items-center justify-center shrink-0">2</span>
+              <p class="text-sm text-gray-600"><strong class="text-gray-900">You receive a call</strong> or email with tailored pricing within 24–48 hours.</p>
+            </li>
+            <li class="flex gap-3">
+              <span class="w-7 h-7 rounded-full bg-red-100 text-red-700 text-xs font-black flex items-center justify-center shrink-0">3</span>
+              <p class="text-sm text-gray-600"><strong class="text-gray-900">Approve &amp; order</strong> — we'll convert your quote into a live order.</p>
+            </li>
+          </ol>
+        </div>
+
+        <div class="bg-red-50 border border-red-100 rounded-2xl p-6">
+          <p class="text-xs font-bold uppercase tracking-wider text-red-700 mb-2">Need help now?</p>
+          <p class="text-sm text-gray-700 leading-relaxed mb-3">Speak directly with our sales desk for urgent project timelines.</p>
+          <a href="tel:+919770016640" class="inline-flex items-center gap-2 text-sm font-bold text-gray-900 hover:text-red-700 transition-colors">
+            📞 +91 97700 16640
+          </a>
+          <p class="text-[11px] text-gray-500 mt-3">Mon–Sat, 8am–6pm IST</p>
+        </div>
+
+      </aside>
+    </div>
+  </div>
 </div>

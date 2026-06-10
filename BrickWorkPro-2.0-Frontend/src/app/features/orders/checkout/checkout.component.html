@@ -1,6 +1,7 @@
 <div class="max-w-7xl mx-auto px-4 py-12">
   <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">Secure Checkout</h1>
-  <p class="text-sm text-gray-500 mb-8 border-b pb-4">Bulk orders require a <strong>minimum of 500 units</strong> per product. Quotes can be requested from 200 units on the <a routerLink="/get-quote" class="text-red-700 font-bold hover:underline">Get a Quote</a> page.</p>
+  <app-policy-banner class="block mb-6" />
+  <app-checkout-steps [current]="checkoutStep()" />
 
   @if (cartService.items().length === 0) {
   <div class="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
@@ -45,35 +46,30 @@
         <form [formGroup]="checkoutForm" class="space-y-5">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Full Name</label>
-              <input type="text" formControlName="customerName"
-                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 outline-none">
+              <bw-form-label htmlFor="checkout-name">Full Name</bw-form-label>
+              <input id="checkout-name" type="text" formControlName="customerName" bwInput>
               @if (checkoutForm.get('customerName')?.invalid && checkoutForm.get('customerName')?.touched) {
               <p class="text-red-600 text-xs mt-1">Name is required.</p>
               }
             </div>
             <div>
-              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Phone Number</label>
-              <input type="tel" formControlName="customerPhone"
-                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 outline-none">
+              <bw-form-label htmlFor="checkout-phone">Phone Number</bw-form-label>
+              <input id="checkout-phone" type="tel" formControlName="customerPhone" bwInput>
               @if (checkoutForm.get('customerPhone')?.invalid && checkoutForm.get('customerPhone')?.touched) {
               <p class="text-red-600 text-xs mt-1">Must be exactly 10 digits.</p>
               }
             </div>
           </div>
           <div>
-            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Email Address</label>
-            <input type="email" formControlName="customerEmail"
-              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 outline-none">
+            <bw-form-label htmlFor="checkout-email">Email Address</bw-form-label>
+            <input id="checkout-email" type="email" formControlName="customerEmail" bwInput>
             @if (checkoutForm.get('customerEmail')?.invalid && checkoutForm.get('customerEmail')?.touched) {
             <p class="text-red-600 text-xs mt-1">A valid email is required.</p>
             }
           </div>
           <div>
-            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Complete Delivery Address
-              &amp; Pincode</label>
-            <textarea formControlName="deliveryAddress" rows="3"
-              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-600 outline-none resize-none"></textarea>
+            <bw-form-label htmlFor="checkout-address">Complete Delivery Address &amp; Pincode</bw-form-label>
+            <textarea id="checkout-address" formControlName="deliveryAddress" rows="3" bwInput class="resize-none"></textarea>
             @if (checkoutForm.get('deliveryAddress')?.invalid && checkoutForm.get('deliveryAddress')?.touched) {
             <p class="text-red-600 text-xs mt-1">Delivery address is required.</p>
             }

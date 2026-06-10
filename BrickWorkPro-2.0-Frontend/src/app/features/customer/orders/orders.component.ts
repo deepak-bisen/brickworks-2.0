@@ -133,9 +133,10 @@ export class CustomerOrdersComponent implements OnInit {
         this.invoiceErrors[orderId] = 'Invoice generated! Downloading...';
         this.cdr.detectChanges();
       },
-      error: () => {
+      error: async (err) => {
         this.generatingInvoice[orderId] = false;
-        this.invoiceErrors[orderId] = 'Generation failed. Try again.';
+        const details = await this.invoiceService.resolveDownloadError(err);
+        this.invoiceErrors[orderId] = details.message || 'Generation failed. Try again.';
         this.cdr.detectChanges();
       },
     });

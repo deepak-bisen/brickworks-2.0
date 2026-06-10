@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { BwInputDirective } from '../../../shared/components/ui/bw-input.directive';
+import { BwFormLabelComponent } from '../../../shared/components/ui/bw-form-label.component';
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, BwInputDirective, BwFormLabelComponent],
   templateUrl: './contact.component.html'
 })
 export class ContactComponent {
