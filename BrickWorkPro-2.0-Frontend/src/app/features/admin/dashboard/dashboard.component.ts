@@ -218,6 +218,36 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadDashboardMetrics();
     this.loadMessages();
     this.loadRevenueByPaymentMethod();
+
+    // For testing the new revenue analytics views (charts, pie, toggles, exports, comparisons)
+    // and to ensure "Revenue by Payment Method" amount numbers are populated with sample data.
+    // This helps verify the UI when backend has no real paid orders yet.
+    setTimeout(() => {
+      if (this.salesData().length === 0) {
+        this.setSampleAnalyticsData();
+      }
+      if (Object.keys(this.revenueByPaymentMethod()).length === 0) {
+        const sampleRevenue: Record<string, number> = {
+          'ONLINE': 185000,
+          'CASH_ON_DELIVERY': 92000,
+          'BANK_TRANSFER': 76000
+        };
+        this.revenueByPaymentMethod.set(sampleRevenue);
+        this.updatePaymentPieChart();
+      }
+    }, 150);
+  }
+
+  private setSampleAnalyticsData() {
+    // Sample sales data for testing Revenue + Profit chart views, comparisons, exports, etc.
+    const sampleSales = [
+      { period: '2026-W20', totalRevenue: 125000, totalProfit: 32000, totalOrders: 12 },
+      { period: '2026-W21', totalRevenue: 98000, totalProfit: 25000, totalOrders: 9 },
+      { period: '2026-W22', totalRevenue: 145000, totalProfit: 41000, totalOrders: 15 },
+      { period: '2026-W23', totalRevenue: 112000, totalProfit: 29000, totalOrders: 11 },
+    ];
+    this.salesData.set(sampleSales);
+    this.updateChart(sampleSales);
   }
 
   switchTab(tab: string) {
