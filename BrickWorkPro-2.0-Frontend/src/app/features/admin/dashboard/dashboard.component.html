@@ -125,12 +125,58 @@
       </section>
 
       <section class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 mb-8">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-lg font-bold text-gray-900">Revenue Analytics</h2>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Timeframe: {{ currentTimeframe() }}</p>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-lg font-bold text-gray-900">Revenue Analytics</h2>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Paid orders only • {{ currentTimeframe() }}</p>
+          </div>
+
+          <!-- Timeframe selector moved closer to the chart for better UX -->
+          <div class="flex bg-gray-100 p-1 rounded-xl border border-gray-200 w-fit text-xs">
+            @for (tf of ['weekly', 'monthly', 'yearly']; track tf) {
+              <button (click)="changeTimeframe(tf)"
+                      [class.bg-white]="currentTimeframe() === tf"
+                      [class.text-red-700]="currentTimeframe() === tf"
+                      [class.shadow-sm]="currentTimeframe() === tf"
+                      class="px-3 py-1 rounded-lg font-bold transition-all">
+                {{ tf }}
+              </button>
+            }
+          </div>
         </div>
 
-        <div class="h-72 w-full relative">
+        <!-- View mode toggle + totals + comparison (dual Revenue + Profit + better insight) -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div class="flex items-center gap-2 text-sm">
+            <span class="font-bold text-gray-500">View:</span>
+            <button (click)="setChartViewMode('revenue')"
+                    [class.bg-red-700]="chartViewMode() === 'revenue'" [class.text-white]="chartViewMode() === 'revenue'"
+                    class="px-3 py-1 rounded-full text-xs font-bold border transition">Revenue</button>
+            <button (click)="setChartViewMode('profit')"
+                    [class.bg-amber-600]="chartViewMode() === 'profit'" [class.text-white]="chartViewMode() === 'profit'"
+                    class="px-3 py-1 rounded-full text-xs font-bold border transition">Profit</button>
+            <button (click)="setChartViewMode('both')"
+                    [class.bg-gray-800]="chartViewMode() === 'both'" [class.text-white]="chartViewMode() === 'both'"
+                    class="px-3 py-1 rounded-full text-xs font-bold border transition">Both</button>
+          </div>
+
+          @if (salesData().length) {
+            <div class="text-xs md:text-sm font-medium flex flex-wrap gap-x-4 text-gray-600">
+              <span>Total Revenue: <span class="font-black text-gray-900">₹{{ totalRevenue() | number:'1.0-0' }}</span></span>
+              <span>Total Profit: <span class="font-black text-gray-900">₹{{ totalProfit() | number:'1.0-0' }}</span></span>
+              @if (getRevenuePeriodComparison(); as cmp) {
+                <span class="text-green-700">Revenue {{ cmp.direction === 'up' ? '↑' : '↓' }} {{ Math.abs(cmp.pct).toFixed(1) }}% vs prev</span>
+              }
+            </div>
+          }
+
+          <div class="flex gap-2">
+            <button (click)="downloadRevenueCsv()" class="text-xs px-3 py-1.5 border rounded-xl hover:bg-gray-50 font-bold">CSV</button>
+            <button (click)="downloadRevenueChartImage()" class="text-xs px-3 py-1.5 border rounded-xl hover:bg-gray-50 font-bold">PNG</button>
+          </div>
+        </div>
+
+        <div class="h-72 w-full relative" id="revenue-analytics-chart">
           @if (isLoading()) {
           <div class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
             <app-loading-spinner label="Loading analytics..." />
@@ -151,6 +197,8 @@
           </div>
           }
         </div>
+
+        <p class="mt-2 text-[10px] text-gray-400">Data excludes PENDING_PAYMENT and CANCELLED orders. Use toggles above for Revenue vs Profit view.</p>
       </section>
 
       <section class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 flex justify-between items-center">
@@ -797,8 +845,15 @@
       <section class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
         <h2 class="text-lg font-bold text-gray-900 mb-4">Payment Method Breakdown</h2>
 
-        <!-- NEW: Revenue by Payment Method (Realized Only) -->
-        <div class="mt-6">
+        <!-- Doughnut chart for visual breakdown (new improvement) -->
+        @if (paymentPieData.labels && paymentPieData.labels.length > 0) {
+          <div class="mb-6 max-w-[420px]">
+            <h3 class="text-sm font-bold text-gray-600 mb-2">Revenue by Payment Method (Paid Orders Only)</h3>
+            <canvas baseChart [data]="paymentPieData" [options]="paymentPieOptions" [type]="paymentPieType" style="max-height: 220px;"></canvas>
+          </div>
+        }
+
+        <div class="mt-2">
           <h3 class="text-sm font-bold text-gray-600 mb-3">Revenue by Payment Method (Paid Orders Only)</h3>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             @for (entry of revenueByPaymentMethod() | keyvalue; track entry.key) {

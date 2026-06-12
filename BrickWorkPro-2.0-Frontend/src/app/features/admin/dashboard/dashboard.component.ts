@@ -72,6 +72,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Revenue by Payment Method from backend analytics (paid orders only)
   revenueByPaymentMethod = signal<Record<string, number>>({});
 
+  Math = Math; // expose for template usage in comparisons
+
   // Load revenue by payment method from backend analytics
   private loadRevenueByPaymentMethod() {
     this.dashboardService.getRevenueByPaymentMethod().subscribe({
@@ -83,6 +85,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }
         });
         this.revenueByPaymentMethod.set(breakdown);
+        this.updatePaymentPieChart();
       },
       error: () => this.revenueByPaymentMethod.set({})
     });
@@ -269,16 +272,70 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadOrders();
   }
 
+  // Chart view mode for Revenue Analytics
+  chartViewMode = signal<'revenue' | 'profit' | 'both'>('both');
+
   public barChartType: ChartType = 'bar';
   public barChartOptions: ChartConfiguration['options'] = {
     responsive: true,
     maintainAspectRatio: false,
-    scales: { y: { beginAtZero: true } },
-    plugins: { legend: { display: false } }
+    scales: {
+      x: {
+        ticks: {
+          maxRotation: 45,
+          minRotation: 0,
+          autoSkip: true,
+          maxTicksLimit: 12
+        },
+        grid: { color: '#f3f4f6' }
+      },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: (value: string | number) => {
+            const num = Number(value);
+            return '₹' + (num / 1000).toFixed(0) + 'k';
+          }
+        },
+        grid: { color: '#f3f4f6' }
+      }
+    },
+    plugins: {
+      legend: { display: true, position: 'top' },
+      title: {
+        display: true,
+        text: 'Revenue & Profit by Period (Paid Orders Only)',
+        font: { size: 14, weight: 'bold' }
+      },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => ctx.dataset.label + ': ₹' + ctx.raw.toLocaleString()
+        }
+      }
+    }
   };
   public barChartData: ChartConfiguration['data'] = {
     labels: [],
-    datasets: [{ data: [], label: 'Revenue (₹)', backgroundColor: '#b91c1c', borderRadius: 6 }]
+    datasets: []
+  };
+
+  // Doughnut chart for Payment Method Revenue (Finance tab)
+  public paymentPieType: ChartType = 'doughnut';
+  public paymentPieOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: { position: 'right' },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => ctx.label + ': ₹' + ctx.raw.toLocaleString()
+        }
+      }
+    }
+  };
+  public paymentPieData: ChartConfiguration['data'] = {
+    labels: [],
+    datasets: [{ data: [], backgroundColor: ['#b91c1c', '#f59e0b', '#10b981', '#6b7280'] }]
   };
 
   loadDashboardMetrics(): void {
@@ -323,14 +380,109 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   updateChart(data: any[]) {
-    this.barChartData = {
-      labels: data.map(d => d.period || d.month || 'Unknown'),
-      datasets: [{
-        data: data.map(d => Number(d.totalRevenue || d.revenue || 0)),
+    const labels = data.map(d => d.period || d.month || 'Unknown');
+    const revenues = data.map(d => Number(d.totalRevenue || d.revenue || 0));
+    const profits = data.map(d => Number(d.totalProfit || d.profit || 0));
+
+    const mode = this.chartViewMode();
+    const datasets: any[] = [];
+
+    if (mode === 'revenue' || mode === 'both') {
+      datasets.push({
+        label: 'Revenue (₹)',
+        data: revenues,
         backgroundColor: '#b91c1c',
-        borderRadius: 6
+        borderRadius: 4
+      });
+    }
+    if (mode === 'profit' || mode === 'both') {
+      datasets.push({
+        label: 'Profit (₹)',
+        data: profits,
+        backgroundColor: '#f59e0b',
+        borderRadius: 4
+      });
+    }
+
+    this.barChartData = { labels, datasets };
+
+    // Update pie chart data (always from latest revenueByPaymentMethod)
+    this.updatePaymentPieChart();
+  }
+
+  setChartViewMode(mode: 'revenue' | 'profit' | 'both') {
+    this.chartViewMode.set(mode);
+    this.updateChart(this.salesData());
+  }
+
+  private updatePaymentPieChart() {
+    const breakdown = this.revenueByPaymentMethod();
+    const entries = Object.entries(breakdown).filter(([, v]) => (v || 0) > 0);
+    const labels = entries.map(([k]) => this.paymentMethodLabel(k));
+    const values = entries.map(([, v]) => v);
+
+    this.paymentPieData = {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: ['#b91c1c', '#f59e0b', '#10b981', '#6b7280', '#3b82f6'],
+        borderWidth: 1
       }]
     };
+  }
+
+  // Simple previous vs current comparison (based on sorted periods in salesData)
+  getRevenuePeriodComparison() {
+    const data = this.salesData();
+    if (!data || data.length < 2) return null;
+    const sorted = [...data].sort((a, b) => (a.period || '').localeCompare(b.period || ''));
+    const latest = Number(sorted[sorted.length - 1].totalRevenue || 0);
+    const prev = Number(sorted[sorted.length - 2].totalRevenue || 0);
+    if (prev === 0) return null;
+    const pct = ((latest - prev) / prev) * 100;
+    return { latest, prev, pct, direction: pct >= 0 ? 'up' : 'down' };
+  }
+
+  getProfitPeriodComparison() {
+    const data = this.salesData();
+    if (!data || data.length < 2) return null;
+    const sorted = [...data].sort((a, b) => (a.period || '').localeCompare(b.period || ''));
+    const latest = Number(sorted[sorted.length - 1].totalProfit || 0);
+    const prev = Number(sorted[sorted.length - 2].totalProfit || 0);
+    if (prev === 0) return null;
+    const pct = ((latest - prev) / prev) * 100;
+    return { latest, prev, pct, direction: pct >= 0 ? 'up' : 'down' };
+  }
+
+  // CSV export for current chart data
+  downloadRevenueCsv() {
+    const data = this.salesData();
+    if (!data.length) return;
+    const headers = ['Period', 'Revenue', 'Profit', 'Orders'];
+    const rows = data.map(d => [
+      d.period || '',
+      d.totalRevenue || 0,
+      d.totalProfit || 0,
+      d.totalOrders || 0
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `revenue-analytics-${this.currentTimeframe()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Download chart as PNG (simple canvas capture)
+  downloadRevenueChartImage() {
+    const canvas = document.querySelector('#revenue-analytics-chart canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = `revenue-chart-${this.currentTimeframe()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
   }
 
   ngOnDestroy(): void {
