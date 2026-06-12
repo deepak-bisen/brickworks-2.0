@@ -157,6 +157,54 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return ['PAYMENT_RECEIVED', 'CONFIRMED_COD', 'IN_PRODUCTION', 'DISPATCHED', 'DELIVERED'].includes(status);
   }
 
+  // Search + Sort for admin live orders / quotes / UTR list
+  searchTerm = signal<string>('');
+  sortMode = signal<'newest' | 'oldest' | 'status'>('newest');
+  expandedOrderId = signal<string | null>(null);
+
+  onSearch(event: Event) {
+    this.searchTerm.set((event.target as HTMLInputElement).value || '');
+  }
+
+  onSortChange(mode: string) {
+    this.sortMode.set(mode as any);
+  }
+
+  toggleOrderDetails(orderId: string) {
+    this.expandedOrderId.set(this.expandedOrderId() === orderId ? null : orderId);
+  }
+
+  // Processed list: applies search (name/phone/address) + sort on top of the sub-tab filtered list.
+  // Keeps original counts for tab labels.
+  filteredAndSortedOrders = computed(() => {
+    let list = [...this.displayedOrdersList()];
+    const term = this.searchTerm().toLowerCase().trim();
+    if (term) {
+      list = list.filter((o: any) => {
+        const name = (o.customerName || '').toLowerCase();
+        const phone = (o.customerPhone || '').toLowerCase();
+        const addr = (o.deliveryAddress || o.deliveryLocation || '').toLowerCase();
+        return name.includes(term) || phone.includes(term) || addr.includes(term);
+      });
+    }
+    const mode = this.sortMode();
+    list.sort((a: any, b: any) => {
+      if (mode === 'newest') {
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      } else if (mode === 'oldest') {
+        return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+      } else if (mode === 'status') {
+        const priority: Record<string, number> = {
+          'PENDING_PAYMENT': 1, 'CONFIRMED_COD': 2, 'PAYMENT_RECEIVED': 2,
+          'IN_PRODUCTION': 3, 'DISPATCHED': 4, 'DELIVERED': 5, 'CANCELLED': 6, 'QUOTE_REQUEST': 0
+        };
+        return (priority[a.status] || 99) - (priority[b.status] || 99);
+      }
+      return 0;
+    });
+    return list;
+  });
+
   ngOnInit(): void {
     this.loadDashboardMetrics();
     this.loadMessages();
@@ -181,6 +229,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   switchOrderSubTab(tab: 'orders' | 'quotes' | 'utr') {
     this.orderSubTab.set(tab);
     this.openActionMenuId.set(null);
+    this.searchTerm.set('');
+    this.expandedOrderId.set(null);
     if (tab === 'utr' && this.orders().length > 0) {
       this.loadPaymentsForPendingOrders(this.orders());
     }

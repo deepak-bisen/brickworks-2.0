@@ -64,57 +64,62 @@
     @if (activeTab() === 'overview') {
     <div class="space-y-8 animate-fade-in-up">
       <section class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <!-- Clarified metrics: basis explained. Values are raw DB sums (no client-side floor/ceil/round in calculations). -->
         <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border-t-8 border-red-700">
-          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Total Production</h3>
+          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Total Bricks Produced</h3>
+          <p class="text-[10px] text-gray-400 -mt-0.5 mb-1">All-time from factory logs (cumulative output)</p>
           @if (isLoading()) {
             <div class="mt-3"><app-skeleton-block height="lg" /></div>
           } @else {
-            <p class="text-2xl md:text-4xl font-black mt-2">{{ totalBricksProduced() | number }}</p>
+            <p class="text-2xl md:text-4xl font-black mt-1">{{ totalBricksProduced() | number:'1.0-0' }}</p>
           }
         </div>
         <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border-t-8 border-blue-700">
-          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">System Orders</h3>
+          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Paid Orders (Period)</h3>
+          <p class="text-[10px] text-gray-400 -mt-0.5 mb-1">Count of paid/live orders in selected timeframe</p>
           @if (isLoading()) {
             <div class="mt-3"><app-skeleton-block height="lg" /></div>
           } @else {
-            <p class="text-2xl md:text-4xl font-black mt-2">{{ totalOrdersCount() }}</p>
+            <p class="text-2xl md:text-4xl font-black mt-1">{{ totalOrdersCount() | number:'1.0-0' }}</p>
           }
         </div>
         <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border-t-8 border-green-700">
-          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Gross Income</h3>
+          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Gross Revenue (Paid)</h3>
+          <p class="text-[10px] text-gray-400 -mt-0.5 mb-1">Sum of total_amount for paid orders only (excl. PENDING/CANCELLED)</p>
           @if (isLoading()) {
             <div class="mt-3"><app-skeleton-block height="lg" /></div>
           } @else {
-            <p class="text-2xl md:text-4xl font-black mt-2">₹{{ totalRevenue() | number:'1.0-2' }}</p>
+            <p class="text-2xl md:text-4xl font-black mt-1">₹{{ totalRevenue() | number:'1.0-0' }}</p>
           }
         </div>
         <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border-t-8 border-amber-700">
-          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Total Profit</h3>
+          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Net Profit (Paid)</h3>
+          <p class="text-[10px] text-gray-400 -mt-0.5 mb-1">From analytics (after tax adj). Raw sums, no rounding applied in calc.</p>
           @if (isLoading()) {
             <div class="mt-3"><app-skeleton-block height="lg" /></div>
           } @else {
-            <p class="text-2xl md:text-4xl font-black mt-2">₹{{ totalProfit() | number:'1.0-2' }}</p>
+            <p class="text-2xl md:text-4xl font-black mt-1">₹{{ totalProfit() | number:'1.0-0' }}</p>
             <p class="text-xs text-gray-500 mt-1">Margin: {{ profitMarginPercent() | number:'1.0-1' }}%</p>
           }
         </div>
 
-        <!-- Realized vs Pipeline cards -->
+        <!-- Realized vs Pipeline cards (client-side on current loaded live orders for real-time feel; backend analytics is the source of truth for historical gross/profit) -->
         <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border-t-8 border-blue-700">
-          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Realized Revenue</h3>
+          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Realized Revenue (Live Paid)</h3>
           @if (isLoading()) {
             <div class="mt-3"><app-skeleton-block height="lg" /></div>
           } @else {
             <p class="text-2xl md:text-4xl font-black mt-2">₹{{ realizedOrderValue() | number:'1.0-0' }}</p>
-            <p class="text-xs text-green-600">Only paid / live orders</p>
+            <p class="text-xs text-green-600">Current paid/live orders only (PAYMENT_RECEIVED → DELIVERED). Exact value from loaded data.</p>
           }
         </div>
         <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border-t-8 border-gray-400">
-          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Pipeline Value</h3>
+          <h3 class="text-gray-400 font-bold uppercase text-[10px] md:text-xs">Pipeline Value (incl. Awaiting Payment)</h3>
           @if (isLoading()) {
             <div class="mt-3"><app-skeleton-block height="lg" /></div>
           } @else {
             <p class="text-2xl md:text-4xl font-black mt-2">₹{{ pipelineOrderValue() | number:'1.0-0' }}</p>
-            <p class="text-xs text-gray-500">Including PENDING_PAYMENT</p>
+            <p class="text-xs text-gray-500">All open orders including PENDING_PAYMENT. No rounding in summation.</p>
           }
         </div>
       </section>
@@ -255,6 +260,28 @@
       </button>
     </div>
 
+    <!-- Search + Sort toolbar for admin orders (affects current sub-tab) -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-4">
+      <input
+        type="text"
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+        placeholder="Search by customer name, phone or address..."
+        class="flex-1 px-4 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:border-red-600 bg-white"
+      />
+      <select
+        [value]="sortMode()"
+        (change)="onSortChange(($any($event.target)).value)"
+        class="px-3 py-2 rounded-xl border border-gray-300 text-sm bg-white font-bold">
+        <option value="newest">Sort: Newest first</option>
+        <option value="oldest">Sort: Oldest first</option>
+        <option value="status">Sort: By status (progress)</option>
+      </select>
+      @if (searchTerm()) {
+        <button (click)="searchTerm.set('');" class="text-xs px-3 py-2 border rounded-xl text-gray-500 hover:bg-gray-100">Clear</button>
+      }
+    </div>
+
     @if (orderSubTab() === 'quotes') {
       <div class="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-xl text-sm text-purple-900">
         <p class="font-bold">Quote pipeline</p>
@@ -274,7 +301,7 @@
 
     <!-- Mobile card layout -->
     <div class="md:hidden space-y-4 mb-6">
-      @for (order of displayedOrdersList(); track order.orderId) {
+      @for (order of filteredAndSortedOrders(); track order.orderId) {
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
           [class.ring-2]="processingOrderId() === order.orderId"
           [class.ring-blue-200]="processingOrderId() === order.orderId">
@@ -283,7 +310,13 @@
               <p class="font-bold text-gray-900">{{ order.customerName || 'No Name' }}</p>
               <p class="text-xs text-gray-500 font-mono mt-1">#{{ order.orderId.toString().substring(0, 12) }}...</p>
             </div>
-            <app-status-badge [status]="order.status" />
+            <div class="flex items-center gap-1">
+              <app-status-badge [status]="order.status" />
+              @if (order.paymentMethod) {
+                <span class="text-[9px] px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-extrabold">{{ order.paymentMethod }}</span>
+              }
+              <button (click)="toggleOrderDetails(order.orderId)" class="ml-1 text-[9px] px-2 py-0.5 border rounded text-gray-500 hover:bg-gray-100">Details</button>
+            </div>
           </div>
           <div class="text-sm text-gray-600 space-y-1 mb-3">
             <p>{{ order.createdAt | date:'dd MMM yyyy, shortTime' }}</p>
@@ -294,6 +327,20 @@
               </p>
             }
           </div>
+
+          <!-- Inline order item details (like customer order history detail) - toggleable -->
+          @if (expandedOrderId() === order.orderId && order.items && order.items.length) {
+            <div class="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs">
+              <div class="font-extrabold mb-1.5 text-gray-700">Order Items ({{ order.items.length }})</div>
+              @for (item of order.items; track item.id || $index) {
+                <div class="flex justify-between py-0.5 border-b border-gray-100 last:border-0">
+                  <span class="font-medium">{{ item.productName || ('Item ' + (item.productId || '')) }} × {{ item.quantity || 1 }}</span>
+                  <span class="font-mono">₹{{ (item.pricePerUnit || 0) * (item.quantity || 1) | number:'1.0-0' }}</span>
+                </div>
+              }
+              <div class="pt-1 text-right text-[10px] text-gray-500">Total shown above includes discounts/tax handling.</div>
+            </div>
+          }
           <div class="flex flex-wrap gap-2 mb-2">
             @if (orderSubTab() === 'quotes' && order.status === 'QUOTE_REQUEST') {
               <button type="button" (click)="convertToOrder(order)"
@@ -385,7 +432,7 @@
           </thead>
           <tbody class="divide-y divide-gray-200">
 
-            @for (order of displayedOrdersList(); track order.orderId)
+            @for (order of filteredAndSortedOrders(); track order.orderId)
             {
             <tr class="hover:bg-gray-50/80 transition-colors"
               [class.bg-blue-50]="processingOrderId() === order.orderId">
@@ -447,18 +494,30 @@
                   </td>
 
               <td class="p-5 text-center">
-                <div class="flex flex-col items-center gap-2">
+                <div class="flex flex-col items-center gap-1.5">
                   <app-status-badge [status]="order.status" />
-              @if (isRealizedOrder(order.status)) {
-                <span class="ml-2 text-[9px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-bold">Realized</span>
-              } @else if (order.status === 'PENDING_PAYMENT') {
-                <span class="ml-2 text-[9px] px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded font-bold">Pipeline</span>
-              }
+            @if (order.paymentMethod) {
+              <span class="text-[9px] ml-1 px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-extrabold">{{ order.paymentMethod }}</span>
+            }
+                  @if (order.paymentMethod) {
+                    <span class="text-[9px] px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-extrabold tracking-wider">
+                      Paid: {{ order.paymentMethod }}
+                    </span>
+                  }
+                  @if (isRealizedOrder(order.status)) {
+                    <span class="text-[9px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-bold">Realized</span>
+                  } @else if (order.status === 'PENDING_PAYMENT') {
+                    <span class="text-[9px] px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded font-bold">Pipeline</span>
+                  }
                   @if (paymentForOrder(order.orderId)?.utrNumber) {
                     <span class="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-1 rounded border border-amber-200">
                       UTR: {{ paymentForOrder(order.orderId).utrNumber }}
                     </span>
                   }
+                  <button (click)="toggleOrderDetails(order.orderId); $event.stopPropagation()"
+                    class="mt-1 text-[9px] font-bold px-2 py-0.5 rounded border border-gray-300 hover:bg-white text-gray-600">
+                    {{ expandedOrderId() === order.orderId ? 'Hide' : 'View' }} details
+                  </button>
                 </div>
               </td>
 
@@ -544,6 +603,42 @@
         </table>
       </div>
     </div>
+
+    <!-- Desktop order details panel (mirrors customer order detail view) -->
+    @if (expandedOrderId(); as oid) {
+      @for (order of filteredAndSortedOrders(); track order.orderId) {
+        @if (order.orderId === oid && order.items?.length) {
+          <div class="mt-3 p-5 bg-white border border-gray-200 rounded-2xl shadow-sm text-sm">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <span class="font-extrabold">Order Details</span>
+                <span class="ml-2 font-mono text-xs text-gray-500">#{{ oid }}</span>
+              </div>
+              <button (click)="expandedOrderId.set(null)" class="text-xs px-3 py-1 border rounded-lg">Close</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 text-xs">
+              <div>
+                <div class="font-bold mb-1">Items</div>
+                @for (item of order.items; track item.id || $index) {
+                  <div class="flex justify-between py-px">
+                    <span>{{ item.productName || item.productId }} × {{ item.quantity }}</span>
+                    <span class="font-mono">₹{{ ((item.pricePerUnit || 0) * (item.quantity || 1)) | number:'1.0-0' }}</span>
+                  </div>
+                }
+              </div>
+              <div class="text-gray-600 mt-2 md:mt-0">
+                <div><span class="font-medium">Customer:</span> {{ order.customerName }} ({{ order.customerPhone }})</div>
+                <div><span class="font-medium">Address:</span> {{ order.deliveryAddress || order.deliveryLocation }}</div>
+                @if (order.paymentMethod) {
+                  <div><span class="font-medium">Payment Method:</span> {{ order.paymentMethod }}</div>
+                }
+                <div class="mt-1 text-[10px] text-gray-400">Gross: ₹{{ order.grossAmount | number:'1.0-0' }} • Net: ₹{{ order.totalAmount | number:'1.0-0' }} • Profit: ₹{{ order.netProfit | number:'1.0-0' }}</div>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    }
     }
     }
 
