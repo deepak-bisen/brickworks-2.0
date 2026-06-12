@@ -216,6 +216,18 @@ export class ProductListComponent implements OnInit, OnDestroy {
     return item?.quantity ?? 0;
   }
 
+  isProductInCart(productId: string): boolean {
+    return this.cartQuantity(productId) > 0;
+  }
+
+  goToCartOrAddToCart(product: Product) {
+    if (this.isProductInCart(product.productId)) {
+      this.router.navigate(['/cart']);
+    } else {
+      this.addToCart(product);
+    }
+  }
+
   lineTotal(product: Product, quantity: number): number {
     const gross = product.unitPrice * quantity;
     if (product.bulkDiscountThreshold && quantity >= product.bulkDiscountThreshold) {

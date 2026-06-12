@@ -225,12 +225,13 @@
                         class="catalog-card-cta-btn catalog-card-cta-btn--secondary">
                         Quote
                       </button>
-                      <button type="button" (click)="addToCart(product)"
-                        [disabled]="product.stockQuantity < getQuantity(product.productId)"
+                      <button type="button" (click)="goToCartOrAddToCart(product)"
+                        [disabled]="!isProductInCart(product.productId) && product.stockQuantity < getQuantity(product.productId)"
                         class="catalog-card-cta-btn"
-                        [class.catalog-card-cta-btn--primary]="product.stockQuantity >= getQuantity(product.productId)"
-                        [class.catalog-card-cta-btn--disabled]="product.stockQuantity < getQuantity(product.productId)">
-                        {{ product.stockQuantity < getQuantity(product.productId) ? 'No stock' : 'Add to cart' }}
+                        [class.catalog-card-cta-btn--primary]="!isProductInCart(product.productId) && product.stockQuantity >= getQuantity(product.productId)"
+                        [class.catalog-card-cta-btn--success]="isProductInCart(product.productId)"
+                        [class.catalog-card-cta-btn--disabled]="!isProductInCart(product.productId) && product.stockQuantity < getQuantity(product.productId)">
+                        {{ isProductInCart(product.productId) ? 'Go to cart' : (product.stockQuantity < getQuantity(product.productId) ? 'No stock' : 'Add to cart') }}
                       </button>
                     </div>
                   </div>
