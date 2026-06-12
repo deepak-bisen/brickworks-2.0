@@ -46,6 +46,7 @@ public interface OrderController {
     ResponseEntity<?> trackOrder(@RequestParam("orderId") String orderId, @RequestParam("phone") String phone);
 
     // Admin resend notifications action for visibility/reliability
+    // driverDetails optional for re-sending dispatch info with structured details (JSON)
     @PostMapping("/{id}/resend-notifications")
-    ResponseEntity<?> resendNotifications(@PathVariable("id") String id);
+    ResponseEntity<?> resendNotifications(@PathVariable("id") String id, @RequestParam(value = "driverDetails", required = false) String driverDetails);
 }

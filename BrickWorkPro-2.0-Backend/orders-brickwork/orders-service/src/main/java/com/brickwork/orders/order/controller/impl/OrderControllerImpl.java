@@ -63,8 +63,8 @@ public class OrderControllerImpl implements OrderController {
     }
 
     @Override
-    public ResponseEntity<?> resendNotifications(@PathVariable("id") String id) {
-        orderService.resendNotifications(id);
+    public ResponseEntity<?> resendNotifications(@PathVariable("id") String id, @RequestParam(value = "driverDetails", required = false) String driverDetails) {
+        orderService.resendNotifications(id, driverDetails);
         return ResponseEntity.ok("Notifications resent for order " + id + ". Check logs for delivery status.");
     }
 }

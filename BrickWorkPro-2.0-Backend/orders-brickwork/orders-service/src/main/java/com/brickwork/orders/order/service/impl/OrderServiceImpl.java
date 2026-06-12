@@ -269,9 +269,7 @@ public class OrderServiceImpl implements OrderService {
             try {
                 String phone = formatPhoneNumberForWhatsApp(order.getCustomerPhone());
 
-                String finalDriverDetails = (driverDetails == null || driverDetails.trim().isEmpty())
-                        ? "Details will be shared shortly or contact support."
-                        : driverDetails;
+                String finalDriverDetails = formatDriverDetails(driverDetails);
 
                 boolean waOk = whatsAppNotificationService.sendDispatchNotification(phone, orderId, finalDriverDetails);
                 boolean emailOk = emailNotificationService.sendDispatchEmail(order.getCustomerEmail(), order.getCustomerName(), orderId, finalDriverDetails);
@@ -328,7 +326,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public void resendNotifications(String orderId) {
+    public void resendNotifications(String orderId, String driverDetails) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found"));
 
@@ -345,7 +343,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         if ("DISPATCHED".equalsIgnoreCase(status) || "DELIVERED".equalsIgnoreCase(status)) {
-            String driver = "Details available in your order portal or contact support.";
+            String driver = formatDriverDetails(driverDetails);
             waOk = whatsAppNotificationService.sendDispatchNotification(phone, orderId, driver);
             emailOk = emailNotificationService.sendDispatchEmail(order.getCustomerEmail(), order.getCustomerName(), orderId, driver);
             log.info("Order {}: RESEND dispatch notifications. WhatsAppOk={}, EmailOk={}", orderId, waOk, emailOk);
@@ -354,6 +352,29 @@ public class OrderServiceImpl implements OrderService {
         order.setLastNotificationSentAt(LocalDateTime.now());
         order.setLastNotificationStatus("RESEND_ATTEMPTED|EMAIL_" + (emailOk ? "SENT" : "ATTEMPTED") + "|WHATSAPP_" + (waOk ? "SENT" : "ATTEMPTED"));
         orderRepository.save(order);
+    }
+
+    private String formatDriverDetails(String driverDetailsJson) {
+        if (driverDetailsJson == null || driverDetailsJson.trim().isEmpty()) {
+            return "Details will be shared shortly or contact support.";
+        }
+        try {
+            // support JSON structured or raw string
+            if (driverDetailsJson.trim().startsWith("{")) {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                java.util.Map<String, String> map = mapper.readValue(driverDetailsJson, new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, String>>() {});
+                StringBuilder sb = new StringBuilder();
+                if (map.get("driverName") != null && !map.get("driverName").isEmpty()) sb.append("Driver: ").append(map.get("driverName")).append(" | ");
+                if (map.get("driverPhone") != null && !map.get("driverPhone").isEmpty()) sb.append("Phone: ").append(map.get("driverPhone")).append(" | ");
+                if (map.get("vehicleNumber") != null && !map.get("vehicleNumber").isEmpty()) sb.append("Vehicle: ").append(map.get("vehicleNumber")).append(" | ");
+                if (map.get("notes") != null && !map.get("notes").isEmpty()) sb.append("Notes: ").append(map.get("notes"));
+                String result = sb.toString().replaceAll(" \\| $", "").trim();
+                return result.isEmpty() ? "Details will be shared shortly or contact support." : result;
+            }
+            return driverDetailsJson;
+        } catch (Exception e) {
+            return driverDetailsJson; // fallback
+        }
     }
 
     private void validateOrderOwnership(Order order) {

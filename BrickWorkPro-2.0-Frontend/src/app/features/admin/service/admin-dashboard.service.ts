@@ -164,12 +164,25 @@ export class AdminDashboardService {
       | 'DELIVERED'
       | 'IN_PRODUCTION'
       | 'PAYMENT_RECEIVED',
+    driverDetails?: string,
   ): Observable<any> {
+    let url = `${this.baseUrl}/api/orders/${orderId}/status?status=${status}`;
+    if (driverDetails) {
+      url += `&driverDetails=${encodeURIComponent(driverDetails)}`;
+    }
     return this.http.put(
-      `${this.baseUrl}/api/orders/${orderId}/status?status=${status}`,
+      url,
       {},
-      { responseType: 'text' }, // <--- BAS YE EK LINE ADD KARNI HAI
+      { responseType: 'text' },
     );
+  }
+
+  resendNotifications(orderId: string | number, driverDetails?: string): Observable<any> {
+    let url = `${this.baseUrl}/api/orders/${orderId}/resend-notifications`;
+    if (driverDetails) {
+      url += `?driverDetails=${encodeURIComponent(driverDetails)}`;
+    }
+    return this.http.post(url, {}, { responseType: 'text' });
   }
 
   getAllMessages(): Observable<any[]> {

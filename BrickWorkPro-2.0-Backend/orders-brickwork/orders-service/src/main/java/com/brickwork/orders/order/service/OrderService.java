@@ -26,5 +26,5 @@ public interface OrderService {
 
     OrderResponseDTO trackPublicOrder(String orderId, String phone);
 
-    void resendNotifications(String orderId);
+    void resendNotifications(String orderId, String driverDetails);
 }

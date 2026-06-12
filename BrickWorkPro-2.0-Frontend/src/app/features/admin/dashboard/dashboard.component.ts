@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, OnDestroy, signal, computed, ChangeDetectionStrategy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdminDashboardService } from '../service/admin-dashboard.service';
@@ -22,7 +23,7 @@ import { SkeletonBlockComponent } from '../../../shared/components/skeleton-bloc
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, BaseChartDirective, UtrVerificationModalComponent, StatusBadgeComponent, LoadingSpinnerComponent, SkeletonBlockComponent],
+  imports: [CommonModule, RouterLink, BaseChartDirective, UtrVerificationModalComponent, StatusBadgeComponent, LoadingSpinnerComponent, SkeletonBlockComponent, FormsModule],
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -575,10 +576,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (ok) this.updateOrderStatus(order.orderId, 'CONFIRMED_COD');
   }
 
-  updateOrderStatus(orderId: string | number, status: 'PENDING_PAYMENT' | 'CONFIRMED_COD' | 'CANCELLED' | 'DISPATCHED' | 'DELIVERED' | 'IN_PRODUCTION' | 'APPROVED' | 'REJECTED') {
+  updateOrderStatus(orderId: string | number, status: 'PENDING_PAYMENT' | 'CONFIRMED_COD' | 'CANCELLED' | 'DISPATCHED' | 'DELIVERED' | 'IN_PRODUCTION' | 'APPROVED' | 'REJECTED', driverDetails?: string) {
     const resolvedStatus = status === 'APPROVED' ? 'CONFIRMED_COD' : status === 'REJECTED' ? 'CANCELLED' : status;
 
-    this.dashboardService.updateOrderStatus(orderId, resolvedStatus as any).subscribe({
+    this.dashboardService.updateOrderStatus(orderId, resolvedStatus as any, driverDetails).subscribe({
       next: () => {
         this.processingOrderId.set(null);
         this.openActionMenuId.set(null);
@@ -589,6 +590,57 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.processingOrderId.set(null);
       }
     });
+  }
+
+  // Driver details modal for dispatch (structured, optional, transient)
+  dispatchingOrder = signal<any | null>(null);
+  isResendDispatch = signal(false);
+  driverDetailsForm = signal({
+    driverName: '',
+    driverPhone: '',
+    vehicleNumber: '',
+    notes: ''
+  });
+
+  startDispatch(order: any) {
+    this.dispatchingOrder.set(order);
+    this.isResendDispatch.set(false);
+    this.driverDetailsForm.set({ driverName: '', driverPhone: '', vehicleNumber: '', notes: '' });
+  }
+
+  startResendDispatch(order: any) {
+    this.dispatchingOrder.set(order);
+    this.isResendDispatch.set(true);
+    this.driverDetailsForm.set({ driverName: '', driverPhone: '', vehicleNumber: '', notes: '' });
+  }
+
+  closeDispatchModal() {
+    this.dispatchingOrder.set(null);
+    this.isResendDispatch.set(false);
+  }
+
+  submitDispatch() {
+    const order = this.dispatchingOrder();
+    if (!order) return;
+    const form = this.driverDetailsForm();
+    const driverDetailsJson = JSON.stringify(form);
+    if (this.isResendDispatch()) {
+      this.dashboardService.resendNotifications(order.orderId, driverDetailsJson).subscribe({
+        next: () => {
+          this.notification.success('Dispatch info re-sent with driver details.');
+          this.loadOrders();
+          this.closeDispatchModal();
+        },
+        error: () => this.closeDispatchModal()
+      });
+    } else {
+      this.updateOrderStatus(order.orderId, 'DISPATCHED', driverDetailsJson);
+      this.closeDispatchModal();
+    }
+  }
+
+  updateDriverField(field: 'driverName' | 'driverPhone' | 'vehicleNumber' | 'notes', value: string) {
+    this.driverDetailsForm.update(f => ({ ...f, [field]: value }));
   }
 
   async rejectOrder(order: any) {

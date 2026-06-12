@@ -330,6 +330,29 @@
       }
     </div>
 
+    <!-- Simple driver details modal (optional, structured, for dispatch / re-send) -->
+    @if (dispatchingOrder(); as ord) {
+      <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50" (click)="closeDispatchModal()">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-5" (click)="$event.stopPropagation()">
+          <div class="font-extrabold text-lg mb-1">{{ isResendDispatch() ? 'Re-send Dispatch Info' : 'Enter Driver Details' }}</div>
+          <div class="text-xs text-gray-500 mb-3">Optional — will be included in the dispatch notification to the customer.</div>
+
+          <div class="space-y-2.5">
+            <input [ngModel]="driverDetailsForm().driverName" (ngModelChange)="updateDriverField('driverName', $event)" type="text" placeholder="Driver Name" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-600" />
+            <input [ngModel]="driverDetailsForm().driverPhone" (ngModelChange)="updateDriverField('driverPhone', $event)" type="text" placeholder="Driver Phone" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-600" />
+            <input [ngModel]="driverDetailsForm().vehicleNumber" (ngModelChange)="updateDriverField('vehicleNumber', $event)" type="text" placeholder="Vehicle Number" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-600" />
+            <textarea [ngModel]="driverDetailsForm().notes" (ngModelChange)="updateDriverField('notes', $event)" placeholder="Additional Notes (optional)" rows="2" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-600"></textarea>
+          </div>
+
+          <div class="flex gap-2 mt-4">
+            <button (click)="submitDispatch()" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">Send with details</button>
+            <button (click)="submitDispatch()" class="flex-1 py-2.5 rounded-xl border font-bold text-sm">Send without details</button>
+          </div>
+          <button (click)="closeDispatchModal()" class="mt-2 w-full text-center text-xs text-gray-500 py-1">Cancel</button>
+        </div>
+      </div>
+    }
+
     <!-- Order Details Modal - clean "new detailed card" UX. Does not pollute the list or appear after the orders. -->
     @if (selectedOrderDetails(); as order) {
       <div class="fixed inset-0 z-[100] flex items-start justify-center bg-black/60 pt-12 md:pt-20" (click)="closeOrderDetails()">
@@ -504,7 +527,7 @@
                 Start Production
               </button>
             } @else if (order.status === 'IN_PRODUCTION') {
-              <button type="button" (click)="updateOrderStatus(order.orderId, 'DISPATCHED')"
+              <button type="button" (click)="startDispatch(order)"
                 class="w-full py-3 rounded-xl bg-blue-600 text-white text-xs font-bold uppercase tracking-wide">
                 Mark Dispatched
               </button>
@@ -513,6 +536,7 @@
                 class="w-full py-3 rounded-xl bg-indigo-600 text-white text-xs font-bold uppercase tracking-wide">
                 Mark Delivered
               </button>
+              <button type="button" (click)="startResendDispatch(order)" class="w-full py-3 rounded-xl border text-xs font-bold">Re-send Dispatch Info</button>
             }
           </div>
 
@@ -536,9 +560,10 @@
                 } @else if (order.status === 'CONFIRMED_COD' || order.status === 'PAYMENT_RECEIVED') {
                   <button (click)="updateOrderStatus(order.orderId, 'IN_PRODUCTION'); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-green-700 hover:bg-white rounded-lg">Start Production</button>
                 } @else if (order.status === 'IN_PRODUCTION') {
-                  <button (click)="updateOrderStatus(order.orderId, 'DISPATCHED'); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-blue-700 hover:bg-white rounded-lg">Dispatch</button>
+                  <button (click)="startDispatch(order); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-blue-700 hover:bg-white rounded-lg">Dispatch</button>
                 } @else if (order.status === 'DISPATCHED') {
                   <button (click)="updateOrderStatus(order.orderId, 'DELIVERED'); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-indigo-700 hover:bg-white rounded-lg">Mark Delivered</button>
+                  <button (click)="startResendDispatch(order); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-blue-700 hover:bg-white rounded-lg">Re-send Dispatch Info</button>
                 } @else if (order.status === 'CANCELLED') {
                   <button (click)="processRefund(order); closeActionMenu()" class="w-full text-left px-3 py-2 text-sm font-bold text-orange-700 hover:bg-white rounded-lg">Refund</button>
                 }
@@ -698,7 +723,7 @@
                 }
 
                 @else if (orderSubTab() === 'orders' && order.status === 'IN_PRODUCTION') {
-                <button (click)="updateOrderStatus(order.orderId, 'DISPATCHED')"
+                <button (click)="startDispatch(order)"
                   class="text-blue-700 hover:bg-blue-600 hover:text-white font-bold text-[10px] uppercase tracking-wider bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 transition-all shadow-sm">
                   🚚 Dispatch
                 </button>
