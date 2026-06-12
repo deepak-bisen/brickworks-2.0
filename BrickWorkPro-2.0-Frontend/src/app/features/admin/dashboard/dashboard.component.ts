@@ -160,7 +160,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Search + Sort for admin live orders / quotes / UTR list
   searchTerm = signal<string>('');
   sortMode = signal<'newest' | 'oldest' | 'status'>('newest');
-  expandedOrderId = signal<string | null>(null);
+
+  // Proper modal for order details (clean UX - does not pollute the list or appear "after all orders")
+  selectedOrderDetails = signal<any | null>(null);
 
   onSearch(event: Event) {
     this.searchTerm.set((event.target as HTMLInputElement).value || '');
@@ -170,8 +172,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.sortMode.set(mode as any);
   }
 
-  toggleOrderDetails(orderId: string) {
-    this.expandedOrderId.set(this.expandedOrderId() === orderId ? null : orderId);
+  showOrderDetails(order: any) {
+    this.selectedOrderDetails.set(order);
+  }
+
+  closeOrderDetails() {
+    this.selectedOrderDetails.set(null);
   }
 
   // Processed list: applies search (name/phone/address) + sort on top of the sub-tab filtered list.
@@ -230,7 +236,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.orderSubTab.set(tab);
     this.openActionMenuId.set(null);
     this.searchTerm.set('');
-    this.expandedOrderId.set(null);
+    this.selectedOrderDetails.set(null);
     if (tab === 'utr' && this.orders().length > 0) {
       this.loadPaymentsForPendingOrders(this.orders());
     }

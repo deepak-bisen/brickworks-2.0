@@ -282,6 +282,106 @@
       }
     </div>
 
+    <!-- Order Details Modal - clean "new detailed card" UX. Does not pollute the list or appear after the orders. -->
+    @if (selectedOrderDetails(); as order) {
+      <div class="fixed inset-0 z-[100] flex items-start justify-center bg-black/60 pt-12 md:pt-20" (click)="closeOrderDetails()">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-3 md:mx-4 overflow-hidden border border-gray-200"
+             (click)="$event.stopPropagation()">
+          <!-- Modal Header -->
+          <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-b">
+            <div>
+              <div class="font-extrabold text-xl text-gray-900">Order Details</div>
+              <div class="text-xs font-mono text-gray-500 mt-0.5">#{{ order.orderId }}</div>
+            </div>
+            <button (click)="closeOrderDetails()" 
+                    class="text-gray-400 hover:text-gray-700 text-2xl leading-none px-2">×</button>
+          </div>
+
+          <div class="p-6 text-sm max-h-[70vh] overflow-auto">
+            <!-- Customer & Payment Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <div class="uppercase text-[10px] font-bold text-gray-400 tracking-widest mb-1">Customer</div>
+                <div class="font-bold">{{ order.customerName || 'N/A' }}</div>
+                <div class="text-gray-600">📞 {{ order.customerPhone || 'N/A' }}</div>
+                <div class="text-gray-600 mt-1">{{ order.customerEmail || '' }}</div>
+              </div>
+              <div>
+                <div class="uppercase text-[10px] font-bold text-gray-400 tracking-widest mb-1">Delivery</div>
+                <div class="text-gray-700">{{ order.deliveryAddress || order.deliveryLocation || 'No address provided' }}</div>
+                <div class="mt-3">
+                  <span class="uppercase text-[10px] font-bold text-gray-400 tracking-widest">Status</span><br>
+                  <app-status-badge [status]="order.status" />
+                  @if (order.paymentMethod) {
+                    <span class="ml-2 text-xs px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-extrabold">
+                      Paid via {{ order.paymentMethod }}
+                    </span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Financial Summary -->
+            <div class="mb-6 p-4 bg-gray-50 rounded-xl border">
+              <div class="uppercase text-[10px] font-bold text-gray-400 tracking-widest mb-2">Financials</div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-y-2 text-sm">
+                @if (order.grossAmount && order.grossAmount > (order.totalAmount || 0)) {
+                  <div>M.R.P: <span class="font-mono line-through text-gray-400">₹{{ order.grossAmount | number:'1.0-0' }}</span></div>
+                }
+                <div>Total: <span class="font-black text-base">₹{{ order.totalAmount || order.totalCost | number:'1.0-0' }}</span></div>
+                @if (order.discountApplied > 0) {
+                  <div class="text-red-600">Discount: -₹{{ order.discountApplied | number:'1.0-0' }}</div>
+                }
+                @if (order.netProfit > 0) {
+                  <div class="text-green-700 font-bold">Net Profit: +₹{{ order.netProfit | number:'1.0-0' }}</div>
+                }
+              </div>
+            </div>
+
+            <!-- Items -->
+            <div>
+              <div class="flex items-baseline justify-between mb-2">
+                <div class="uppercase text-[10px] font-bold text-gray-400 tracking-widest">Items ({{ order.items?.length || 0 }})</div>
+                @if (order.paymentMethod) {
+                  <div class="text-xs text-emerald-700 font-medium">Payment: {{ order.paymentMethod }}</div>
+                }
+              </div>
+
+              @if (order.items && order.items.length) {
+                <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+                  <thead class="bg-gray-100 text-gray-500 text-xs">
+                    <tr>
+                      <th class="text-left py-2 px-3 font-bold">Product</th>
+                      <th class="text-center py-2 px-3 font-bold">Qty</th>
+                      <th class="text-right py-2 px-3 font-bold">Unit Price</th>
+                      <th class="text-right py-2 px-3 font-bold">Line Total</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    @for (item of order.items; track item.productId || $index) {
+                      <tr>
+                        <td class="py-2 px-3 font-medium">{{ item.productName || ('Product ' + (item.productId || '')) }}</td>
+                        <td class="py-2 px-3 text-center font-mono">{{ item.quantity || 1 }}</td>
+                        <td class="py-2 px-3 text-right font-mono">₹{{ (item.unitPrice || 0) | number:'1.0-2' }}</td>
+                        <td class="py-2 px-3 text-right font-bold font-mono">₹{{ ((item.unitPrice || 0) * (item.quantity || 1)) | number:'1.0-0' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              } @else {
+                <div class="text-gray-400 text-xs italic">No item details available.</div>
+              }
+            </div>
+          </div>
+
+          <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+            <button (click)="closeOrderDetails()" 
+                    class="px-5 py-2 rounded-xl border text-sm font-bold hover:bg-white">Close</button>
+          </div>
+        </div>
+      </div>
+    }
+
     @if (orderSubTab() === 'quotes') {
       <div class="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-xl text-sm text-purple-900">
         <p class="font-bold">Quote pipeline</p>
@@ -313,9 +413,9 @@
             <div class="flex items-center gap-1">
               <app-status-badge [status]="order.status" />
               @if (order.paymentMethod) {
-                <span class="text-[9px] px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-extrabold">{{ order.paymentMethod }}</span>
+                <span class="text-[9px] px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-extrabold">Paid: {{ order.paymentMethod }}</span>
               }
-              <button (click)="toggleOrderDetails(order.orderId)" class="ml-1 text-[9px] px-2 py-0.5 border rounded text-gray-500 hover:bg-gray-100">Details</button>
+              <button (click)="showOrderDetails(order)" class="ml-1 text-[9px] px-2 py-0.5 border rounded text-gray-500 hover:bg-gray-100">Details</button>
             </div>
           </div>
           <div class="text-sm text-gray-600 space-y-1 mb-3">
@@ -328,19 +428,7 @@
             }
           </div>
 
-          <!-- Inline order item details (like customer order history detail) - toggleable -->
-          @if (expandedOrderId() === order.orderId && order.items && order.items.length) {
-            <div class="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs">
-              <div class="font-extrabold mb-1.5 text-gray-700">Order Items ({{ order.items.length }})</div>
-              @for (item of order.items; track item.id || $index) {
-                <div class="flex justify-between py-0.5 border-b border-gray-100 last:border-0">
-                  <span class="font-medium">{{ item.productName || ('Item ' + (item.productId || '')) }} × {{ item.quantity || 1 }}</span>
-                  <span class="font-mono">₹{{ (item.pricePerUnit || 0) * (item.quantity || 1) | number:'1.0-0' }}</span>
-                </div>
-              }
-              <div class="pt-1 text-right text-[10px] text-gray-500">Total shown above includes discounts/tax handling.</div>
-            </div>
-          }
+          <!-- Details are now shown in a clean modal (see below). This keeps the list tidy. -->
           <div class="flex flex-wrap gap-2 mb-2">
             @if (orderSubTab() === 'quotes' && order.status === 'QUOTE_REQUEST') {
               <button type="button" (click)="convertToOrder(order)"
@@ -494,14 +582,11 @@
                   </td>
 
               <td class="p-5 text-center">
-                <div class="flex flex-col items-center gap-1.5">
+                <div class="flex flex-col items-center gap-1">
                   <app-status-badge [status]="order.status" />
-            @if (order.paymentMethod) {
-              <span class="text-[9px] ml-1 px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-extrabold">{{ order.paymentMethod }}</span>
-            }
                   @if (order.paymentMethod) {
                     <span class="text-[9px] px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-extrabold tracking-wider">
-                      Paid: {{ order.paymentMethod }}
+                      Paid via {{ order.paymentMethod }}
                     </span>
                   }
                   @if (isRealizedOrder(order.status)) {
@@ -514,9 +599,9 @@
                       UTR: {{ paymentForOrder(order.orderId).utrNumber }}
                     </span>
                   }
-                  <button (click)="toggleOrderDetails(order.orderId); $event.stopPropagation()"
+                  <button (click)="showOrderDetails(order); $event.stopPropagation()"
                     class="mt-1 text-[9px] font-bold px-2 py-0.5 rounded border border-gray-300 hover:bg-white text-gray-600">
-                    {{ expandedOrderId() === order.orderId ? 'Hide' : 'View' }} details
+                    View details
                   </button>
                 </div>
               </td>
@@ -604,41 +689,6 @@
       </div>
     </div>
 
-    <!-- Desktop order details panel (mirrors customer order detail view) -->
-    @if (expandedOrderId(); as oid) {
-      @for (order of filteredAndSortedOrders(); track order.orderId) {
-        @if (order.orderId === oid && order.items?.length) {
-          <div class="mt-3 p-5 bg-white border border-gray-200 rounded-2xl shadow-sm text-sm">
-            <div class="flex items-center justify-between mb-3">
-              <div>
-                <span class="font-extrabold">Order Details</span>
-                <span class="ml-2 font-mono text-xs text-gray-500">#{{ oid }}</span>
-              </div>
-              <button (click)="expandedOrderId.set(null)" class="text-xs px-3 py-1 border rounded-lg">Close</button>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 text-xs">
-              <div>
-                <div class="font-bold mb-1">Items</div>
-                @for (item of order.items; track item.id || $index) {
-                  <div class="flex justify-between py-px">
-                    <span>{{ item.productName || item.productId }} × {{ item.quantity }}</span>
-                    <span class="font-mono">₹{{ ((item.pricePerUnit || 0) * (item.quantity || 1)) | number:'1.0-0' }}</span>
-                  </div>
-                }
-              </div>
-              <div class="text-gray-600 mt-2 md:mt-0">
-                <div><span class="font-medium">Customer:</span> {{ order.customerName }} ({{ order.customerPhone }})</div>
-                <div><span class="font-medium">Address:</span> {{ order.deliveryAddress || order.deliveryLocation }}</div>
-                @if (order.paymentMethod) {
-                  <div><span class="font-medium">Payment Method:</span> {{ order.paymentMethod }}</div>
-                }
-                <div class="mt-1 text-[10px] text-gray-400">Gross: ₹{{ order.grossAmount | number:'1.0-0' }} • Net: ₹{{ order.totalAmount | number:'1.0-0' }} • Profit: ₹{{ order.netProfit | number:'1.0-0' }}</div>
-              </div>
-            </div>
-          </div>
-        }
-      }
-    }
     }
     }
 

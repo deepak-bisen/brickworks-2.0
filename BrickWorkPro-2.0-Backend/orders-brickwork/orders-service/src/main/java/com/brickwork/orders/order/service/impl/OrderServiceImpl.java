@@ -199,32 +199,19 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found"));
 
+        // === PAYMENT CONFIRMATION (PAYMENT_RECEIVED or CONFIRMED_COD from PENDING_PAYMENT) ===
+        // Do NOT auto-advance to IN_PRODUCTION here. Keep the status as the paid status
+        // so admin must explicitly click "Start Production" in the dashboard.
+        // This restores the manual step: Paid (PAYMENT_RECEIVED / CONFIRMED_COD) → Start Production → IN_PRODUCTION
         if ((newStatus == OrderStatus.PAYMENT_RECEIVED || newStatus == OrderStatus.CONFIRMED_COD)
                 && (order.getStatus() == OrderStatus.PENDING_PAYMENT)) {
-            for (OrderDetails detail : order.getOrderDetails()) {
-                productClient.deductStock(detail.getProductId(), detail.getQuantity());
-            }
-            log.info("Stock deducted for order {}, moving to IN_PRODUCTION", orderId);
-            newStatus = OrderStatus.IN_PRODUCTION;
 
-            try {
-                ProductionLogFromOrderRequest productionRequest = new ProductionLogFromOrderRequest();
-                productionRequest.setOrderId(orderId);
-                productionRequest.setItems(order.getOrderDetails().stream()
-                        .map(detail -> new ProductionLogFromOrderRequest.ProductionLogFromOrderItem(
-                                detail.getProductId(), detail.getQuantity()))
-                        .collect(Collectors.toList()));
-                productionClient.createFromOrder(productionRequest);
-            } catch (Exception e) {
-                log.error("Failed to create production logs for order {}", orderId, e);
-            }
-
-            // Set payment method when confirming payment
+            // Set payment method (comes from finance service calls)
             if (paymentMethod != null && !paymentMethod.isBlank()) {
                 order.setPaymentMethod(paymentMethod);
             }
 
-            // Send confirmation notifications when payment is confirmed via update
+            // Send confirmation notifications immediately when payment is confirmed
             try {
                 String phone = formatPhoneNumberForWhatsApp(order.getCustomerPhone());
                 boolean emailOk = emailNotificationService.sendOrderConfirmationEmail(
@@ -241,6 +228,36 @@ public class OrderServiceImpl implements OrderService {
                 log.error("Order {}: Confirmation notification failed on payment", orderId, e);
                 order.setLastNotificationSentAt(LocalDateTime.now());
                 order.setLastNotificationStatus("CONFIRMATION_FAILED:" + e.getMessage());
+            }
+        }
+
+        // === EXPLICIT START PRODUCTION (IN_PRODUCTION transition) ===
+        // Perform stock deduction and create production log ONLY when admin explicitly moves the order
+        // from a paid/pending state to IN_PRODUCTION. This keeps the "Start Production" action meaningful.
+        if (newStatus == OrderStatus.IN_PRODUCTION &&
+                (order.getStatus() == OrderStatus.PENDING_PAYMENT ||
+                 order.getStatus() == OrderStatus.PAYMENT_RECEIVED ||
+                 order.getStatus() == OrderStatus.CONFIRMED_COD)) {
+
+            for (OrderDetails detail : order.getOrderDetails()) {
+                try {
+                    productClient.deductStock(detail.getProductId(), detail.getQuantity());
+                } catch (Exception ex) {
+                    log.error("Stock deduction failed for product {} in order {}", detail.getProductId(), orderId, ex);
+                }
+            }
+            log.info("Stock deducted for order {} on explicit Start Production", orderId);
+
+            try {
+                ProductionLogFromOrderRequest productionRequest = new ProductionLogFromOrderRequest();
+                productionRequest.setOrderId(orderId);
+                productionRequest.setItems(order.getOrderDetails().stream()
+                        .map(detail -> new ProductionLogFromOrderRequest.ProductionLogFromOrderItem(
+                                detail.getProductId(), detail.getQuantity()))
+                        .collect(Collectors.toList()));
+                productionClient.createFromOrder(productionRequest);
+            } catch (Exception e) {
+                log.error("Failed to create production logs for order {} on Start Production", orderId, e);
             }
         }
 
