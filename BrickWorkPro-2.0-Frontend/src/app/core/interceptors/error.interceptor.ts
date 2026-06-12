@@ -30,6 +30,17 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           return throwError(() => error);
         }
 
+        // Payment *write* actions during checkout (COD, UTR submit, Razorpay create/verify).
+        // These are now resilient on the backend (payment record is saved even if order sync lags).
+        // Let the CheckoutComponent decide the user-facing message (often a soft/recoverable error
+        // with the orderId so the user isn't scared by a global toast when the important data exists).
+        if (req.url.includes('/api/finance/payments/cod/select') ||
+            req.url.includes('/api/finance/payments/utr/submit') ||
+            req.url.includes('/api/finance/payments/create-order') ||
+            req.url.includes('/api/finance/payments/verify')) {
+          return throwError(() => error);
+        }
+
         switch (error.status) {
           case 401:
             if (req.url.includes('/api/auth/login')) {

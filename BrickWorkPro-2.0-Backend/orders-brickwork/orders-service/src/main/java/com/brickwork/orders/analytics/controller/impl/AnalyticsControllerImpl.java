@@ -1,5 +1,6 @@
 package com.brickwork.orders.analytics.controller.impl;
 
+import com.brickwork.orders.analytics.dto.PaymentMethodRevenueProjection;
 import com.brickwork.orders.analytics.dto.SalesAnalyticsProjection;
 import com.brickwork.orders.analytics.dto.TopProductResponseDTO;
 import com.brickwork.orders.analytics.service.AnalyticsService;
@@ -37,5 +38,12 @@ public class AnalyticsControllerImpl {
 
         List<TopProductResponseDTO> topProducts = analyticsService.getTopProducts(timeframe);
         return ResponseEntity.ok(topProducts);
+    }
+
+    @GetMapping("/revenue-by-payment-method")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<PaymentMethodRevenueProjection>> getRevenueByPaymentMethod() {
+        log.debug("Fetching revenue by payment method analytics");
+        return ResponseEntity.ok(analyticsService.getRevenueByPaymentMethod());
     }
 }

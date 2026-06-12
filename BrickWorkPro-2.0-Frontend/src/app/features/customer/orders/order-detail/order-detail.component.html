@@ -54,6 +54,17 @@
             }
           </div>
         </div>
+
+        <!-- Notification visibility banner (new) -->
+        @if (o.lastNotificationStatus || o.customerEmail || o.customerPhone) {
+          <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900">
+            <p class="font-bold">📬 We sent updates via email/SMS</p>
+            <p class="mt-0.5">To {{o.customerEmail || 'your registered email'}} / {{o.customerPhone || 'your phone'}}. Last recorded: <span class="font-mono">{{o.lastNotificationStatus || 'sent'}}</span>.</p>
+            @if (o.lastNotificationSentAt) {
+              <p class="text-[10px] mt-1 opacity-75">At {{o.lastNotificationSentAt | date:'short'}}</p>
+            }
+          </div>
+        }
       </div>
 
       @if (o.items && o.items.length > 0) {

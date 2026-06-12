@@ -42,4 +42,8 @@ export interface OrderResponse {
   items?: OrderItemResponse[];
   requestType?: string;
   totalCost?: number;
+
+  // Added for notification visibility (matches backend OrderResponseDTO)
+  lastNotificationSentAt?: string;
+  lastNotificationStatus?: string;
 }

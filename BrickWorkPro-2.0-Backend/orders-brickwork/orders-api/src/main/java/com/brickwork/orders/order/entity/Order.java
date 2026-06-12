@@ -51,11 +51,24 @@ public class Order {
     @Column(name = "TOTAL_AMOUNT", columnDefinition = "DOUBLE",nullable = false)
     private Double totalAmount; // Amount after discount
 
+    @Column(name = "GROSS_PROFIT", columnDefinition = "DOUBLE")
+    private Double grossProfit; // totalAmount - totalCost (before GST adjustment)
+
     @Column(name = "TOTAL_PROFIT", columnDefinition = "DOUBLE",nullable = false)
-    private Double totalProfit;
+    private Double totalProfit; // Net profit after (totalAmount / 1.18) - totalCost
+
+    @Column(name = "PAYMENT_METHOD")
+    private String paymentMethod; // CASH_ON_DELIVERY, BANK_TRANSFER, ONLINE - set on payment confirmation
 
     @Column(name = "DISCOUNT_APPLIED", columnDefinition = "DOUBLE",nullable = false)
     private Double discountApplied;
+
+    // Notification visibility & resend support
+    @Column(name = "LAST_NOTIFICATION_SENT_AT")
+    private LocalDateTime lastNotificationSentAt;
+
+    @Column(name = "LAST_NOTIFICATION_STATUS", columnDefinition = "VARCHAR(500)")
+    private String lastNotificationStatus; // e.g. "CONFIRMATION_EMAIL_SENT|WHATSAPP_SENT" or "DISPATCH_SENT|EMAIL_FAILED"
 
     // This is a relationship to OrderDetail within the SAME service's database.
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)

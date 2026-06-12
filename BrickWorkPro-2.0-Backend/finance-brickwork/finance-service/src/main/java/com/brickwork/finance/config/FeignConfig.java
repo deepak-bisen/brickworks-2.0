@@ -32,6 +32,6 @@ public class FeignConfig {
 
     @Bean
     public Request.Options feignRequestOptions() {
-        return new Request.Options(5000, 10000);
+        return new Request.Options(10000, 30000);
     }
 }

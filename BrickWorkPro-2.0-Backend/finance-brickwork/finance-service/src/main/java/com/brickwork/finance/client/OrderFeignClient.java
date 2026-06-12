@@ -18,5 +18,10 @@ public interface OrderFeignClient {
 
     // Update the status in the orders microservice when payment succeeds
     @PutMapping("/{orderId}/status")
-    void updateOrderStatus(@PathVariable("orderId") String orderId, @RequestParam("status") String status);
+    void updateOrderStatus(
+            @PathVariable("orderId") String orderId,
+            @RequestParam("status") String status,
+            @RequestParam(value = "driverDetails", required = false) String driverDetails,
+            @RequestParam(value = "paymentMethod", required = false) String paymentMethod
+    );
 }

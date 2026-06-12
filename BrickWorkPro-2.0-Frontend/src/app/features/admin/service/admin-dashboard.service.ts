@@ -26,8 +26,8 @@ export class AdminDashboardService {
       );
   }
 
-  // FIX: TopProductResponseDTO returns: period, productId, productName, totalQuantitySold
-  // There is NO 'totalRevenueGenerated' field in this DTO.
+  // Top products now correctly filtered to only paid/live orders in backend.
+  // totalRevenueGenerated = SUM(qty * price_per_unit) from paid order line items.
   getTopProducts(timeframe: string = 'monthly'): Observable<any[]> {
     return this.http
       .get<any[]>(`${this.baseUrl}/api/orders/analytics/top-products?timeframe=${timeframe}`)
@@ -37,6 +37,7 @@ export class AdminDashboardService {
             ...p,
             productName: p.productName || `Product ${p.productId}`,
             totalQuantitySold: p.totalQuantitySold ?? 0,
+            totalRevenueGenerated: p.totalRevenueGenerated ?? 0,
           })),
         ),
       );
@@ -215,5 +216,12 @@ export class AdminDashboardService {
   // NAYA: Initiate Refund API Call
   initiateRefund(orderId: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/api/finance/payments/refund/${orderId}`, {}, { responseType: 'text' });
+  }
+
+  /**
+   * Revenue by Payment Method as proper backend analytics endpoint.
+   */
+  getRevenueByPaymentMethod(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/api/orders/analytics/revenue-by-payment-method`);
   }
 }

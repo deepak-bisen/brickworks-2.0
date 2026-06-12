@@ -142,8 +142,9 @@ public class OrderServiceImpl implements OrderService {
         order.setGrossAmount(grossAmount);
         order.setTotalAmount(totalAmount);
         order.setDiscountApplied(totalDiscount);
+        order.setGrossProfit(totalAmount - totalCost); // Gross profit before GST adjustment
         double taxableRevenue = totalAmount / 1.18;
-        order.setTotalProfit(taxableRevenue - totalCost);
+        order.setTotalProfit(taxableRevenue - totalCost); // Net profit
         order.setOrderDetails(detailsList);
 
         Order savedOrder = orderRepository.save(order);
@@ -154,11 +155,19 @@ public class OrderServiceImpl implements OrderService {
         try {
             String phone = savedOrder.getCustomerPhone() != null ? savedOrder.getCustomerPhone() : "910000000000";
             if (savedOrder.getStatus() == OrderStatus.PAYMENT_RECEIVED || savedOrder.getStatus() == OrderStatus.CONFIRMED_COD) {
-                emailNotificationService.sendOrderConfirmationEmail(savedOrder.getCustomerEmail(), savedOrder.getCustomerName(), savedOrder.getOrderId(), savedOrder.getTotalAmount());
-                whatsAppNotificationService.sendOrderConfirmation(phone, savedOrder.getOrderId(), savedOrder.getTotalAmount());
+                boolean emailOk = emailNotificationService.sendOrderConfirmationEmail(savedOrder.getCustomerEmail(), savedOrder.getCustomerName(), savedOrder.getOrderId(), savedOrder.getTotalAmount());
+                boolean waOk = whatsAppNotificationService.sendOrderConfirmation(phone, savedOrder.getOrderId(), savedOrder.getTotalAmount());
+                savedOrder.setLastNotificationSentAt(LocalDateTime.now());
+                savedOrder.setLastNotificationStatus("CONFIRMATION_EMAIL_" + (emailOk ? "SENT" : "ATTEMPTED") + "|WHATSAPP_" + (waOk ? "SENT" : "ATTEMPTED"));
+                orderRepository.save(savedOrder);
+                log.info("Order {}: Confirmation notifications attempted. EmailOk={}, WhatsAppOk={}. Recipient email={}, phone={}", savedOrder.getOrderId(), emailOk, waOk, savedOrder.getCustomerEmail(), phone);
             }
         } catch (Exception e) {
-            log.error("Order creation notification failed for order {}", savedOrder.getOrderId(), e);
+            log.info("Order {}: Confirmation notification attempt failed for recipient email={} phone={} - error logged", savedOrder.getOrderId(), savedOrder.getCustomerEmail(), savedOrder.getCustomerPhone());
+            log.error("Order {}: Confirmation notification failed", savedOrder.getOrderId(), e);
+            savedOrder.setLastNotificationSentAt(LocalDateTime.now());
+            savedOrder.setLastNotificationStatus("CONFIRMATION_FAILED:" + e.getMessage());
+            orderRepository.save(savedOrder);
         }
 
         return mapToResponse(savedOrder);
@@ -177,14 +186,14 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public List<OrderResponseDTO> getOrdersByCustomer(String customerId) {
         validateCustomerAccess(customerId);
-        return orderRepository.findByCustomerId(customerId).stream()
+        return orderRepository.findByCustomerIdOrderByCreatedAtDesc(customerId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public String updateOrderStatus(String orderId, OrderStatus newStatus, String driverDetails) {
+    public String updateOrderStatus(String orderId, OrderStatus newStatus, String driverDetails, String paymentMethod) {
         validateStaffStatusChange(newStatus);
 
         Order order = orderRepository.findById(orderId)
@@ -209,6 +218,30 @@ public class OrderServiceImpl implements OrderService {
             } catch (Exception e) {
                 log.error("Failed to create production logs for order {}", orderId, e);
             }
+
+            // Set payment method when confirming payment
+            if (paymentMethod != null && !paymentMethod.isBlank()) {
+                order.setPaymentMethod(paymentMethod);
+            }
+
+            // Send confirmation notifications when payment is confirmed via update
+            try {
+                String phone = formatPhoneNumberForWhatsApp(order.getCustomerPhone());
+                boolean emailOk = emailNotificationService.sendOrderConfirmationEmail(
+                    order.getCustomerEmail(), order.getCustomerName(), orderId,
+                    order.getTotalAmount() != null ? order.getTotalAmount() : 0.0);
+                boolean waOk = whatsAppNotificationService.sendOrderConfirmation(
+                    phone, orderId, order.getTotalAmount() != null ? order.getTotalAmount() : 0.0);
+                order.setLastNotificationSentAt(LocalDateTime.now());
+                order.setLastNotificationStatus("CONFIRMATION_EMAIL_" + (emailOk ? "SENT" : "ATTEMPTED") + "|WHATSAPP_" + (waOk ? "SENT" : "ATTEMPTED"));
+                log.info("Order {}: Confirmation notifications attempted on payment confirmation. EmailOk={}, WhatsAppOk={}. Recipient email={}, phone={}", 
+                    orderId, emailOk, waOk, order.getCustomerEmail(), phone);
+            } catch (Exception e) {
+                log.info("Order {}: Confirmation notification attempt failed - error: {}", orderId, e.getMessage());
+                log.error("Order {}: Confirmation notification failed on payment", orderId, e);
+                order.setLastNotificationSentAt(LocalDateTime.now());
+                order.setLastNotificationStatus("CONFIRMATION_FAILED:" + e.getMessage());
+            }
         }
 
         order.setStatus(newStatus);
@@ -223,10 +256,18 @@ public class OrderServiceImpl implements OrderService {
                         ? "Details will be shared shortly or contact support."
                         : driverDetails;
 
-                whatsAppNotificationService.sendDispatchNotification(phone, orderId, finalDriverDetails);
-                emailNotificationService.sendDispatchEmail(order.getCustomerEmail(), order.getCustomerName(), orderId, finalDriverDetails);
+                boolean waOk = whatsAppNotificationService.sendDispatchNotification(phone, orderId, finalDriverDetails);
+                boolean emailOk = emailNotificationService.sendDispatchEmail(order.getCustomerEmail(), order.getCustomerName(), orderId, finalDriverDetails);
+                order.setLastNotificationSentAt(LocalDateTime.now());
+                order.setLastNotificationStatus("DISPATCH_WHATSAPP_" + (waOk ? "SENT" : "ATTEMPTED") + "|EMAIL_" + (emailOk ? "SENT" : "ATTEMPTED"));
+                orderRepository.save(order);
+                log.info("Order {}: Dispatch notifications attempted. WhatsAppOk={}, EmailOk={}. Recipient phone={}, email={}", orderId, waOk, emailOk, phone, order.getCustomerEmail());
             } catch (Exception e) {
-                log.error("Dispatch notification failed for order {}", orderId, e);
+                log.info("Order {}: Dispatch notification attempt failed - error: {}", orderId, e.getMessage());
+                log.error("Order {}: Dispatch notification failed", orderId, e);
+                order.setLastNotificationSentAt(LocalDateTime.now());
+                order.setLastNotificationStatus("DISPATCH_FAILED:" + e.getMessage());
+                orderRepository.save(order);
             }
         }
 
@@ -236,7 +277,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public List<OrderResponseDTO> getAllActualOrders() {
-        return orderRepository.findByStatusNot(OrderStatus.QUOTE_REQUEST)
+        return orderRepository.findByStatusNotOrderByCreatedAtDesc(OrderStatus.QUOTE_REQUEST)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -266,6 +307,36 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("Order tracked successfully: orderId={}", orderId);
         return mapToResponse(order);
+    }
+
+    @Override
+    @Transactional
+    public void resendNotifications(String orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new NotFoundException("Order not found"));
+
+        String phone = formatPhoneNumberForWhatsApp(order.getCustomerPhone());
+        String status = order.getStatus() != null ? order.getStatus().name() : "";
+
+        boolean emailOk = false;
+        boolean waOk = false;
+
+        if (status.contains("PAYMENT") || status.contains("CONFIRMED_COD") || status.contains("IN_PRODUCTION")) {
+            emailOk = emailNotificationService.sendOrderConfirmationEmail(order.getCustomerEmail(), order.getCustomerName(), orderId, order.getTotalAmount());
+            waOk = whatsAppNotificationService.sendOrderConfirmation(phone, orderId, order.getTotalAmount());
+            log.info("Order {}: RESEND confirmation notifications. EmailOk={}, WhatsAppOk={}", orderId, emailOk, waOk);
+        }
+
+        if ("DISPATCHED".equalsIgnoreCase(status) || "DELIVERED".equalsIgnoreCase(status)) {
+            String driver = "Details available in your order portal or contact support.";
+            waOk = whatsAppNotificationService.sendDispatchNotification(phone, orderId, driver);
+            emailOk = emailNotificationService.sendDispatchEmail(order.getCustomerEmail(), order.getCustomerName(), orderId, driver);
+            log.info("Order {}: RESEND dispatch notifications. WhatsAppOk={}, EmailOk={}", orderId, waOk, emailOk);
+        }
+
+        order.setLastNotificationSentAt(LocalDateTime.now());
+        order.setLastNotificationStatus("RESEND_ATTEMPTED|EMAIL_" + (emailOk ? "SENT" : "ATTEMPTED") + "|WHATSAPP_" + (waOk ? "SENT" : "ATTEMPTED"));
+        orderRepository.save(order);
     }
 
     private void validateOrderOwnership(Order order) {
@@ -335,10 +406,17 @@ public class OrderServiceImpl implements OrderService {
         response.setGrossAmount(order.getGrossAmount() != null && order.getGrossAmount() > 0
                 ? order.getGrossAmount()
                 : (order.getTotalAmount() != null ? order.getTotalAmount() : 0.0));
+        response.setGrossProfit(order.getGrossProfit());
+        response.setNetProfit(order.getTotalProfit());
+        response.setPaymentMethod(order.getPaymentMethod());
         response.setCustomerName(order.getCustomerName());
         response.setCustomerEmail(order.getCustomerEmail());
         response.setCustomerPhone(order.getCustomerPhone());
         response.setDeliveryAddress(order.getDeliveryAddress());
+
+        // Notification fields for visibility + resend
+        response.setLastNotificationSentAt(order.getLastNotificationSentAt());
+        response.setLastNotificationStatus(order.getLastNotificationStatus());
 
         if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
             List<OrderItemResponseDTO> itemDTOs = order.getOrderDetails().stream().map(detail -> {

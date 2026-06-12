@@ -15,9 +15,10 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     private JavaMailSender mailSender;
 
     @Override
-    public void sendOrderConfirmationEmail(String toEmail, String customerName, String orderId, double totalAmount) {
-        if (toEmail == null || toEmail.trim().isEmpty() || toEmail.equals("N/A")) return;
-        log.info("Sending order confirmation email to {}", toEmail);
+    public boolean sendOrderConfirmationEmail(String toEmail, String customerName, String orderId, double totalAmount) {
+        if (toEmail == null || toEmail.trim().isEmpty() || toEmail.equals("N/A")) return false;
+        log.info("Order {}: Sending CONFIRMATION EMAIL to recipient {} (success will be logged after send)", orderId, toEmail);
+        final boolean[] result = {false};
         new Thread(() -> {
             try {
                 SimpleMailMessage message = new SimpleMailMessage();
@@ -31,17 +32,21 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
                         "Regards,\nBrickWorks Pro Team");
 
                 mailSender.send(message);
-                log.info("Order confirmation email sent to {}", toEmail);
+                log.info("Order {}: CONFIRMATION EMAIL sent successfully to recipient {}", orderId, toEmail);
+                result[0] = true;
             } catch (Exception e) {
-                log.error("Failed to send order confirmation email to {}", toEmail, e);
+                log.info("Order {}: CONFIRMATION EMAIL FAILED for recipient {} - error: {}", orderId, toEmail, e.getMessage());
+                log.error("Order {}: Failed to send CONFIRMATION EMAIL to {}", orderId, toEmail, e);
             }
         }).start();
+        // Note: async, return optimistic true for caller to record attempt; detailed success in async log
+        return true;
     }
 
     @Override
-    public void sendDispatchEmail(String toEmail, String customerName, String orderId, String driverDetails) {
-        if (toEmail == null || toEmail.trim().isEmpty() || toEmail.equals("N/A")) return;
-
+    public boolean sendDispatchEmail(String toEmail, String customerName, String orderId, String driverDetails) {
+        if (toEmail == null || toEmail.trim().isEmpty() || toEmail.equals("N/A")) return false;
+        log.info("Order {}: Sending DISPATCH EMAIL to recipient {} (driver: {})", orderId, toEmail, driverDetails);
         new Thread(() -> {
             try {
                 SimpleMailMessage message = new SimpleMailMessage();
@@ -54,10 +59,12 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
                         "Regards,\nBrickWorks Pro Team");
 
                 mailSender.send(message);
-                log.info("Dispatch email sent to {}", toEmail);
+                log.info("Order {}: DISPATCH EMAIL sent successfully to recipient {}", orderId, toEmail);
             } catch (Exception e) {
-                log.error("Failed to send dispatch email to {}", toEmail, e);
+                log.info("Order {}: DISPATCH EMAIL FAILED for recipient {} - error: {}", orderId, toEmail, e.getMessage());
+                log.error("Order {}: Failed to send DISPATCH EMAIL to {}", orderId, toEmail, e);
             }
         }).start();
+        return true;
     }
 }

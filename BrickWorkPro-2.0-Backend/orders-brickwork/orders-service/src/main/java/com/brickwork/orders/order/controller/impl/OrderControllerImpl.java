@@ -47,8 +47,9 @@ public class OrderControllerImpl implements OrderController {
     public ResponseEntity<?> updateOrderStatus(
             @PathVariable("id") String id,
             @RequestParam("status") OrderStatus status,
-            @RequestParam(value = "driverDetails", required = false) String driverDetails) {
-        return ResponseEntity.ok(orderService.updateOrderStatus(id, status, driverDetails));
+            @RequestParam(value = "driverDetails", required = false) String driverDetails,
+            @RequestParam(value = "paymentMethod", required = false) String paymentMethod) {
+        return ResponseEntity.ok(orderService.updateOrderStatus(id, status, driverDetails, paymentMethod));
     }
 
     @Override
@@ -59,5 +60,11 @@ public class OrderControllerImpl implements OrderController {
     @Override
     public ResponseEntity<OrderResponseDTO> trackOrder(String orderId, String phone) {
         return ResponseEntity.ok(orderService.trackPublicOrder(orderId, phone));
+    }
+
+    @Override
+    public ResponseEntity<?> resendNotifications(@PathVariable("id") String id) {
+        orderService.resendNotifications(id);
+        return ResponseEntity.ok("Notifications resent for order " + id + ". Check logs for delivery status.");
     }
 }

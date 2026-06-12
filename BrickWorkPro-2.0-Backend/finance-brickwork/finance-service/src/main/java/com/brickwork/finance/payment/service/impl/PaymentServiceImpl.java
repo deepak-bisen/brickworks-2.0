@@ -140,8 +140,17 @@ public class PaymentServiceImpl implements PaymentService {
             paymentTransactionRepository.save(tx);
             log.info("Payment marked successful for order {}, razorpayPaymentId={}", orderId, rzpPaymentId);
 
-            // Tell Orders Microservice that payment is done!
-            orderFeignClient.updateOrderStatus(orderId, "PAYMENT_RECEIVED");
+            // IMPORTANT: Do NOT let downstream order status update failure roll back the payment
+            // or return an error to the caller (UI or webhook). The payment record is the source
+            // of truth for money movement. Order sync can be reconciled later.
+            try {
+                orderFeignClient.updateOrderStatus(orderId, "PAYMENT_RECEIVED", null, "ONLINE");
+            } catch (Exception feignEx) {
+                log.error("CRITICAL: Failed to update order {} to PAYMENT_RECEIVED after successful payment. " +
+                          "Payment tx is committed. Manual reconciliation or webhook retry may be needed. Cause: {}",
+                          orderId, feignEx.getMessage(), feignEx);
+                // Do not rethrow — we still want to return success to the payment initiator.
+            }
 
             // FIX: Generate the invoice automatically on Razorpay success!
             try {
@@ -181,8 +190,14 @@ public class PaymentServiceImpl implements PaymentService {
             paymentTransactionRepository.save(transaction);
             log.info("UTR approved for order {}", orderId);
 
-            // MAGIC HAPPENS HERE: We trigger the exact same automation as Razorpay!
-            orderFeignClient.updateOrderStatus(transaction.getOrderId(), "PAYMENT_RECEIVED");
+            // Protect the cross-service update the same way as customer payments.
+            try {
+                orderFeignClient.updateOrderStatus(transaction.getOrderId(), "PAYMENT_RECEIVED", null, "BANK_TRANSFER");
+            } catch (Exception feignEx) {
+                log.error("CRITICAL: Failed to update order {} to PAYMENT_RECEIVED after UTR approval. " +
+                          "Payment tx is SUCCESS. Reconciliation required. Cause: {}",
+                          orderId, feignEx.getMessage(), feignEx);
+            }
 
             try {
                 invoiceService.generateAndSaveInvoice(transaction.getOrderId());
@@ -197,7 +212,7 @@ public class PaymentServiceImpl implements PaymentService {
             log.info("UTR rejected for order {}", orderId);
 
             // Optionally: Tell order service payment failed
-            orderFeignClient.updateOrderStatus(transaction.getOrderId(), "PENDING_PAYMENT");
+            orderFeignClient.updateOrderStatus(transaction.getOrderId(), "PENDING_PAYMENT", null, null);
             return "Payment Rejected. Invalid UTR.";
         }
     }
@@ -216,8 +231,17 @@ public class PaymentServiceImpl implements PaymentService {
         paymentTransactionRepository.save(transaction);
         log.info("COD selected for order {}, amount={}", orderId, amount);
 
-        // Tell the Orders Service that the order is confirmed so the factory can start molding/dispatching
-        orderFeignClient.updateOrderStatus(orderId, "CONFIRMED_COD");
+        // IMPORTANT: Downstream failures (orders service, stock deduct, production, etc.) must not
+        // cause the customer to see an error or lose the payment record. The COD payment record
+        // is created; order status update can be reconciled.
+        try {
+            orderFeignClient.updateOrderStatus(orderId, "CONFIRMED_COD", null, "CASH_ON_DELIVERY");
+        } catch (Exception feignEx) {
+            log.error("CRITICAL: Failed to update order {} to CONFIRMED_COD after COD selection. " +
+                      "Payment tx committed as PENDING/COD. Reconciliation needed. Cause: {}",
+                      orderId, feignEx.getMessage(), feignEx);
+            // Swallow — return success to UI so user is not stuck. The record exists.
+        }
 
         // FIX: Generate the invoice immediately for Cash On Delivery!
         try {
@@ -245,11 +269,20 @@ public class PaymentServiceImpl implements PaymentService {
         paymentTransactionRepository.save(transaction);
         log.info("COD cash collected: paymentId={}, orderId={}", paymentId, transaction.getOrderId());
 
-        // Update the order status to reflect completion
-        orderFeignClient.updateOrderStatus(transaction.getOrderId(), "DELIVERED");
+        // Protect downstream update
+        try {
+            orderFeignClient.updateOrderStatus(transaction.getOrderId(), "DELIVERED", null, null);
+        } catch (Exception feignEx) {
+            log.error("Failed to update order {} to DELIVERED after COD collection. Payment tx is SUCCESS. Cause: {}",
+                      transaction.getOrderId(), feignEx.getMessage(), feignEx);
+        }
 
         // Trigger the invoice generation now that payment is finalized!
-        invoiceService.generateAndSaveInvoice(transaction.getOrderId());
+        try {
+            invoiceService.generateAndSaveInvoice(transaction.getOrderId());
+        } catch (Exception e) {
+            log.error("Invoice generation failed for COD collection on order {}", transaction.getOrderId(), e);
+        }
 
         return "Cash collected successfully! Order marked as DELIVERED and Invoice Generated.";
     }

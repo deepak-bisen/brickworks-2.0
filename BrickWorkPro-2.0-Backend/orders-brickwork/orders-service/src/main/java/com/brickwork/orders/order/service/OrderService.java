@@ -16,7 +16,7 @@ public interface OrderService {
   //  Order createOrderWithStatus(OrderRequestDTO orderRequest, String status);
 
 
-    String updateOrderStatus(String orderId, OrderStatus status,String driverDetails);
+    String updateOrderStatus(String orderId, OrderStatus status, String driverDetails, String paymentMethod);
     List<OrderResponseDTO> getOrdersByCustomer(String customerId);
     OrderResponseDTO getOrderById(String orderId);
 
@@ -25,4 +25,6 @@ public interface OrderService {
     List<OrderResponseDTO> getAllPublicQuotes();
 
     OrderResponseDTO trackPublicOrder(String orderId, String phone);
+
+    void resendNotifications(String orderId);
 }

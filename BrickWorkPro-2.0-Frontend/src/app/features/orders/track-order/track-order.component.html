@@ -74,6 +74,20 @@
             </div>
           }
 
+          <!-- Notification visibility banner (new) -->
+          @if (orderData().lastNotificationStatus || orderData().customerEmail || orderData().customerPhone) {
+            <div class="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900">
+              <p class="font-bold">📬 Notification sent</p>
+              <p class="mt-0.5">We sent a confirmation and/or dispatch update via email/SMS to {{orderData().customerEmail || 'your email'}} / {{orderData().customerPhone || 'your phone'}}. 
+                Last status: <span class="font-mono">{{orderData().lastNotificationStatus || 'recorded'}}</span>.
+                Check your inbox or <a routerLink="/track-order" class="underline">track here</a>.
+              </p>
+              @if (orderData().lastNotificationSentAt) {
+                <p class="text-[10px] mt-1 opacity-75">Sent at: {{orderData().lastNotificationSentAt | date:'short'}}</p>
+              }
+            </div>
+          }
+
           <!-- Progress Bar Timeline -->
           <div class="relative max-w-3xl mx-auto px-2 sm:px-0 mb-8">
 

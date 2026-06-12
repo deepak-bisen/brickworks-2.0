@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, NgZone, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -40,6 +40,7 @@ export class CheckoutComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private notification = inject(NotificationService);
+  private zone = inject(NgZone);
 
   checkoutError = signal<string>('');
   isSubmitting = signal<boolean>(false);
@@ -177,7 +178,7 @@ export class CheckoutComponent implements OnInit {
           this.checkoutError.set(errorMessages);
           return;
         }
-        this.checkoutError.set('Failed to process your order. Please try again.');
+        this.checkoutError.set('Failed to create your order. No order or payment record was saved. Please try again or contact support.');
       },
     });
   }
@@ -188,8 +189,21 @@ export class CheckoutComponent implements OnInit {
 
     if (this.paymentMethod() === 'COD') {
       this.orderService.selectCashOnDelivery(orderId, totalAmount).subscribe({
-        next: () => this.finalizeCheckout('COD'),
-        error: () => this.checkoutError.set('Failed to register COD payment.'),
+        next: () => {
+          this.checkoutError.set('');
+          this.finalizeCheckout('COD');
+        },
+        error: (err) => {
+          const msg = extractApiErrorMessage(err) || 'Temporary issue registering COD on server.';
+          // The order was already created. Backend now treats most downstream failures as non-fatal
+          // for the payment record. Give the user a recoverable message + still complete the flow.
+          this.checkoutError.set(
+            `${msg} Your order (${orderId}) was created and payment is being processed. ` +
+            `Please check "My Orders" or track this order shortly.`
+          );
+          // Still advance the user — the important records (order + likely payment tx) exist on the backend.
+          this.finalizeCheckout('COD');
+        },
       });
     } else if (this.paymentMethod() === 'UTR') {
       if (this.utrForm.invalid) {
@@ -200,8 +214,18 @@ export class CheckoutComponent implements OnInit {
       this.orderService
         .submitUtrPayment(orderId, totalAmount, utrNumber!)
         .subscribe({
-          next: () => this.finalizeCheckout('UTR'),
-          error: () => this.checkoutError.set('Failed to submit UTR details.'),
+          next: () => {
+            this.checkoutError.set('');
+            this.finalizeCheckout('UTR');
+          },
+          error: (err) => {
+            const msg = extractApiErrorMessage(err) || 'Temporary issue submitting UTR on server.';
+            this.checkoutError.set(
+              `${msg} Your order (${orderId}) was created and the UTR submission is being processed. ` +
+              `Check "My Orders" for status (admin verification is required for bank transfers).`
+            );
+            this.finalizeCheckout('UTR');
+          },
         });
     } else if (this.paymentMethod() === 'UPI') {
       this.processRazorpayPayment(orderId, totalAmount);
@@ -219,6 +243,7 @@ export class CheckoutComponent implements OnInit {
 
     this.orderService.createRazorpayOrder(orderId, amount).subscribe({
       next: (razorpayOrder) => {
+        this.checkoutError.set('');  // clear any previous error before opening popup
         const options = {
           key: razorpayKeyId,
           amount: razorpayOrder.amount,
@@ -234,11 +259,23 @@ export class CheckoutComponent implements OnInit {
               orderId: orderId,
             };
             this.orderService.verifyRazorpayPayment(verificationPayload).subscribe({
-              next: () => this.finalizeCheckout('UPI'),
-              error: () =>
+              next: () => this.zone.run(() => {
+                this.checkoutError.set('');
+                this.finalizeCheckout('UPI');
+              }),
+              error: (err) => this.zone.run(() => {
+                const msg = extractApiErrorMessage(err) || 'Payment verification step encountered an issue.';
+                // The /create-order step already created a PaymentTransaction (CREATED state).
+                // The actual Razorpay payment may have succeeded (money moved). The webhook
+                // (or later reconcile) can still mark it SUCCESS and advance the order.
+                // Do not leave the user stuck on the checkout screen.
                 this.checkoutError.set(
-                  'Payment verification failed. Please contact support.'
-                ),
+                  `${msg} Order ${orderId} and the Razorpay order were recorded. ` +
+                  `If your payment went through on Razorpay, it will be confirmed via webhook shortly. ` +
+                  `Check "My Orders" or the Track Order page.`
+                );
+                this.finalizeCheckout('UPI');
+              }),
             });
           },
           prefill: {
@@ -250,12 +287,23 @@ export class CheckoutComponent implements OnInit {
         };
         const rzp = new Razorpay(options);
         rzp.on('payment.failed', (response: any) => {
-          this.checkoutError.set(`Payment Failed: ${response.error.description}`);
+          this.zone.run(() => {
+            this.checkoutError.set(`Payment Failed: ${response.error.description}`);
+          });
         });
         rzp.open();
       },
-      error: () =>
-        this.checkoutError.set('Failed to initialize payment gateway.'),
+      error: (err) => {
+        const msg = extractApiErrorMessage(err) || 'Failed to initialize payment gateway with the server.';
+        this.zone.run(() => {
+          this.checkoutError.set(
+            `${msg} Your order (${orderId}) was already created successfully. ` +
+            `You can try another payment method or check "My Orders". No payment transaction was started yet.`
+          );
+        });
+        // Here we do NOT auto-finalize because the Razorpay create (which creates the tx row) failed.
+        // The user is still on the payment selection step and can choose COD/UTR instead.
+      },
     });
   }
 

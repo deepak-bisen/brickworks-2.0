@@ -1,9 +1,12 @@
 package com.brickwork.exception;
 
+import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.client.circuitbreaker.NoFallbackAvailableException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -80,6 +83,34 @@ public class GlobalApiExceptionHandler {
                 .body(ApiErrorResponse.of(HttpStatus.UNAUTHORIZED.value(), message, message, request.getRequestURI()));
     }
 
+    @ExceptionHandler(NoFallbackAvailableException.class)
+    public ResponseEntity<ApiErrorResponse> handleNoFallback(NoFallbackAvailableException ex, HttpServletRequest request) {
+        String message = resolveDownstreamMessage(ex.getCause());
+        log.error("Downstream service unavailable path={}", request.getRequestURI(), ex);
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiErrorResponse.of(
+                        HttpStatus.SERVICE_UNAVAILABLE.value(),
+                        message,
+                        message,
+                        request.getRequestURI()));
+    }
+
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ApiErrorResponse> handleFeign(FeignException ex, HttpServletRequest request) {
+        int status = ex.status() > 0 ? ex.status() : HttpStatus.SERVICE_UNAVAILABLE.value();
+        HttpStatus httpStatus = HttpStatus.resolve(status);
+        if (httpStatus == null) {
+            httpStatus = HttpStatus.SERVICE_UNAVAILABLE;
+            status = httpStatus.value();
+        }
+        String message = ex.getMessage() != null ? ex.getMessage() : "Downstream service call failed";
+        log.warn("Feign call failed status={} path={}", status, request.getRequestURI());
+        return ResponseEntity
+                .status(httpStatus)
+                .body(ApiErrorResponse.of(status, message, message, request.getRequestURI()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGeneric(Exception ex, HttpServletRequest request) {
         log.error("Unhandled exception on path={}", request.getRequestURI(), ex);
@@ -91,5 +122,15 @@ public class GlobalApiExceptionHandler {
                         message,
                         message,
                         request.getRequestURI()));
+    }
+
+    private static String resolveDownstreamMessage(Throwable cause) {
+        if (cause instanceof TimeoutException) {
+            return "A required service timed out. Please try again.";
+        }
+        if (cause != null && cause.getMessage() != null && cause.getMessage().contains("Connect timed out")) {
+            return "A required service is unreachable. Ensure all backend services are running.";
+        }
+        return "A required service is temporarily unavailable. Please try again.";
     }
 }

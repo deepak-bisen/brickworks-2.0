@@ -1,5 +1,6 @@
 package com.brickwork.orders.analytics.service.impl;
 
+import com.brickwork.orders.analytics.dto.PaymentMethodRevenueProjection;
 import com.brickwork.orders.analytics.repository.AnalyticsRepository;
 import com.brickwork.orders.client.ProductClient;
 import com.brickwork.orders.order.dto.ProductDTO;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,6 +29,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     private ProductClient productClient;
 
     @Override
+    @Cacheable(value = "salesAnalytics", key = "#timeframe")
     public List<SalesAnalyticsProjection> getSalesData(String timeframe) {
         log.debug("Querying sales analytics: timeframe={}", timeframe);
         return switch (timeframe.toLowerCase()) {
@@ -38,6 +41,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     }
 
     @Override
+    @Cacheable(value = "topProducts", key = "#timeframe")
     public List<TopProductResponseDTO> getTopProducts(String timeframe) {
         log.debug("Querying top products analytics: timeframe={}", timeframe);
 
@@ -72,4 +76,12 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             return dto;
         }).collect(Collectors.toList());
     }
+
+    @Override
+    @Cacheable(value = "revenueByPaymentMethod")
+    public List<PaymentMethodRevenueProjection> getRevenueByPaymentMethod() {
+        log.debug("Querying revenue by payment method");
+        return analyticsRepository.getRevenueByPaymentMethod();
+    }
 }
+

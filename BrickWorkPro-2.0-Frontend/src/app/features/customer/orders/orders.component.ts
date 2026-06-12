@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { OrderService } from '../../orders/services/order.service';
@@ -17,7 +18,7 @@ import {
 @Component({
   selector: 'app-customer-orders',
   standalone: true,
-  imports: [CommonModule, RouterLink, StatusBadgeComponent, LoadingSpinnerComponent, SkeletonBlockComponent],
+  imports: [CommonModule, FormsModule, RouterLink, StatusBadgeComponent, LoadingSpinnerComponent, SkeletonBlockComponent],
   templateUrl: './orders.component.html',
 })
 export class CustomerOrdersComponent implements OnInit {
@@ -32,6 +33,24 @@ export class CustomerOrdersComponent implements OnInit {
   loadError = '';
   invoiceErrors: Record<string, string> = {};
   generatingInvoice: Record<string, boolean> = {};
+
+  // Sort control for customer order history
+  sortMode: 'newest' | 'oldest' = 'newest';
+
+  get sortedOrders(): any[] {
+    if (!this.orders.length) return [];
+    const sorted = [...this.orders].sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+      return this.sortMode === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+    return sorted;
+  }
+
+  onSortChange() {
+    // Trigger change detection for the getter
+    this.cdr.detectChanges();
+  }
 
   ngOnInit() {
     this.fetchWithRetry(5);

@@ -29,7 +29,7 @@ public interface OrderController {
     // Endpoint for the secure Customer Dashboard
     // Added for Phase 2: Status updates (e.g. Pending -> Dispatched)
     @PutMapping("/{id}/status")
-    ResponseEntity<?> updateOrderStatus(@PathVariable("id") String id, @RequestParam("status") OrderStatus status, @RequestParam(value = "driverDetails", required = false) String driverDetails);
+    ResponseEntity<?> updateOrderStatus(@PathVariable("id") String id, @RequestParam("status") OrderStatus status, @RequestParam(value = "driverDetails", required = false) String driverDetails, @RequestParam(value = "paymentMethod", required = false) String paymentMethod);
 
     // RESTORED PHASE 1: Endpoint for the secure Customer Dashboard
     @GetMapping("/customer/{customerId}")
@@ -44,4 +44,8 @@ public interface OrderController {
 
     @GetMapping("/track")
     ResponseEntity<?> trackOrder(@RequestParam("orderId") String orderId, @RequestParam("phone") String phone);
+
+    // Admin resend notifications action for visibility/reliability
+    @PostMapping("/{id}/resend-notifications")
+    ResponseEntity<?> resendNotifications(@PathVariable("id") String id);
 }

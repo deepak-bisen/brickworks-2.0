@@ -62,6 +62,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
   totalOrdersCount = computed(() => this.salesData().reduce((sum, item) => sum + (Number(item.totalOrders || 0)), 0));
   totalBricksProduced = signal<number>(0);
 
+  // Profit Margin %
+  profitMarginPercent = computed(() => {
+    const rev = this.totalRevenue();
+    const prof = this.totalProfit();
+    return rev > 0 ? (prof / rev) * 100 : 0;
+  });
+
+  // Revenue by Payment Method from backend analytics (paid orders only)
+  revenueByPaymentMethod = signal<Record<string, number>>({});
+
+  // Load revenue by payment method from backend analytics
+  private loadRevenueByPaymentMethod() {
+    this.dashboardService.getRevenueByPaymentMethod().subscribe({
+      next: (data: any[]) => {
+        const breakdown: Record<string, number> = {};
+        (data || []).forEach((item: any) => {
+          if (item.paymentMethod) {
+            breakdown[item.paymentMethod] = item.totalRevenue || 0;
+          }
+        });
+        this.revenueByPaymentMethod.set(breakdown);
+      },
+      error: () => this.revenueByPaymentMethod.set({})
+    });
+  }
+
   activeOrdersList = computed(() => this.orders().filter(o => o.requestType !== 'QUOTE LEAD'));
   quoteRequestsList = computed(() => this.orders().filter(o => o.requestType === 'QUOTE LEAD'));
 
@@ -84,8 +110,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   });
 
+  // Current open order value (includes PENDING_PAYMENT)
   financeOrderValue = computed(() =>
     this.activeOrdersList().reduce((sum, o) => sum + Number(o.totalAmount || o.totalCost || 0), 0)
+  );
+
+  // Pipeline Value: all active orders (including PENDING_PAYMENT)
+  pipelineOrderValue = computed(() =>
+    this.activeOrdersList().reduce((sum, o) => sum + Number(o.totalAmount || o.totalCost || 0), 0)
+  );
+
+  // Realized Value: only paid / live orders (excludes PENDING_PAYMENT and CANCELLED)
+  realizedOrderValue = computed(() =>
+    this.activeOrdersList()
+      .filter(o => ['PAYMENT_RECEIVED', 'CONFIRMED_COD', 'IN_PRODUCTION', 'DISPATCHED', 'DELIVERED'].includes(o.status))
+      .reduce((sum, o) => sum + Number(o.totalAmount || o.totalCost || 0), 0)
   );
 
   financePendingPaymentCount = computed(() =>
@@ -114,9 +153,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     Object.entries(this.financePaymentBreakdown()).filter(([, count]) => count > 0)
   );
 
+  isRealizedOrder(status: string): boolean {
+    return ['PAYMENT_RECEIVED', 'CONFIRMED_COD', 'IN_PRODUCTION', 'DISPATCHED', 'DELIVERED'].includes(status);
+  }
+
   ngOnInit(): void {
     this.loadDashboardMetrics();
     this.loadMessages();
+    this.loadRevenueByPaymentMethod();
   }
 
   switchTab(tab: string) {
