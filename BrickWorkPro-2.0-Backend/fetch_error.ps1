@@ -1,1 +1,0 @@
-try { (Invoke-WebRequest -Uri 'http://localhost:9191/api/products/analytics/stats/daily' -UseBasicParsing).Content } catch { if (.Exception.Response -ne ) { =.Exception.Response.GetResponseStream(); =New-Object System.IO.StreamReader(); .ReadToEnd() } else { .Exception.Message } }

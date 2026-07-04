@@ -1,20 +1,21 @@
 package com.brickwork.users.service.user.impl;
 
+import com.brickwork.exception.BadRequestException;
 import com.brickwork.exception.NotFoundException;
 import com.brickwork.security.util.JwtUtil;
 import com.brickwork.users.dto.*;
 import com.brickwork.users.entity.Customer;
 import com.brickwork.users.entity.Employee;
 import com.brickwork.users.entity.User;
+import com.brickwork.users.enums.OtpVerificationStatus;
 import com.brickwork.users.enums.Role;
 import com.brickwork.users.repository.UserRepository;
 import com.brickwork.users.service.user.EmailService;
-import com.brickwork.users.service.user.RedisOtpService;
+import com.brickwork.users.service.user.OtpCacheService;
 import com.brickwork.users.service.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,16 +29,16 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RedisOtpService redisOtpService;
+    private final OtpCacheService otpCacheService;
     private final EmailService emailService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
     @Autowired
-    UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RedisOtpService redisOtpService, EmailService emailService, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+    UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, OtpCacheService otpCacheService, EmailService emailService, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.redisOtpService = redisOtpService;
+        this.otpCacheService = otpCacheService;
         this.emailService = emailService;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
@@ -235,9 +236,72 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("If the email is registered, an OTP has been sent. " + email));
 
-        String otp = redisOtpService.generateAndStoreOtp(email);
+        String otp = otpCacheService.generateAndStoreOtp(email);
 
         emailService.sendOtp(email, otp);
+    }
+    @Override
+    public void verifyOtp(VerifyOtpRequestDTO request) {
+
+        String email = request.getEmail().trim().toLowerCase();
+        String otp = request.getOtp() != null ? request.getOtp().trim() : "";
+
+        OtpVerificationStatus status =
+                otpCacheService.verifyOtp(
+                        email,
+                        otp
+                );
+
+        switch (status) {
+
+            case VERIFIED:
+                log.info("OTP verified successfully for {}", email);
+                return;
+
+            case INVALID_OTP:
+                throw new BadRequestException("Invalid OTP.");
+
+            case OTP_EXPIRED:
+                throw new BadRequestException("OTP has expired.");
+
+            case MAX_ATTEMPTS_EXCEEDED:
+                throw new BadRequestException(
+                        "Maximum OTP verification attempts exceeded."
+                );
+
+            case OTP_NOT_FOUND:
+                throw new BadRequestException(
+                        "No OTP found. Please request a new OTP."
+                );
+
+            default:
+                throw new BadRequestException("OTP verification failed.");
+        }
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequestDTO request) {
+
+        String email = request.getEmail().trim().toLowerCase();
+
+        if (!otpCacheService.isVerified(email)) {
+            throw new BadRequestException("OTP verification required.");
+        }
+
+        if (!request.getNewPassword()
+                .equals(request.getConfirmPassword())) {
+
+            throw new BadRequestException("Passwords do not match.");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new NotFoundException("User not found"));
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        otpCacheService.clear(email);
+        log.info("Password reset successfully for {}", email);
     }
 
     // Helper method to map Entity to DTO

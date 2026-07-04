@@ -65,6 +65,43 @@ describe('AuthService', () => {
     expect(service.isCustomer()).toBe(false);
   });
 
+  it('should request a password reset for the provided email', () => {
+    service.forgotPassword('customer@example.com').subscribe();
+
+    const req = httpMock.expectOne('http://localhost:9191/api/auth/forgot-password');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ email: 'customer@example.com' });
+    req.flush({ message: 'Password reset request received' });
+  });
+
+  it('should verify an otp for the provided email', () => {
+    service.verifyOtp('customer@example.com', '123456').subscribe();
+
+    const req = httpMock.expectOne('http://localhost:9191/api/auth/verify-otp');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ email: 'customer@example.com', otp: '123456' });
+    req.flush({ message: 'OTP verified successfully' });
+  });
+
+  it('should reset the password for the provided email', () => {
+    service
+      .resetPassword({
+        email: 'customer@example.com',
+        newPassword: 'newPassword123',
+        confirmPassword: 'newPassword123',
+      })
+      .subscribe();
+
+    const req = httpMock.expectOne('http://localhost:9191/api/auth/reset-password');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      email: 'customer@example.com',
+      newPassword: 'newPassword123',
+      confirmPassword: 'newPassword123',
+    });
+    req.flush({ message: 'Password reset successfully' });
+  });
+
   it('should strip ROLE_ prefix from JWT role claim', () => {
     localStorage.setItem('brickworks_token', CUSTOMER_TOKEN);
 

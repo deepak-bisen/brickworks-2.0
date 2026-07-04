@@ -2,7 +2,6 @@ package com.brickwork.users.service.user;
 
 import com.brickwork.users.dto.*;
 import com.brickwork.users.entity.User;
-import org.springframework.http.ResponseEntity;
 
 import java.util.Optional;
 
@@ -18,4 +17,6 @@ public interface UserService {
     UserDTO getUserByUsername(String username);
     UserDTO updateCustomerProfile(String email, CustomerUpdateDTO updateDTO);
     void forgotPassword(String email);
+    void verifyOtp(VerifyOtpRequestDTO request);
+    void resetPassword(ResetPasswordRequestDTO request);
 }

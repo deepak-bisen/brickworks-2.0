@@ -4,20 +4,37 @@
 
 # --- Environment & secrets ---
 .env
+.env.local
+.env.*.local
 .env.*
 !.env.example
+!.env.*.example
 scripts/login.json
 scripts/*-credentials*.json
+*.key
+*.pem
+secrets/
+.secrets/
 
-# --- Backend (Java / Maven) ---
+# --- Backend (Java / Maven / Gradle) ---
 **/target/
 **/build/
+**/dist/
 *.class
 *.jar
 *.war
 *.ear
+*.zip
+*.tar.gz
 hs_err_pid*
 replay_pid*
+*.jks
+*.keystore
+
+# Build output
+**/out/
+**/.gradle/
+gradle-app.setting
 
 HELP.md
 .apt_generated
@@ -27,20 +44,40 @@ HELP.md
 .settings/
 .springBeans
 .sts4-cache
+.eclipse/
 
 # Maven wrapper JAR is downloaded locally; scripts are committed
 **/.mvn/wrapper/maven-wrapper.jar
+**/.mvn/wrapper/MavenWrapperDownloader.java
 
 # --- Frontend (Angular / Node) ---
 **/node_modules/
 **/dist/
+**/.angular/
 **/.angular/cache/
 **/tmp/
+**/out-tsc/
+**/.cache/
+
+# npm/yarn logs
 npm-debug.log*
+npm-error.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+pnpm-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Build artifacts
 *.tsbuildinfo
+.next/
+out/
+build/
+dist/
+.parcel-cache
+.cache
+.vercel
 
 # --- Logs & runtime output ---
 *.log
@@ -57,32 +94,66 @@ scripts/**/*.png
 .vscode/
 !BrickWorkPro-2.0-Frontend/.vscode/
 !BrickWorkPro-2.0-Frontend/.vscode/**
+!BrickWorkPro-2.0-Backend/.vscode/
+!BrickWorkPro-2.0-Backend/.vscode/**
 .cursor/
 !BrickWorkPro-2.0-Frontend/.claude/CLAUDE.md
 !BrickWorkPro-2.0-Frontend/.cursor/rules/cursor.mdc
 !BrickWorkPro-2.0-Frontend/.gemini/GEMINI.md
 !BrickWorkPro-2.0-Frontend/.github/copilot-instructions.md
+.sublime-project
+.sublime-workspace
+*.swp
+*.swo
+*~
+.DS_Store
 
 # Keep shared IntelliJ run configs for the backend
 !BrickWorkPro-2.0-Backend/.run/
 !BrickWorkPro-2.0-Backend/.run/**
 
+# Rider
+.idea_modules/
+*.sln.iml
+
 # --- OS ---
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Thumbs.db:encryptable
 Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+Site.master
 
 # --- Test / coverage ---
 coverage/
 .nyc_output/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
 test-results/
+xunit-results/
 playwright-report/
+.jest-cache/
+.mocha-cache/
 
 # --- Local AI / agent tooling (not part of the app) ---
 agent-tools/
 terminals/
 mcps/
 updates.jsonl
+.claude/
+.github/
+.git/
 
 # --- NetBeans (legacy) ---
 /nbproject/private/
@@ -90,6 +161,35 @@ updates.jsonl
 /nbdist/
 /.nb-gradle/
 
+# --- Temporary & backup files ---
+*.tmp
+*.bak
+*.backup
+*.swp
+*.swo
+*~
+*.orig
+*.rej
+.*.swp
+.*.swo
+
+# --- Process & lock files ---
+*.pid
+*.seed
+*.pid.lock
+lerna-lock.json
+yarn.lock
+package-lock.json
+
+# --- Specific project files to exclude ---
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/dictionaries/
+.idea/shelf/
+
 # --- Explicit keeps (do not ignore) ---
 !BrickWorkPro-2.0-Frontend/.postcssrc.json
 !BrickWorkPro-2.0-Frontend/tailwind.config.js
+!.github/workflows/
+!.github/workflows/**

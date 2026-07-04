@@ -4,6 +4,8 @@ import com.brickwork.users.service.user.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailSendException;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -27,24 +29,21 @@ public class EmailServiceImpl implements EmailService {
 
         try {
             log.info("Sending OTP mail to email address {}", email);
-            MimeMessage message = mailSender.createMimeMessage();
+            SimpleMailMessage message = new SimpleMailMessage();
 
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, true);
 
-            helper.setFrom(fromEmail);
-            helper.setTo(email);
-            helper.setSubject("BrickWorks Password Reset OTP");
-            helper.setText("Dear User ,\n\n" +
-                    "You requested to reset your password ,\nYour One-Time Password is: "+ otp +
-                    "\nThis OTP is valid for 10 minutes\n" +
+            message.setFrom(fromEmail);
+            message.setTo(email);
+            message.setSubject("BrickWorks Password Reset OTP");
+            message.setText("Dear User,\n\n" +
+                    "Your One-Time Password is: "+ otp + "This OTP is valid for 10 minutes\n" +
                     "If you didn't request this, simply ignore this email.\n" +
-                    "\nThank you for choosing BrickWorks Pro!\n\n" +
-                    "Regards,\nBrickWorks Pro Team",true);
+                    "\nThank You!\n\n" +
+                    "Regards,\nBrickWorks Pro Team");
             log.info("OTO mail sent to email address {}", email);
             mailSender.send(message);
 
-        } catch (MessagingException e) {
+        } catch (MailSendException e) {
             log.info("OTO mail sent to email address {} failed", email);
             throw new RuntimeException("Failed to send OTP email", e);
         }

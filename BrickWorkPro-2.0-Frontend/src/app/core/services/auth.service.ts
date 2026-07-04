@@ -94,6 +94,27 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/register/employee`, data);
   }
 
+  forgotPassword(email: string) {
+    return this.http.post(`${this.apiUrl}/forgot-password`, { email }, {
+      responseType: 'text' as const,
+      observe: 'body' as const,
+    });
+  }
+
+  verifyOtp(email: string, otp: string) {
+    return this.http.post(`${this.apiUrl}/verify-otp`, { email, otp }, {
+      responseType: 'text' as const,
+      observe: 'body' as const,
+    });
+  }
+
+  resetPassword(data: { email: string; newPassword: string; confirmPassword: string }) {
+    return this.http.post(`${this.apiUrl}/reset-password`, data, {
+      responseType: 'text' as const,
+      observe: 'body' as const,
+    });
+  }
+
   // FIX: Read userId from the JWT claim 'userId' (set by JwtUtil.generateCustomToken)
   getUserId(): string | null {
     const token = this.getTokenFromStorage();

@@ -73,7 +73,18 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       }
 
-      notification.error(errorMessage);
+      const isAuthPlainTextEndpoint =
+        req.url.includes('/api/auth/forgot-password') ||
+        req.url.includes('/api/auth/verify-otp') ||
+        req.url.includes('/api/auth/reset-password');
+
+      if (!isAuthPlainTextEndpoint) {
+        notification.error(errorMessage);
+      } else {
+        // Suppress global toasts for auth endpoints that return plain text
+        // — the specific UI (e.g., the forgot-password card) will show inline messages.
+        console.info('Suppressed global toast for auth endpoint:', req.url, errorMessage);
+      }
       return throwError(() => error);
     }),
   );

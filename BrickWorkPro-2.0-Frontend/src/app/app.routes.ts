@@ -4,6 +4,7 @@ import { ProductListComponent } from './features/products/product-list/product-l
 import { HomeComponent } from './features/home/home.component';
 import { QuoteRequestComponent } from './features/orders/quote-request/quote-request.component';
 import { RegisterComponent } from './features/users/register/register.component';
+import { ForgotPasswordComponent } from './features/users/forgot-password/forgot-password.component';
 import { ContactComponent } from './features/home/contact/contact.component';
 import { CheckoutComponent } from './features/orders/checkout/checkout.component';
 import { CartComponent } from './features/orders/cart/cart.component';
@@ -21,6 +22,7 @@ export const routes: Routes = [
   { path: 'home', component: HomeComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'products', component: ProductListComponent },
   { path: 'get-quote', component: QuoteRequestComponent },
   { path: 'contact', component: ContactComponent },

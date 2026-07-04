@@ -1,21 +1,12 @@
 package com.brickwork.users.controller.impl;
 
-import com.brickwork.exception.NotFoundException;
-import com.brickwork.security.util.JwtUtil;
 import com.brickwork.users.controller.AuthController;
 import com.brickwork.users.dto.*;
-import com.brickwork.users.entity.User;
 import com.brickwork.users.service.user.UserService;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -99,6 +90,19 @@ public class AuthControllerImpl implements AuthController {
 
         userService.forgotPassword(request.getEmail());
         return ResponseEntity.ok().body("OTP Sent Successfully");
+    }
+
+    @Override
+        public ResponseEntity<String> verifyOtp(VerifyOtpRequestDTO request) {
+
+        userService.verifyOtp(request);
+        return ResponseEntity.ok("OTP verified successfully.");
+    }
+
+    @Override
+    public ResponseEntity<String> resetPassword(ResetPasswordRequestDTO request) {
+        userService.resetPassword(request);
+        return ResponseEntity.ok("Password reset successfully.");
     }
 
 }
