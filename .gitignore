@@ -58,6 +58,10 @@ scripts/**/*.png
 !BrickWorkPro-2.0-Frontend/.vscode/
 !BrickWorkPro-2.0-Frontend/.vscode/**
 .cursor/
+!BrickWorkPro-2.0-Frontend/.claude/CLAUDE.md
+!BrickWorkPro-2.0-Frontend/.cursor/rules/cursor.mdc
+!BrickWorkPro-2.0-Frontend/.gemini/GEMINI.md
+!BrickWorkPro-2.0-Frontend/.github/copilot-instructions.md
 
 # Keep shared IntelliJ run configs for the backend
 !BrickWorkPro-2.0-Backend/.run/
