@@ -13,6 +13,8 @@ export class GalleryComponent {
     { src: 'assets/images/projects/home-2.jpg', alt: 'Residential Project' },
     { src: 'assets/images/projects/cement-home.jpg', alt: 'Cement Brick Structure' },
     { src: 'assets/images/projects/home.jpg', alt: 'Our Own House' },
-    { src: 'assets/images/products/red-brick.jpg', alt: 'Custom Brick Layout' }
+    { src: 'assets/images/projects/kiln.jpg', alt: 'Kiln for Brick Firing' },
+    {src: 'assets/images/products/red_backed.png', alt: 'Bricks for Construction' },
+    {src: 'assets/images/products/brick_unbacked.png', alt: 'Unbacked Bricks In Process' },
   ];
 }

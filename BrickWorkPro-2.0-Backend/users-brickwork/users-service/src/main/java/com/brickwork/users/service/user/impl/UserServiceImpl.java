@@ -1,19 +1,22 @@
 package com.brickwork.users.service.user.impl;
 
 import com.brickwork.exception.NotFoundException;
-import com.brickwork.users.dto.CustomerRegistrationDTO;
-import com.brickwork.users.dto.CustomerUpdateDTO;
-import com.brickwork.users.dto.EmployeeRegistrationDTO;
-import com.brickwork.users.dto.UserDTO;
+import com.brickwork.security.util.JwtUtil;
+import com.brickwork.users.dto.*;
 import com.brickwork.users.entity.Customer;
 import com.brickwork.users.entity.Employee;
 import com.brickwork.users.entity.User;
 import com.brickwork.users.enums.Role;
 import com.brickwork.users.repository.UserRepository;
+import com.brickwork.users.service.user.EmailService;
+import com.brickwork.users.service.user.RedisOtpService;
 import com.brickwork.users.service.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +26,22 @@ import java.util.Optional;
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final RedisOtpService redisOtpService;
+    private final EmailService emailService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RedisOtpService redisOtpService, EmailService emailService, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.redisOtpService = redisOtpService;
+        this.emailService = emailService;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
+    }
 
     // --- REUSABLE HELPER METHOD ---
     private void populateBaseUserFields(User targetEntity, UserDTO sourceDto) {
@@ -48,6 +62,34 @@ public class UserServiceImpl implements UserService {
         }
         targetEntity.setPhoneNumber(phoneNumber);
     }
+
+    @Override
+    public JwtResponseDTO authenticateUser(LoginRequestDTO loginRequest) {
+
+    String username = loginRequest.getUsername() == null
+            ? null
+            : loginRequest.getUsername().trim();
+    String password = loginRequest.getPassword();
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password)
+        );
+
+    User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new NotFoundException("User not found"));
+
+    String jwt = jwtUtil.generateCustomToken(
+            user.getUsername(),
+            user.getRole().name(),
+            user.getId()
+    );
+        log.info("User authenticated successfully: username={}, role={}", user.getUsername(), user.getRole());
+        return new JwtResponseDTO(
+            jwt,
+            user.getUsername(),
+            user.getRole().name()
+        );
+}
 
     @Override
     public UserDTO registerUser(UserDTO userDTO) {
@@ -185,6 +227,17 @@ public class UserServiceImpl implements UserService {
 
         log.info("Updated customer profile: username={}", username);
         return mapToDTO(user);
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("If the email is registered, an OTP has been sent. " + email));
+
+        String otp = redisOtpService.generateAndStoreOtp(email);
+
+        emailService.sendOtp(email, otp);
     }
 
     // Helper method to map Entity to DTO

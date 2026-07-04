@@ -6,6 +6,8 @@ import com.brickwork.users.controller.AuthController;
 import com.brickwork.users.dto.*;
 import com.brickwork.users.entity.User;
 import com.brickwork.users.service.user.UserService;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,20 +15,19 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
 public class AuthControllerImpl implements AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+
 
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private JwtUtil jwtUtil;
+
 
     @Override
     public ResponseEntity<?> registerUser(UserDTO userDTO) {
@@ -75,30 +76,11 @@ public class AuthControllerImpl implements AuthController {
     }
 
     @Override
-    public ResponseEntity<?> authenticateUser(LoginRequestDTO loginRequest) {
-        String username = loginRequest.getUsername() == null
-                ? null
-                : loginRequest.getUsername().trim();
-        String password = loginRequest.getPassword();
+    public ResponseEntity<JwtResponseDTO> authenticateUser(LoginRequestDTO loginRequest) {
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password)
+        return ResponseEntity.ok(
+                userService.authenticateUser(loginRequest)
         );
-
-        User user = userService.findByUsername(username)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-
-        String jwt = jwtUtil.generateCustomToken(
-                user.getUsername(),
-                user.getRole().name(),
-                user.getId()
-        );
-        log.info("User authenticated successfully: username={}, role={}", user.getUsername(), user.getRole());
-        return ResponseEntity.ok(new JwtResponseDTO(
-                jwt,
-                user.getUsername(),
-                user.getRole().name()
-        ));
     }
 
     @Override
@@ -109,6 +91,14 @@ public class AuthControllerImpl implements AuthController {
     @Override
     public ResponseEntity<?> updateProfile(String username, CustomerUpdateDTO updateDTO) {
         return ResponseEntity.ok(userService.updateCustomerProfile(username, updateDTO));
+    }
+
+    @Override
+    public ResponseEntity<?> forgotPassword(
+            ForgotPasswordRequestDTO request) {
+
+        userService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok().body("OTP Sent Successfully");
     }
 
 }

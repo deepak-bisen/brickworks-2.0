@@ -1,17 +1,17 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="4. Orders" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
-    <module name="orders-app" />
-    <option name="SPRING_BOOT_MAIN_CLASS" value="com.brickwork.orders.OrdersBrickworkApplication" />
     <envs>
       <env name="JWT_SECRET" value="brickwork-dev-jwt-secret-key-32chars-min" />
       <env name="INTERNAL_SERVICE_KEY" value="brickworks-internal-dev-key" />
       <env name="DB_USERNAME" value="root" />
       <env name="DB_PASSWORD" value="root" />
-      <env name="MAIL_USERNAME" value="change-me" />
-      <env name="MAIL_PASSWORD" value="change-me" />
-      <env name="WHATSAPP_INSTANCE_ID" value="change-me" />
-      <env name="WHATSAPP_TOKEN" value="change-me" />
+      <env name="MAIL_USERNAME" value="bisen1412@gmail.com" />
+      <env name="MAIL_PASSWORD" value="gosadgzbordwfsnd" />
+      <env name="WHATSAPP_INSTANCE_ID" value="instance178831" />
+      <env name="WHATSAPP_TOKEN" value="t8s1ujkdry48jh8a" />
     </envs>
+    <module name="orders-app" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.brickwork.orders.OrdersBrickworkApplication" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
