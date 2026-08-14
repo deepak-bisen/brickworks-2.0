@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "com.brickwork")
-@RestController // <--- TEMPORARY ANNOTATION FOR HEALTH CHECK
+//@RestController // <--- TEMPORARY ANNOTATION FOR HEALTH CHECK
 public class UsersBrickworkApplication {
 
     public static void main(String[] args) {
@@ -16,8 +16,8 @@ public class UsersBrickworkApplication {
     }
 
     // <--- TEMPORARY PING METHOD FOR HEALTH CHECK--->
-    @GetMapping("/ping")
-    public String ping() {
-        return "Users Service is UP and responding!";
-    }
+    //    @GetMapping("/ping")
+    //    public String ping() {
+    //        return "Users Service is UP and responding!";
+    //    }
 }
