@@ -1,22 +1,153 @@
+version: "3.9"
+
 services:
+
   mariadb:
     image: mariadb:11
-    container_name: brickwork-mariadb
-    restart: unless-stopped
-    ports:
-      - "3306:3306"
+    container_name: brickworks-db
+    restart: always
     environment:
-      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD:-root}
-      MARIADB_USER: ${DB_USERNAME:-root}
-      MARIADB_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
     volumes:
-      - mariadb_data:/var/lib/mysql
-      - ./scripts/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      - mariadb-data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  eureka:
+    build:
+      context: ./BrickWorkPro-2.0-Backend
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: service-registry-brickwork/target/service-registry-brickwork-0.0.1-SNAPSHOT.jar
+    ports:
+      - "8761:8761"
+
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+
+  users:
+    build:
+      context: ./BrickWorkPro-2.0-Backend
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: users-brickwork/users-app/target/users-app-0.0.1-SNAPSHOT.jar
+
+    depends_on:
+      - mariadb
+      - eureka
+
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:mariadb://mariadb:3306/brickworks2users
+      DB_USERNAME: root
+      DB_PASSWORD: root
+
+      EUREKA_SERVER_URL: http://eureka:8761/eureka/
+
+      JWT_SECRET: yourSuperSecretJWTKey
+
+      INTERNAL_SERVICE_KEY: brickworks-secret
+
+      MAIL_USERNAME: yourmail@gmail.com
+      MAIL_PASSWORD: yourpassword
+
+  products:
+    build:
+      context: ./BrickWorkPro-2.0-Backend
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: products-brickwork/products-app/target/products-app-0.0.1-SNAPSHOT.jar
+
+    depends_on:
+      - mariadb
+      - eureka
+
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:mariadb://mariadb:3306/brickworks2products
+      DB_USERNAME: root
+      DB_PASSWORD: root
+
+      EUREKA_SERVER_URL: http://eureka:8761/eureka/
+
+      JWT_SECRET: yourSuperSecretJWTKey
+
+      INTERNAL_SERVICE_KEY: brickworks-secret
+
+  orders:
+    build:
+      context: ./BrickWorkPro-2.0-Backend
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: orders-brickwork/orders-app/target/orders-app-0.0.1-SNAPSHOT.jar
+
+    depends_on:
+      - mariadb
+      - eureka
+
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:mariadb://mariadb:3306/brickworks2orders
+      DB_USERNAME: root
+      DB_PASSWORD: root
+
+      EUREKA_SERVER_URL: http://eureka:8761/eureka/
+
+      JWT_SECRET: yourSuperSecretJWTKey
+
+      INTERNAL_SERVICE_KEY: brickworks-secret
+
+      MAIL_USERNAME: yourmail@gmail.com
+      MAIL_PASSWORD: yourpassword
+
+  finance:
+    build:
+      context: ./BrickWorkPro-2.0-Backend
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: finance-brickwork/finance-app/target/finance-app-0.0.1-SNAPSHOT.jar
+
+    depends_on:
+      - mariadb
+      - eureka
+
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:mariadb://mariadb:3306/brickworks2finance
+      DB_USERNAME: root
+      DB_PASSWORD: root
+
+      EUREKA_SERVER_URL: http://eureka:8761/eureka/
+
+      JWT_SECRET: yourSuperSecretJWTKey
+
+      INTERNAL_SERVICE_KEY: brickworks-secret
+
+      RAZORPAY_KEY_ID: xxxx
+      RAZORPAY_KEY_SECRET: xxxx
+      RAZORPAY_WEBHOOK_SECRET: xxxx
+
+  gateway:
+    build:
+      context: ./BrickWorkPro-2.0-Backend
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar
+
+    depends_on:
+      - users
+      - products
+      - orders
+      - finance
+      - eureka
+
+    ports:
+      - "9191:9191"
+
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      EUREKA_SERVER_URL: http://eureka:8761/eureka/
 
 volumes:
-  mariadb_data:
+  mariadb-data:

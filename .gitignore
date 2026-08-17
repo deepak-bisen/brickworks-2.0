@@ -1,65 +1,84 @@
 # =============================================================================
-# BrickWorkPro 2.0 — keep source, config, and scripts; ignore build/local noise
+# BrickWorkPro 2.0
+# Production-ready .gitignore
 # =============================================================================
 
-# --- Environment & secrets ---
+# =============================================================================
+# Environment & Secrets
+# =============================================================================
 .env
 .env.local
 .env.*.local
 .env.*
 !.env.example
 !.env.*.example
-scripts/login.json
-scripts/*-credentials*.json
-*.key
-*.pem
-secrets/
-.secrets/
 
-# --- Backend (Java / Maven / Gradle) ---
-**/target/
-**/build/
-**/dist/
-*.class
-*.jar
-*.war
-*.ear
-*.zip
-*.tar.gz
-hs_err_pid*
-replay_pid*
+*.pem
+*.key
+*.p12
 *.jks
 *.keystore
 
-# Build output
+secrets/
+.secrets/
+
+scripts/login.json
+scripts/*credentials*.json
+
+# =============================================================================
+# Java / Spring Boot
+# =============================================================================
+**/target/
+**/build/
 **/out/
 **/.gradle/
-gradle-app.setting
+
+*.class
+*.war
+*.ear
+
+hs_err_pid*
+replay_pid*
 
 HELP.md
-.apt_generated
+
 .classpath
-.factorypath
 .project
+.factorypath
 .settings/
 .springBeans
 .sts4-cache
 .eclipse/
 
-# Maven wrapper JAR is downloaded locally; scripts are committed
-**/.mvn/wrapper/maven-wrapper.jar
-**/.mvn/wrapper/MavenWrapperDownloader.java
+.apt_generated
 
-# --- Frontend (Angular / Node) ---
+# =============================================================================
+# Node / Angular
+# =============================================================================
 **/node_modules/
-**/dist/
 **/.angular/
 **/.angular/cache/
+**/dist/
 **/tmp/
 **/out-tsc/
 **/.cache/
 
-# npm/yarn logs
+.next/
+.parcel-cache/
+.nuxt/
+.svelte-kit/
+
+*.tsbuildinfo
+
+# =============================================================================
+# Logs
+# =============================================================================
+*.log
+*.log.*
+
+logs/
+scripts/logs/
+
 npm-debug.log*
 npm-error.log*
 yarn-debug.log*
@@ -67,129 +86,176 @@ yarn-error.log*
 pnpm-debug.log*
 pnpm-error.log*
 lerna-debug.log*
-.pnpm-debug.log*
 
-# Build artifacts
-*.tsbuildinfo
-.next/
-out/
-build/
-dist/
-.parcel-cache
-.cache
-.vercel
-
-# --- Logs & runtime output ---
-*.log
-*.log.*
-scripts/logs/
-scripts/**/*.png
-!BrickWorkPro-2.0-Frontend/public/**/*.png
-
-# --- IDEs & editors ---
-.idea/
-*.iml
-*.iws
-*.ipr
-.vscode/
-!BrickWorkPro-2.0-Frontend/.vscode/
-!BrickWorkPro-2.0-Frontend/.vscode/**
-!BrickWorkPro-2.0-Backend/.vscode/
-!BrickWorkPro-2.0-Backend/.vscode/**
-.cursor/
-!BrickWorkPro-2.0-Frontend/.claude/CLAUDE.md
-!BrickWorkPro-2.0-Frontend/.cursor/rules/cursor.mdc
-!BrickWorkPro-2.0-Frontend/.gemini/GEMINI.md
-!BrickWorkPro-2.0-Frontend/.github/copilot-instructions.md
-.sublime-project
-.sublime-workspace
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Keep shared IntelliJ run configs for the backend
-!BrickWorkPro-2.0-Backend/.run/
-!BrickWorkPro-2.0-Backend/.run/**
-
-# Rider
-.idea_modules/
-*.sln.iml
-
-# --- OS ---
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-Thumbs.db:encryptable
-Desktop.ini
-desktop.ini
-$RECYCLE.BIN/
-Site.master
-
-# --- Test / coverage ---
+# =============================================================================
+# Coverage / Testing
+# =============================================================================
 coverage/
 .nyc_output/
+
 .coverage
 .coverage.*
-.cache
-nosetests.xml
+
 coverage.xml
+nosetests.xml
+
 *.cover
+
 .hypothesis/
+
 test-results/
-xunit-results/
 playwright-report/
+
 .jest-cache/
 .mocha-cache/
 
-# --- Local AI / agent tooling (not part of the app) ---
+# =============================================================================
+# IDEs
+# =============================================================================
+
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+
+# Cursor
+.cursor/
+
+# Claude
+.claude/
+
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
+# =============================================================================
+# OS Files
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+desktop.ini
+
+$RECYCLE.BIN/
+
+.Spotlight-V100
+.Trashes
+
+# =============================================================================
+# Temporary Files
+# =============================================================================
+*.tmp
+*.temp
+*.bak
+*.backup
+
+*.orig
+*.rej
+
+*.swp
+*.swo
+*~
+
+# =============================================================================
+# Runtime
+# =============================================================================
+*.pid
+*.seed
+*.pid.lock
+
+# =============================================================================
+# Local Databases
+# =============================================================================
+*.sqlite
+*.sqlite3
+*.db
+
+# =============================================================================
+# Uploads
+# =============================================================================
+uploads/
+**/uploads/
+
+# =============================================================================
+# Deployment
+# =============================================================================
+.vercel/
+.render/
+.netlify/
+
+# =============================================================================
+# Generated Images / Logs
+# =============================================================================
+scripts/**/*.png
+!BrickWorkPro-2.0-Frontend/public/**/*.png
+
+# =============================================================================
+# NetBeans
+# =============================================================================
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# =============================================================================
+# AI / Local Development Tools
+# =============================================================================
 agent-tools/
 terminals/
 mcps/
 updates.jsonl
-.claude/
-.github/
-.git/
 
-# --- NetBeans (legacy) ---
-/nbproject/private/
-/nbbuild/
-/nbdist/
-/.nb-gradle/
+# =============================================================================
+# Explicit Keeps
+# =============================================================================
 
-# --- Temporary & backup files ---
-*.tmp
-*.bak
-*.backup
-*.swp
-*.swo
-*~
-*.orig
-*.rej
-.*.swp
-.*.swo
+# Environment template
+!.env.example
 
-# --- Process & lock files ---
-*.pid
-*.seed
-*.pid.lock
-lerna-lock.json
-yarn.lock
-package-lock.json
+# GitHub Actions
+!.github/
+!.github/**
 
-# --- Specific project files to exclude ---
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/usage.statistics.xml
-.idea/dictionaries/
-.idea/shelf/
+# Maven Wrapper
+!**/.mvn/
+!**/.mvn/**
+!**/mvnw
+!**/mvnw.cmd
 
-# --- Explicit keeps (do not ignore) ---
+# Backend Run Configurations
+!BrickWorkPro-2.0-Backend/.run/
+!BrickWorkPro-2.0-Backend/.run/**
+
+# Frontend VS Code
+!BrickWorkPro-2.0-Frontend/.vscode/
+!BrickWorkPro-2.0-Frontend/.vscode/**
+
+# Backend VS Code
+!BrickWorkPro-2.0-Backend/.vscode/
+!BrickWorkPro-2.0-Backend/.vscode/**
+
+# Frontend Config Files
 !BrickWorkPro-2.0-Frontend/.postcssrc.json
 !BrickWorkPro-2.0-Frontend/tailwind.config.js
-!.github/workflows/
-!.github/workflows/**
+
+# AI Rules
+!BrickWorkPro-2.0-Frontend/.claude/CLAUDE.md
+!BrickWorkPro-2.0-Frontend/.cursor/rules/cursor.mdc
+!BrickWorkPro-2.0-Frontend/.gemini/GEMINI.md
+!BrickWorkPro-2.0-Frontend/.github/copilot-instructions.md
+
+# Local Project Configurations
+**/application-local.properties
+**/application-local.yml
+**/application-local.yaml
+.env
+*.env
