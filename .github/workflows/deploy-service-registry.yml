@@ -1,20 +1,27 @@
+# Docs for the Azure Web Apps Deploy action:
+# https://github.com/Azure/webapps-deploy
+#
+# More GitHub Actions for Azure:
+# https://github.com/Azure/actions
+
 name: Deploy Service Registry to Azure
 
 on:
   push:
     branches:
       - production-ready
-  workflow_dispatch:
 
-permissions:
-  contents: read
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     steps:
-      - name: Checkout source
+      - name: Checkout source code
         uses: actions/checkout@v4
 
       - name: Set up Java 21
@@ -24,15 +31,15 @@ jobs:
           distribution: 'microsoft'
           cache: maven
 
-      - name: Build Service Registry
-        working-directory: BrickWorkPro-2.0-Backend/service-registry-brickwork
-        run: mvn clean package -DskipTests
+      - name: Build with Maven
+        run: mvn clean install -DskipTests
 
-      - name: Upload JAR
+      - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
           name: service-registry
-          path: BrickWorkPro-2.0-Backend/service-registry-brickwork/target/*.jar
+          path: '${{ github.workspace }}/target/*.jar'
+
 
   deploy:
     runs-on: ubuntu-latest
@@ -43,21 +50,21 @@ jobs:
       contents: read
 
     steps:
-      - name: Download JAR
+      - name: Download JAR artifact
         uses: actions/download-artifact@v4
         with:
           name: service-registry
-          path: ./deploy
 
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_AA52B559516D488ABF9082ACD41ECF7E }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_C459A945A9BA48CBF26BC9FC0A53ADB }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CF09A9C15AC943078F072C99D7B5F30A }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: brickworkpro-service-registry
-          package: ./deploy/*.jar
+          slot-name: Production
+          package: '*.jar'
