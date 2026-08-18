@@ -35,7 +35,7 @@ jobs:
           ls -lah BrickWorkPro-2.0-Backend/service-registry-brickwork/target/
 
           echo "JAR files:"
-          find BrickWorkPro-2.0-Backend/service-registry-brickwork/target/ \
+          find BrickWorkPro-2.0-Backend/service-registry-brickwork/target \
             -type f -name "*.jar" -print
 
       - name: Upload Service Registry JAR
@@ -65,11 +65,26 @@ jobs:
           echo "Current directory:"
           pwd
 
+          echo ""
           echo "Downloaded files:"
           ls -lah deploy
 
+          echo ""
           echo "JAR files:"
           find deploy -type f -name "*.jar" -print
+
+      - name: Set JAR path
+        id: jar
+        run: |
+          JAR_FILE=$(find "$GITHUB_WORKSPACE/deploy" -type f -name "*.jar" | head -n 1)
+
+          if [ -z "$JAR_FILE" ]; then
+            echo "ERROR: No JAR file found!"
+            exit 1
+          fi
+
+          echo "Found JAR: $JAR_FILE"
+          echo "path=$JAR_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -83,5 +98,5 @@ jobs:
         with:
           app-name: brickworkpro-service-registry
           slot-name: Production
-          package: deploy
+          package: ${{ steps.jar.outputs.path }}
           type: jar
