@@ -29,11 +29,21 @@ jobs:
         working-directory: BrickWorkPro-2.0-Backend/service-registry-brickwork
         run: mvn clean package -DskipTests
 
+      - name: Show build output
+        run: |
+          echo "Service Registry target directory:"
+          ls -lah BrickWorkPro-2.0-Backend/service-registry-brickwork/target/
+
+          echo "JAR files:"
+          find BrickWorkPro-2.0-Backend/service-registry-brickwork/target/ \
+            -type f -name "*.jar" -print
+
       - name: Upload Service Registry JAR
         uses: actions/upload-artifact@v4
         with:
           name: service-registry
           path: BrickWorkPro-2.0-Backend/service-registry-brickwork/target/*.jar
+          if-no-files-found: error
 
   deploy:
     runs-on: ubuntu-latest
@@ -48,15 +58,19 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: service-registry
-          path: ./deploy
-          
+          path: deploy
+
       - name: Show downloaded files
         run: |
-         echo "Downloaded files:"
-         ls -lah
-         echo "JAR files:"
-         find . -maxdepth 2 -type f -name "*.jar" -print
-    
+          echo "Current directory:"
+          pwd
+
+          echo "Downloaded files:"
+          ls -lah deploy
+
+          echo "JAR files:"
+          find deploy -type f -name "*.jar" -print
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -64,9 +78,10 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to Azure Web App
+      - name: Deploy Service Registry to Azure
         uses: azure/webapps-deploy@v3
         with:
           app-name: brickworkpro-service-registry
           slot-name: Production
-          package: ./deploy/*.jar
+          package: deploy
+          type: jar
