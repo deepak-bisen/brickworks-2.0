@@ -78,9 +78,17 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Verify Azure App Service
+        run: |
+          az account show
+          az webapp show \
+            --name brickworkpro-api-gateway \
+            --resource-group brickworkspro-rg \
+            --output table
+
       - name: Deploy API Gateway to Azure
         uses: azure/webapps-deploy@v3
         with:
           app-name: brickworkspro-api-gateway
           slot-name: Production
-          package: deploy/app.jar
+          package: ./deploy/*.jar
