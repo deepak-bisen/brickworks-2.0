@@ -32,12 +32,11 @@ jobs:
         working-directory: BrickWorkPro-2.0-Backend/users-brickwork
         run: mvn -B clean package -DskipTests
 
-      - name: Show users-app JAR
+      - name: Show generated JAR
         run: |
           echo "Users App target directory:"
           ls -lah BrickWorkPro-2.0-Backend/users-brickwork/users-app/target/
 
-          echo ""
           echo "JAR files:"
           find BrickWorkPro-2.0-Backend/users-brickwork/users-app/target \
             -maxdepth 1 \
@@ -45,7 +44,7 @@ jobs:
             -name "*.jar" \
             -print
 
-      - name: Copy Users App JAR
+      - name: Copy JAR to deployment directory
         run: |
           mkdir -p deploy
 
@@ -81,7 +80,6 @@ jobs:
           echo "Downloaded files:"
           ls -lah deploy
 
-          echo ""
           echo "JAR file:"
           file deploy/app.jar
 
@@ -96,11 +94,10 @@ jobs:
         run: |
           az account show
 
-          echo "=== Users Service App Service ==="
-
           az webapp show \
             --name brickworkpro-users-service \
             --resource-group brickworkspro-rg \
+            --query "{name:name,state:state,hostName:defaultHostName,location:location}" \
             --output table
 
       - name: Deploy Users Service to Azure
@@ -108,4 +105,5 @@ jobs:
         with:
           app-name: brickworkpro-users-service
           slot-name: Production
-          package: ./deploy/*.jar
+          package: ./deploy/app.jar
+          type: jar
