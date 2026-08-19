@@ -81,24 +81,25 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Verify Azure resources
+      - name: Diagnose Azure Web Apps
         run: |
-         echo "=== Azure Account ==="
-         az account show --output table
+          echo "=== Azure Account ==="
+          az account show --query "{name:name,id:id,tenantId:tenantId}" -o json
 
-         echo ""
-         echo "=== Subscriptions ==="
-         az account list --output table
+          echo ""
+          echo "=== Web Apps in brickworkspro-rg ==="
+          az webapp list \
+            --resource-group brickworkspro-rg \
+            --query "[].name" \
+            --output tsv
 
-         echo ""
-         echo "=== Resource Groups ==="
-         az group list --output table
-
-         echo ""
-         echo "=== Web Apps in brickworkspro-rg ==="
-         az webapp list \
-           --resource-group brickworkspro-rg \
-           --output table
+          echo ""
+          echo "=== API Gateway lookup ==="
+          az webapp show \
+            --name brickworkpro-api-gateway \
+            --resource-group brickworkspro-rg \
+            --query "{name:name,id:id,state:state,hostName:defaultHostName}" \
+            --output json
 
       - name: Deploy API Gateway to Azure
         uses: azure/webapps-deploy@v3
