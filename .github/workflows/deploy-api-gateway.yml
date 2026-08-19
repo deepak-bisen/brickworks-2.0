@@ -105,4 +105,4 @@ jobs:
         with:
           app-name: brickworkspro-api-gateway
           slot-name: Production
-          package: ./deploy/*.jar
+          package: ./deploy/app.jar
