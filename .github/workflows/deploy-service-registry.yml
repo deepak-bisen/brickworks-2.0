@@ -4,7 +4,10 @@ on:
   push:
     branches:
       - production-ready
-
+    paths:
+      - 'BrickWorkPro-2.0-Backend/service-registry-brickwork/**'
+      - '.github/workflows/deploy-service-registry.yml'
+      
   workflow_dispatch:
 
 jobs:
