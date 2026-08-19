@@ -1,0 +1,111 @@
+name: Deploy Users Service to Azure
+
+on:
+  push:
+    branches:
+      - production-ready
+    paths:
+      - 'BrickWorkPro-2.0-Backend/users-brickwork/**'
+      - '.github/workflows/deploy-users-service.yml'
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'microsoft'
+          cache: maven
+
+      - name: Build Users Service
+        working-directory: BrickWorkPro-2.0-Backend/users-brickwork
+        run: mvn -B clean package -DskipTests
+
+      - name: Show users-app JAR
+        run: |
+          echo "Users App target directory:"
+          ls -lah BrickWorkPro-2.0-Backend/users-brickwork/users-app/target/
+
+          echo ""
+          echo "JAR files:"
+          find BrickWorkPro-2.0-Backend/users-brickwork/users-app/target \
+            -maxdepth 1 \
+            -type f \
+            -name "*.jar" \
+            -print
+
+      - name: Copy Users App JAR
+        run: |
+          mkdir -p deploy
+
+          cp BrickWorkPro-2.0-Backend/users-brickwork/users-app/target/*.jar deploy/app.jar
+
+          echo "Deployment JAR:"
+          ls -lah deploy/app.jar
+
+      - name: Upload Users Service JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: users-service
+          path: deploy/app.jar
+          if-no-files-found: error
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download Users Service JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: users-service
+          path: deploy
+
+      - name: Verify deployment JAR
+        run: |
+          echo "Downloaded files:"
+          ls -lah deploy
+
+          echo ""
+          echo "JAR file:"
+          file deploy/app.jar
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Verify Azure App Service
+        run: |
+          az account show
+
+          echo "=== Users Service App Service ==="
+
+          az webapp show \
+            --name brickworkpro-users-service \
+            --resource-group brickworkspro-rg \
+            --output table
+
+      - name: Deploy Users Service to Azure
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: brickworkpro-users-service
+          slot-name: Production
+          package: ./deploy/*.jar
