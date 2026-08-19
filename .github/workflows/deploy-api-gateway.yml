@@ -81,6 +81,6 @@ jobs:
       - name: Deploy API Gateway to Azure
         uses: azure/webapps-deploy@v3
         with:
-          app-name: brickworkpro-api-gateway
+          app-name: brickworkspro-api-gateway
           slot-name: Production
           package: deploy/app.jar
