@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.brickworkspro.example.com',
+  apiUrl: 'https://brickworkpro-api-gateway-eyapbgf0eweaaect.centralindia-01.azurewebsites.net',
   razorpayKeyId: '',
 };
