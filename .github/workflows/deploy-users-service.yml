@@ -29,8 +29,8 @@ jobs:
           cache: maven
 
       - name: Build Users Service
-        working-directory: BrickWorkPro-2.0-Backend/users-brickwork
-        run: mvn -B clean package -DskipTests
+        working-directory: BrickWorkPro-2.0-Backend
+        run: mvn -B clean package -DskipTests -pl users-brickwork/users-app -am
 
       - name: Show generated JAR
         run: |
