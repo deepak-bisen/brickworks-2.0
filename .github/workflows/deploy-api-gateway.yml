@@ -4,7 +4,10 @@ on:
   push:
     branches:
       - production-ready
-
+    paths:
+      - 'BrickWorkPro-2.0-Backend/api-gateway/**'
+      - '.github/workflows/deploy-api-gateway.yml'
+      
   workflow_dispatch:
 
 jobs:
