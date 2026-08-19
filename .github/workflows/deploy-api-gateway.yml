@@ -81,24 +81,23 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Diagnose Azure Web Apps
+      - name: Find API Gateway resource
         run: |
-          echo "=== Azure Account ==="
-          az account show --query "{name:name,id:id,tenantId:tenantId}" -o json
+          echo "=== All Microsoft.Web sites ==="
+
+          az resource list \
+            --resource-group brickworkspro-rg \
+            --resource-type Microsoft.Web/sites \
+            --query "[].{Name:name,Id:id,Kind:kind,Location:location}" \
+            --output json
 
           echo ""
-          echo "=== Web Apps in brickworkspro-rg ==="
-          az webapp list \
-            --resource-group brickworkspro-rg \
-            --query "[].name" \
-            --output tsv
+          echo "=== API Gateway resources matching name ==="
 
-          echo ""
-          echo "=== API Gateway lookup ==="
-          az webapp show \
-            --name brickworkpro-api-gateway \
+          az resource list \
             --resource-group brickworkspro-rg \
-            --query "{name:name,id:id,state:state,hostName:defaultHostName}" \
+            --resource-type Microsoft.Web/sites \
+            --query "[?contains(name, 'api-gateway')].{Name:name,Id:id,Kind:kind,Location:location}" \
             --output json
 
       - name: Deploy API Gateway to Azure
