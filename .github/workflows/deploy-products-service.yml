@@ -35,10 +35,10 @@ jobs:
       - name: Show generated JAR
         run: |
           echo "Products App target directory:"
-          ls -lah products-brickwork/products-app/target/
+          ls -lah BrickWorkPro-2.0-Backend/products-brickwork/products-app/target/
 
           echo "JAR files:"
-          find products-brickwork/products-app/target \
+          find BrickWorkPro-2.0-Backend/products-brickwork/products-app/target \
             -maxdepth 1 \
             -type f \
             -name "*.jar" \
@@ -47,11 +47,11 @@ jobs:
       - name: Copy JAR to deployment directory
         run: |
           mkdir -p deploy
-          cp products-brickwork/products-app/target/*.jar deploy/app.jar
+          cp BrickWorkPro-2.0-Backend/products-brickwork/products-app/target/*.jar deploy/app.jar
 
           echo "Deployment JAR:"
           ls -lah deploy/app.jar
-
+          
       - name: Upload Products Service JAR
         uses: actions/upload-artifact@v4
         with:
